@@ -24,6 +24,14 @@ Notas:
 
 ## 2. Mods (16) — todos identificados en Modrinth por hash SHA-1
 
+> **Foto del 2026-09-03.** Es el inventario de la PC de referencia, no el pack de
+> hoy. Lo que cambió desde entonces: salieron `player-revive` (2026-09-05) y
+> `xaerominimap` / `xaeroworldmap` (2026-09-06, por el radar de jugadores),
+> `maplink` nunca entró, y entraron el shader Complementary y el mod propio de
+> precios. El pack vivo se mira con `cd web && npm run pack:check`; el porqué de
+> cada baja está en [`servidor/LEEME.md`](../servidor/LEEME.md).
+
+
 | Archivo en `mods/` | Mod (slug Modrinth) | Versión real | Licencia | Cliente / Servidor |
 |---|---|---|---|---|
 | `fabric-api-0.155.2+26.1.2.jar` | fabric-api | 0.155.2+26.1.2 | Apache-2.0 | optional / optional |
@@ -109,6 +117,11 @@ Dos cosas que salen de acá y afectan al plan:
 **`enable-query=true` en el puerto del juego.** Esto confirma por qué no había que reusar el puerto 25445 para la voz: ese UDP ya lo usa la consulta de estado. La allocation aparte (25446) era el camino correcto.
 
 ## 5.c Mods que tiene el servidor
+
+> **Foto del 2026-09-03.** Al 2026-09-06 son 14 jars: se movieron a
+> `/mods-apagados` los cinco de solo cliente, `tl_skin_cape`, `maplink`,
+> `player-revive` y los dos de Xaero. La lista al día está en
+> [`servidor/LEEME.md`](../servidor/LEEME.md).
 
 16 jars en `/mods`. Comparado con el cliente:
 

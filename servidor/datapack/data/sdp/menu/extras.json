@@ -549,47 +549,53 @@
         }
       },
       "sound": "click",
-      "action": {
-        "type": "message",
-        "message": {
-          "text": "",
-          "extra": [
-            {
-              "text": "  » ",
-              "italic": false,
-              "color": "dark_gray"
-            },
-            {
-              "text": "Para ponerte la skin de otra cuenta:   ",
-              "italic": false,
-              "color": "gray"
-            },
-            {
-              "text": "/skin set mojang ",
-              "color": "#00a6ff",
-              "bold": true,
-              "italic": false,
-              "click_event": {
-                "action": "suggest_command",
-                "command": "/skin set mojang "
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
               },
-              "hover_event": {
-                "action": "show_text",
-                "value": {
-                  "text": "Clickea y completa lo que falta",
-                  "italic": false,
-                  "color": "gray"
+              {
+                "text": "Para ponerte la skin de otra cuenta:   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/skin set mojang ",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/skin set mojang "
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
                 }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
               }
-            },
-            {
-              "text": "   clickealo y completalo",
-              "italic": false,
-              "color": "dark_gray"
-            }
-          ]
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
         }
-      }
+      ]
     },
     {
       "slot": [
@@ -629,97 +635,58 @@
         }
       },
       "sound": "click",
-      "action": {
-        "type": "message",
-        "message": {
-          "text": "",
-          "extra": [
-            {
-              "text": "  » ",
-              "italic": false,
-              "color": "dark_gray"
-            },
-            {
-              "text": "Para ponerte un apodo:   ",
-              "italic": false,
-              "color": "gray"
-            },
-            {
-              "text": "/nickname set ",
-              "color": "#00a6ff",
-              "bold": true,
-              "italic": false,
-              "click_event": {
-                "action": "suggest_command",
-                "command": "/nickname set "
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
               },
-              "hover_event": {
-                "action": "show_text",
-                "value": {
-                  "text": "Clickea y completa lo que falta",
-                  "italic": false,
-                  "color": "gray"
+              {
+                "text": "Para ponerte un apodo:   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/nickname set ",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/nickname set "
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
                 }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
               }
-            },
-            {
-              "text": "   clickealo y completalo",
-              "italic": false,
-              "color": "dark_gray"
-            }
-          ]
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
         }
-      }
+      ]
     },
     {
       "slot": [
         2,
         6
-      ],
-      "type": "item",
-      "item": {
-        "id": "minecraft:ender_chest",
-        "count": 1,
-        "components": {
-          "minecraft:custom_name": {
-            "text": "/enderchest",
-            "italic": false,
-            "color": "#00a6ff",
-            "bold": true
-          },
-          "minecraft:lore": [
-            {
-              "text": "  Tu cofre de ender donde estes",
-              "italic": false,
-              "color": "gray"
-            }
-          ],
-          "minecraft:tooltip_display": {
-            "hidden_components": [
-              "minecraft:attribute_modifiers",
-              "minecraft:potion_contents",
-              "minecraft:unbreakable",
-              "minecraft:stored_enchantments",
-              "minecraft:enchantments"
-            ]
-          },
-          "minecraft:custom_data": {
-            "sdp": "menu"
-          }
-        }
-      },
-      "sound": "click",
-      "action": {
-        "type": "command",
-        "command": "enderchest",
-        "as_player": true,
-        "silent": false
-      }
-    },
-    {
-      "slot": [
-        2,
-        7
       ],
       "type": "item",
       "item": {
@@ -754,47 +721,53 @@
         }
       },
       "sound": "click",
-      "action": {
-        "type": "message",
-        "message": {
-          "text": "",
-          "extra": [
-            {
-              "text": "  » ",
-              "italic": false,
-              "color": "dark_gray"
-            },
-            {
-              "text": "Para mandarle un privado a alguien:   ",
-              "italic": false,
-              "color": "gray"
-            },
-            {
-              "text": "/msg ",
-              "color": "#00a6ff",
-              "bold": true,
-              "italic": false,
-              "click_event": {
-                "action": "suggest_command",
-                "command": "/msg "
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
               },
-              "hover_event": {
-                "action": "show_text",
-                "value": {
-                  "text": "Clickea y completa lo que falta",
-                  "italic": false,
-                  "color": "gray"
+              {
+                "text": "Para mandarle un privado a alguien:   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/msg ",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/msg "
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
                 }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
               }
-            },
-            {
-              "text": "   clickealo y completalo",
-              "italic": false,
-              "color": "dark_gray"
-            }
-          ]
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
         }
-      }
+      ]
     },
     {
       "slot": [

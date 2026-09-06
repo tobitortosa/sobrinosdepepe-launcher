@@ -73,7 +73,7 @@ Después, si hace falta: mod de verificación en el servidor (fase 4, opcional, 
 - Botón ADMIN visible si la cuenta tiene rol admin, con dos pestañas.
 - **USUARIOS**: lista con estado y fecha, buscador, botones aprobar, banear, desbanear y contraseña temporal.
 - **MODS**: pack actual, subir `.jar` (arrastrando varios de una), quitar, y botón publicar. Al publicar, el backend te dice si algún jar hay que subirlo también al server.
-- Créditos: la lista de mods con autor, licencia y link. Es obligatorio por la licencia de Xaero's.
+- Créditos: la lista de mods con autor, licencia y link. Es obligatorio por las licencias de Simple Voice Chat y del shader Complementary.
 
 **Listo cuando:** agregás un mod desde el launcher, publicás, y en otra PC el launcher lo descarga solo al abrir.
 

@@ -168,10 +168,20 @@ def correr(comando):
 def escribir(comando, explicacion):
     """
     Para los comandos que piden datos que una GUI de cofre no puede pedir. Manda
-    dos lineas al chat, y la segunda se clickea para que el comando quede escrito
-    y el jugador lo complete.
+    una linea al chat que se clickea para que el comando quede escrito, y despues
+    CIERRA el menu.
 
-    Es UN componente y sin ningun salto de linea adentro, y las dos cosas
+    Cerrarlo no es un detalle: con el cofre abierto el chat se ve pero no se puede
+    clickear, porque la pantalla del contenedor se come los clicks. O sea que el
+    boton parecia no hacer nada, y esa es la mitad de "los comandos de extras no
+    funcionan": tres de los cinco botones de EXTRAS son de este tipo. La otra
+    mitad eran los permisos que le faltaban al grupo default de LuckPerms.
+
+    Que se puedan encadenar dos acciones sale de StandardItem: el campo se llama
+    "action" pero su codec es Action.LIST_CODEC, o sea una lista o una sola, y
+    MenuElement.onClick corre Action.executeAll en orden.
+
+    El mensaje es UN componente y sin ningun salto de linea adentro, y las dos cosas
     importan:
 
       - con un salto, el mod parte el texto por los saltos y rearma cada pedazo
@@ -182,15 +192,18 @@ def escribir(comando, explicacion):
         cosas: el menu entero no carga y el log dice "Both alternatives read
         successfully, can not pick the correct one".
     """
-    return {"type": "message", "message": {"text": "", "extra": [
-        texto("  " + e.FLECHA + " ", e.APAGADO),
-        texto(explicacion + "   ", e.ETIQUETA),
-        {"text": comando, "color": e.ACENTO, "bold": True, "italic": False,
-         "click_event": {"action": "suggest_command", "command": comando},
-         "hover_event": {"action": "show_text",
-                         "value": texto("Clickea y completa lo que falta", e.ETIQUETA)}},
-        texto("   clickealo y completalo", e.APAGADO),
-    ]}}
+    return [
+        {"type": "message", "message": {"text": "", "extra": [
+            texto("  " + e.FLECHA + " ", e.APAGADO),
+            texto(explicacion + "   ", e.ETIQUETA),
+            {"text": comando, "color": e.ACENTO, "bold": True, "italic": False,
+             "click_event": {"action": "suggest_command", "command": comando},
+             "hover_event": {"action": "show_text",
+                             "value": texto("Clickea y completa lo que falta", e.ETIQUETA)}},
+            texto("   clickealo y completalo", e.APAGADO),
+        ]}},
+        cerrar(),
+    ]
 
 
 def comprar(comando, precio):
@@ -287,8 +300,8 @@ guardar("comandos", {
         celda(3, 6, item("minecraft:amethyst_shard", "TIENDA DE SHARDS", e.SHARDS,
                          ["Lo que se compra matando:", "spawners, armas y armaduras"]),
               abrir("sdp:tienda"), "select"),
-        celda(3, 7, item("minecraft:map", "EXTRAS", e.ACENTO,
-                         ["Mapa, voz, skin, apodo", "y lo demas"]),
+        celda(3, 7, item("minecraft:name_tag", "EXTRAS", e.ACENTO,
+                         ["Vision nocturna, skin,", "apodo y privados"]),
               abrir("sdp:extras"), "select"),
         celda(3, 8, item("minecraft:barrier", "CERRAR", e.ERROR), cerrar(), "close"),
     ],
@@ -328,7 +341,6 @@ guardar("casa", {
         ("minecraft:lime_dye", "/tpaccept", ["Aceptar que alguien venga"], correr("tpaccept")),
         ("minecraft:red_dye", "/tpdeny", ["Rechazar el pedido"], correr("tpdeny")),
         ("minecraft:recovery_compass", "/back", ["Volver a tu ultimo viaje"], correr("back")),
-        ("minecraft:ladder", "/top", ["Subir a la superficie"], correr("top")),
     ]) + [volver(fila=5)],
 })
 
@@ -339,6 +351,11 @@ reglas = item("minecraft:netherite_chestplate", e.CALAVERA + " COMO SE PELEA ACA
     texto("  " + e.VINETA + " Si te matan, perdes lo que llevas", e.ETIQUETA),
     texto("  " + e.VINETA + " Quien te mata se lleva el 10% de tu plata", e.ETIQUETA),
     texto("  " + e.VINETA + " Las bases NO estan protegidas", e.ETIQUETA),
+    texto("  " + e.VINETA + " Peleando no se puede viajar", e.ETIQUETA),
+    texto("", None),
+    texto("  Desde que le pegas a alguien o te pegan quedas", e.ERROR),
+    texto("  EN PELEA por 15 segundos, y ahi no andan", e.ERROR),
+    texto("  /home, /spawn, /rtp, /back ni /tpa.", e.ERROR),
     texto("", None),
     texto("  Lo que guardas en el ender chest no se", e.ETIQUETA),
     texto("  pierde al morir y nadie te lo puede robar.", e.ETIQUETA),
@@ -373,8 +390,6 @@ guardar("extras", {
          escribir("/skin set mojang ", "Para ponerte la skin de otra cuenta:")),
         ("minecraft:name_tag", "/nickname set", ["Tu apodo en el chat"],
          escribir("/nickname set ", "Para ponerte un apodo:")),
-        ("minecraft:ender_chest", "/enderchest", ["Tu cofre de ender donde estes"],
-         correr("enderchest")),
         ("minecraft:writable_book", "/msg", ["Mensaje privado a alguien"],
          escribir("/msg ", "Para mandarle un privado a alguien:")),
     ]) + [volver(fila=5)],

@@ -26,7 +26,7 @@ web/                           backend y página de descarga (Next.js)
 └── drizzle/                   migraciones
 
 launcher/
-├── pack.json                  el pack: Minecraft, loader y los 16 mods con sus hashes
+├── pack.json                  copia del pack publicado; solo la usa la CLI de la fase 0
 └── src/
     ├── SobrinosDePepe.Core/        instalación y arranque del juego
     │   ├── LauncherPaths      dónde vive todo

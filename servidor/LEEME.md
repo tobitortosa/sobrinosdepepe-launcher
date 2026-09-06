@@ -11,10 +11,11 @@ subir tal cual y todo queda como estaba.
 | `generar-precios.py` | Arma `prices.json` y `config.json` de EconomyCraft, rearma el mod cliente de precios y verifica que no haya plata infinita. |
 | `verificar-precios.py` | Solo la verificación, contra el servidor o contra un archivo. |
 | `generar-menus.py` | Arma los menús de cofre (los deja en el datapack). |
-| `generar-comandos.py` | Arma los comandos propios de Melius y los sube. |
+| `generar-comandos.py` | Arma los comandos propios de Melius, sube también los modificadores y recarga. |
 | `generar-cartel.py` | Arma el cartel de la derecha. |
 | `configurar-scoreboard.py` | Rehace los objetivos y los lugares del scoreboard, que el juego guarda dentro del mundo. |
 | `configurar-borde.py` | Pone el borde del mundo, igual en las tres dimensiones. |
+| `configurar-permisos.py` | Le da al grupo `default` de LuckPerms los permisos de los comandos que la guía promete. |
 | `ajustar-saldos.py` | Deja el saldo de cada uno en proporción a las horas jugadas. |
 | `estilo.py` | Los colores y los símbolos, en un solo lugar. |
 
@@ -167,9 +168,11 @@ eso `dynamic_prices_enabled` queda en `false`.
 
 ## Qué mods van en el servidor y cuáles en el launcher
 
-Son dos listas distintas y no tienen por qué coincidir. El servidor carga 20
-mods; el pack que baja el launcher tiene 17 entradas. **Los 14 que están en los
-dos lados son el mismo archivo**, verificado por hash.
+Son dos listas distintas y no tienen por qué coincidir. Al 2026-09-06 el
+servidor tiene **14 jars** en `/mods` y el pack que baja el launcher tiene **14
+entradas** (13 mods y el shader). **Los 6 que están en los dos lados son el mismo
+archivo**, verificado por hash: fabric-api, cloth-config, lithium, modernfix,
+sound-physics y voicechat.
 
 Cómo se decide dónde va cada uno: se lee el `fabric.mod.json` del jar.
 
@@ -184,12 +187,12 @@ Ojo con los que declaran entrypoint de cliente pero no lo usan:
 **EconomyCraft tiene `onInitializeClient()` vacío**, así que los jugadores no
 necesitan tenerlo. Está bien que no esté en el pack.
 
-En `/mods-apagados/` hay siete jars que se sacaron el 2026-09-05 porque no
-hacían nada. Se movieron en vez de borrarse, así que volver atrás es moverlos de
-nuevo a `/mods`:
+En `/mods-apagados/` hay diez jars. Se movieron en vez de borrarse, así que
+volver atrás es moverlos de nuevo a `/mods`:
 
 | Jar | Por qué salió |
 |---|---|
+| xaerominimap, xaeroworldmap | **Sacados el 2026-09-06, y también del pack.** El minimapa trae radar de jugadores: `default_radar_categories_client.json` tiene la categoría `players` con sus subcategorías `friend`, `tracked`, `same_team` y `other_teams`. En un servidor de PvP libre eso es saber siempre dónde está todo el mundo, que es justo lo contrario de lo que hace divertido salir a buscar pelea. Son `environment: *`, así que el servidor **sí** los cargaba. Los configs de `overrides/config/xaero/` también salieron del launcher: `ConfigSeeder` nunca borra, así que a quien ya los tenía le quedan, pero no los lee nadie. |
 | iris, sodium, sodium-extra, reeses-sodium-options, zoomx | Son `environment: client`. El servidor nunca los cargó (se ve en la lista de arranque). Ya están en el pack, que es donde sirven. |
 | tl_skin_cape | Igual, pero además **no está en el pack**, o sea que no lo tenía nadie. Del lado del servidor las skins las resuelve `skinrestorer`. |
 | maplink | Este sí cargaba. Sincroniza Xaero con un Bluemap/Dynmap/Squaremap, y acá no hay ninguno. Su `maplink.fabric.mixins.json` tiene la lista común **vacía**: todos sus mixins son de cliente, así que en un servidor dedicado no parchea nada. |
@@ -293,6 +296,146 @@ Los precios de la tienda de shards son los de Donut escalados por el spawner:
 allá sale 1.500 y acá 200, o sea todo por 0,133. Lo que se mantiene es la
 relación entre los items, que es la que define qué conviene comprar primero.
 
+## La marca de pelea
+
+Quince segundos desde el último golpe entre jugadores en los que **no se puede
+viajar**: `/home`, `/spawn`, `/back`, `/rtp`, `/tpa` y `/tpaccept` contestan "Estás
+EN PELEA" y no hacen nada. Sin esto una pelea se termina cuando el que va
+perdiendo escribe `/home`, y entonces no hay pelea: hay dos personas mirando
+quién aprieta enter primero.
+
+Son tres piezas y ninguna sabe de las otras dos:
+
+1. **Quién está en pelea.** Dos advancements sin `display` (o sea invisibles) con
+   `rewards.function`. Cada uno se dispara de un lado del golpe, porque el juego
+   solo le da la recompensa al jugador del trigger y desde el JSON no hay forma
+   de nombrar al otro:
+
+   | Archivo | Trigger | A quién marca |
+   |---|---|---|
+   | `advancement/pegar.json` | `minecraft:player_hurt_entity` con `entity` = jugador | al que pegó |
+   | `advancement/pegado.json` | `minecraft:entity_hurt_player` con `damage.source_entity` = jugador | al que le pegaron |
+
+   Los dos llaman a `sdp:combate`, que se revoca a sí mismo para volver a
+   escuchar (igual que `sdp:kill`) y pone `sdp_combate` en 300.
+
+   Ojo con dos campos que no son iguales aunque se llamen parecido:
+   `entity` de `player_hurt_entity` es un `ContextAwarePredicate` (**una lista**
+   de condiciones de loot), y `damage.source_entity` es un `EntityPredicate`
+   pelado (**un objeto**). Poner la lista donde va el objeto no carga.
+
+   Y `source_entity` y no `direct_entity`: el juego compara `source_entity`
+   contra `DamageSource.getEntity()`, que es el **dueño** del golpe. Con eso
+   entran la flecha, el tridente y la poción; con `direct_entity` habría que
+   nombrar cada proyectil.
+
+   `"dealt": {"min": 0.1}` no es decoración: la perla de ender pega con daño
+   **cero** (`ThrownEnderpearl.onHitEntity` llama a `hurt(..., 0.0f)`) y dispara
+   el trigger igual. Sin ese filtro, tirarle una perla a alguien lo metía en
+   pelea de arriba.
+
+2. **El reloj.** El objetivo `sdp_combate` baja un tick por tick en `sdp:tick` y
+   a los 300 se le saca la etiqueta. Solo corre para los conectados, así que
+   desconectarse no lo acelera. Morir sí lo termina, y no hace falta una línea
+   para eso: `ServerPlayer.restoreFrom` no copia las etiquetas, o sea que el que
+   respawnea ya no la tiene.
+
+3. **El candado.** `modificadores/combate.json` es un modificador de Melius de
+   tipo `node:starts_with`, pero con `execution_modifiers` en vez de
+   `requirement_modifier`: en vez de esconder el comando le agrega un predicado a
+   la ejecución.
+
+   ```json
+   {"type": "predicate:add",
+    "predicate": {"type": "negate",
+                  "value": {"type": "entity",
+                            "value": {"nbt": "{Tags:[\"sdp_combate\"]}"}}},
+    "failure": [{"command": "function sdp:combate_bloqueado", ...}]}
+   ```
+
+   Trampas de este archivo, las tres medidas contra el servidor:
+
+   - **`failure` NO es un componente de texto**, aunque lo parezca: es una lista
+     de **acciones de comando**, las mismas de `executes`. Con `{"text": ...}` el
+     log dice `Failed to parse either. First: Not a json array; Second: No key
+     command`. Por eso el mensaje vive en `sdp:combate_bloqueado` y no en el JSON.
+   - **`node:starts_with` compara por segmentos, no por letras.** El path de un
+     comando es `dispatcher.getPath` unido con puntos (`/tpa Pepe` es
+     `tpa.target_player`), y compara segmento contra segmento: **`tpa` no matchea
+     `tpaccept`**. Hay que listar los dos.
+   - El predicado de entidad no tiene `scores`: `EntityPredicate` en 26.1 no lo
+     trae. Por eso el candado es una **etiqueta** leída por `nbt`, que sí está en
+     el NBT del jugador. `NbtUtils.compareNbt` con listas hace "contiene", así que
+     `{Tags:["sdp_combate"]}` matchea aunque el jugador tenga otras etiquetas.
+
+   El modificador se aplica a **cualquier** comando, no solo a los de Melius:
+   `ContextChainMixin` envuelve `ContextChain.runExecutable`, que es por donde
+   pasa todo. Por eso alcanza para tapar los de Essential Commands.
+
+### Lo que esta marca NO agarra
+
+Está medido en el bytecode de 26.1 y conviene saberlo antes de que alguien lo
+descubra jugando:
+
+- **Los lobos.** `DamageSources.mobAttack(lobo)` deja al lobo como dueño del
+  golpe, así que ninguno de los dos triggers pasa. Y el juego **sí** le da la
+  kill al dueño (`resolvePlayerResponsibleForDamage` mira si es un lobo
+  domesticado), o sea que se puede matar con lobos sin quedar nunca en pelea. Es
+  el agujero más grande y desde el JSON no se puede tapar.
+- **Los crystals en cadena.** Un crystal que rompe un jugador sí marca; uno que
+  detona otra explosión no, porque ahí el `DamageSource` se queda sin entidad.
+- **Reventar una cama o un respawn anchor.** `badRespawnPointExplosion` se
+  construye con una posición y sin entidad.
+- **El fuego, la lava, la caída y el vacío.** El golpe con Fire Aspect sí marca,
+  pero si la víctima se muere quemada veinte segundos después ya nadie está en
+  pelea. Igual con empujar a alguien a la lava: marca el empujón, no la muerte.
+- **Desloguearse.** Salir del juego marcado no es un escape (la etiqueta se
+  guarda en el NBT y vuelve con el jugador), pero tampoco cuesta nada. Si alguna
+  vez molesta, la solución de los servidores grandes es matar al que se va
+  marcado; acá todavía no está.
+- El TNT **sí** marca a los dos: `Explosion.getIndirectSourceEntity` devuelve el
+  `PrimedTnt.getOwner()`.
+
+Si algún día se habilita `/tpahere` o `/warp`, hay que agregarlos a
+`combate.json`: son las otras dos formas de salir de un lugar.
+
+## Los permisos de LuckPerms
+
+**El nivel con el que Essential Commands registra cada comando no importa.**
+`ECPerms.check` hace, textual:
+
+```java
+Permissions.getPermissionValue(fuente, permiso)
+    .orElse(fuente.permissions().hasPermission(
+        new Permission.HasCommandLevel(PermissionLevel.byId(Math.max(2, nivel)))))
+```
+
+Ese `Math.max(2, nivel)` es la trampa. Con `use_permissions_api=true`, que es
+como está, hay **dos estados y no tres**: o el nodo está otorgado en LuckPerms, o
+el comando pide operador. Un comando declarado con nivel 0 **no** es "para
+todos".
+
+Y como el `requires` de Brigadier se evalúa al parsear, al jugador sin el permiso
+el comando **ni le autocompleta**: escribirlo contesta "Unknown or incomplete
+command". No hay ningún error que diga "te falta un permiso".
+
+Hasta el 2026-09-06 el grupo `default` tenía siete nodos y **dos de ellos no
+existen en el mod**:
+
+- `essentialcommands.home` pelado. LuckPerms solo expande comodines que terminan
+  en `.*`, así que no otorgaba `home.tp`. Lo que hacía andar `/home` eran los
+  otros dos.
+- `essentialcommands.rtp`. El literal `rtp` es un alias que pide
+  `essentialcommands.randomteleport`.
+
+Resultado: `/spawn`, `/back`, `/rtp` y `/nickname set` no le funcionaban a nadie
+que no fuera operador. Es la mitad de "los comandos de EXTRAS no funcionan"; la
+otra mitad está en `generar-menus.py`, en `escribir()`.
+
+La lista viva está en `configurar-permisos.py`, con el porqué de cada uno y de
+los que a propósito **no** se otorgan (`near.self` es un radar, `suicide` le saca
+la kill al asesino, `enderchest` y `top` ya no existen).
+
 ## Los comandos de EconomyCraft y el nivel de operador
 
 `PermissionCompat.gamemaster()` devuelve `true` cuando la fuente **no es un
@@ -328,9 +471,9 @@ golpe y en silencio.
 
 ## `comandos/` → `/config/melius-commands/commands/`
 
-`/comandos`, `/tienda`, `/economia`, `/casa`, `/pvp`, `/extras`, `/shards`,
-`/bounty`, `/nv`, `/nightvision`, `/clearchat`. Desde que los menús son GUI,
-casi todos son una línea: abren un menú o llaman a una función.
+Son diez: `/ayuda`, `/comandos`, `/tienda`, `/economia`, `/casa`, `/pvp`,
+`/extras`, `/shards`, `/nv` y `/nightvision`. Desde que los menús son GUI, casi
+todos son una línea: abren un menú o llaman a una función.
 
 Los hace **Melius Commands** y se recargan con `/reload`. El esquema completo de
 un archivo son seis campos: `id`, `literals`, `arguments`, `require`, `executes`
@@ -347,6 +490,10 @@ enter. Es el tipo de falla que solo se nota si se prueba sin ser operador
 `as_console` viene en `true` por defecto, y **no borra la entidad de la fuente**:
 solo cambia a dónde van los mensajes.
 
+Los archivos de `modificadores/` los sube el mismo script. Hasta el 2026-09-06
+solo se bajaban con `respaldar.py` y se subían a mano, así que la copia del
+repositorio era decorativa; ahora es la fuente y el servidor la copia.
+
 ## `datapack/data/sdp/menu/` → los menús de cofre
 
 Los dibuja **Inventory Menu** (`inventory_menu-1.2.0.jar`), que es server-side
@@ -362,6 +509,13 @@ Trampas:
 - El tipo de item `navigate` **no se usa**: si se le pone un `model`, el mod
   reemplaza el stack entero y pierde el nombre y la descripción. Va `type:
   "item"` con la acción aparte.
+- **El campo `action` acepta una lista y las corre en orden.** Se llama en
+  singular pero su codec es `Action.LIST_CODEC` y `MenuElement.onClick` hace
+  `Action.executeAll`. Eso es lo que arregla los botones que mandan un comando
+  para completar al chat: con el cofre abierto **el chat se ve pero no se puede
+  clickear**, porque la pantalla del contenedor se come los clicks, así que el
+  botón parecía no hacer nada. Ahora `escribir()` devuelve dos acciones: el
+  mensaje y `{"type": "navigate", "action": "close"}`.
 - Los placeholders `%...%` **aplanan el texto y le borran el formato a los
   hijos**: `PlaceholderResolver` hace `getString()` y rearma todo como un
   literal. Por eso los nombres y las descripciones no llevan ninguno, y el saldo
@@ -510,7 +664,23 @@ Se aplican con `/reload`.
 | `warp` | No hay ningún lugar creado, así que solo podía fallar. Se destapa borrando el archivo cuando existan. |
 | `workbench`, `anvil`, `stonecutter` | Mesas portátiles. La idea es que cada uno tenga su mesa de crafteo de verdad, no llevarla en el bolsillo. |
 
+Y `combate.json`, que es de otra clase: no reemplaza el requisito del nodo sino
+que le agrega un predicado a la **ejecución**. Está explicado abajo, en "La marca
+de pelea".
+
 `/clearchat` existió y se sacó: eran sesenta líneas vacías y no lo usaba nadie.
+
+## Comandos que se sacaron enteros
+
+No con un modificador sino apagándolos en `/config/EssentialCommands.properties`,
+que es lo que hace que el nodo **no exista**: `help top` contesta "Unknown
+command". El archivo lo baja `respaldar.py` a `esenciales/`, y **no se puede
+editar con el servidor prendido**: el mod lo reescribe al apagarse.
+
+| Comando | Clave | Por qué |
+|---|---|---|
+| `/top` | `enable_top=false` | Está roto. `TopCommand.getTop` busca desde arriba tres bloques de aire seguidos, así que en el Nether te deja arriba del techo de bedrock y en una cueva te sube al primer hueco que encuentra, no a la superficie. |
+| `/enderchest` | `enable_enderchest=false` | El cofre de ender es la única caja fuerte del servidor: lo que guardás ahí no se pierde al morir. Poder abrirlo desde cualquier lado, en medio de una pelea, lo convierte en un inventario infinito e inrobable. El bloque sigue existiendo y sigue sirviendo. |
 
 ## Otras cosas de 26.1 que ya nos costaron tiempo
 

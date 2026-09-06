@@ -226,7 +226,7 @@ El pack fija Minecraft **26.1** (la del server, protocolo 775) y Fabric Loader *
 
 ## 11. Créditos
 
-Lista de mods con autor, licencia y link dentro del launcher. Es obligatorio: Xaero's Minimap y World Map son de derechos reservados y permiten el uso en packs con la condición de dar crédito con un link accesible. Sin monetizar el launcher ni el server.
+Lista de mods con autor, licencia y link dentro del launcher. Es obligatorio: Simple Voice Chat es de derechos reservados y el shader Complementary pide crédito visible. Sin monetizar el launcher ni el server. (Xaero's Minimap y World Map también lo pedían; salieron del pack el 2026-09-06.)
 
 ## 12. Posicionamiento
 

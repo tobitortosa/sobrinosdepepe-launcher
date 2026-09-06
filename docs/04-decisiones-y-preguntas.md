@@ -16,6 +16,7 @@
 | Skins | SkinRestorer instalado en el server. Cada uno pide la suya por chat. Cero código nuestro. |
 | Shaders | Fuera del pack. |
 | MapLink | Fuera del pack: su configuración ignora este server. |
+| Xaero's Minimap y World Map | Fuera del pack y del servidor desde el 2026-09-06. El minimapa trae radar de jugadores, y con PvP libre en todo el mundo eso es saber siempre dónde está cada uno. |
 
 ## Fuera de alcance, por pedido explícito
 

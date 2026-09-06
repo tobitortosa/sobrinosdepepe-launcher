@@ -746,7 +746,7 @@
       ],
       "type": "item",
       "item": {
-        "id": "minecraft:map",
+        "id": "minecraft:name_tag",
         "count": 1,
         "components": {
           "minecraft:custom_name": {
@@ -757,12 +757,12 @@
           },
           "minecraft:lore": [
             {
-              "text": "  Mapa, voz, skin, apodo",
+              "text": "  Vision nocturna, skin,",
               "italic": false,
               "color": "gray"
             },
             {
-              "text": "  y lo demas",
+              "text": "  apodo y privados",
               "italic": false,
               "color": "gray"
             }

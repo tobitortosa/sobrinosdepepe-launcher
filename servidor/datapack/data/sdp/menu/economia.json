@@ -774,47 +774,53 @@
         }
       },
       "sound": "click",
-      "action": {
-        "type": "message",
-        "message": {
-          "text": "",
-          "extra": [
-            {
-              "text": "  » ",
-              "italic": false,
-              "color": "dark_gray"
-            },
-            {
-              "text": "Para pagarle a alguien:   ",
-              "italic": false,
-              "color": "gray"
-            },
-            {
-              "text": "/pay ",
-              "color": "#00a6ff",
-              "bold": true,
-              "italic": false,
-              "click_event": {
-                "action": "suggest_command",
-                "command": "/pay "
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
               },
-              "hover_event": {
-                "action": "show_text",
-                "value": {
-                  "text": "Clickea y completa lo que falta",
-                  "italic": false,
-                  "color": "gray"
+              {
+                "text": "Para pagarle a alguien:   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/pay ",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/pay "
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
                 }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
               }
-            },
-            {
-              "text": "   clickealo y completalo",
-              "italic": false,
-              "color": "dark_gray"
-            }
-          ]
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
         }
-      }
+      ]
     },
     {
       "slot": [

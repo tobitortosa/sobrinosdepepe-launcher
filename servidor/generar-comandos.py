@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Arma los comandos propios y los sube al servidor.
+Arma los comandos propios y los sube al servidor, junto con los modificadores.
 
     python servidor/generar-comandos.py
 
-Los declara Melius Commands. Desde que los menus son GUI de cofre, todos estos
+Los comandos los declara Melius Commands, y los modificadores son del mismo mod:
+viven en servidor/modificadores/ y se suben tal cual, sin generarse. Hasta el
+2026-09-06 solo se bajaban con respaldar.py y se subian a mano, asi que la copia
+del repositorio era decorativa; ahora es la fuente y el servidor la copia. Desde que los menus son GUI de cofre, todos estos
 comandos son una linea: abren el menu que corresponde o llaman a una funcion del
 datapack.
 
@@ -29,6 +32,7 @@ import estilo as e
 import mc
 
 CARPETA = os.path.join(AQUI, "comandos")
+MODIFICADORES = os.path.join(AQUI, "modificadores")
 
 
 def accion(comando):
@@ -96,14 +100,14 @@ GRUPOS = [
     ]),
     ("VIAJES", e.ACENTO, [
         ("/spawn", False), ("/home casa", False), ("/home set casa", False),
-        ("/rtp", False), ("/back", False), ("/top", False),
+        ("/rtp", False), ("/back", False),
         ("/tpa ", True), ("/tpaccept", False), ("/tpdeny", False),
     ]),
     ("PELEA", e.KILLS, [
         ("/shards", False), ("/tienda", False),
     ]),
     ("EXTRAS", e.MARCA, [
-        ("/nv", False), ("/enderchest", False),
+        ("/nv", False),
         ("/msg ", True), ("/nickname set ", True), ("/skin set ", True),
     ]),
 ]
@@ -128,12 +132,27 @@ for nombre, color, comandos in GRUPOS:
     for comando, pide in comandos:
         lista.append(boton(comando, pide))
     lista.append(t(chr(10)))
+lista.append(t(chr(10) + "  Los de VIAJES no andan mientras estas EN PELEA:", e.ERROR))
+lista.append(t(chr(10) + "  se te va la marca 15 segundos despues del ultimo golpe." + chr(10), e.APAGADO))
 lista.append(t(chr(10) + "  Los podes escribir directo, o abrir el menu con ", e.ETIQUETA))
 lista.append(t("/ayuda", e.ACENTO, negrita=True, run="/ayuda",
                 hover="Abrir el menu"))
 lista.append(t(chr(10) + "  " + e.RAYA * 22 + chr(10), e.APAGADO))
 
 guardar("comandos", {"executes": [accion("tellraw @s " + json.dumps(lista))]})
+
+# ------------------------------------------------------------- los modificadores
+# Le cambian el requisito o la ejecucion a un comando que ya existe: los que se le
+# esconden a los jugadores (operador 4) y la marca de pelea, que le agrega a los
+# comandos de viaje un predicado que exige no tener la etiqueta sdp_combate.
+print("modificadores:")
+for nombre in sorted(os.listdir(MODIFICADORES)):
+    if not nombre.endswith(".json"):
+        continue
+    ruta = os.path.join(MODIFICADORES, nombre)
+    mc.write("/config/melius-commands/modifiers/" + nombre,
+             open(ruta, encoding="utf-8").read())
+    print("  %s" % nombre)
 
 mc.cmd("reload")
 print("  recargado")

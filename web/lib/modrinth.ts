@@ -3,7 +3,8 @@ import { env, MODRINTH_USER_AGENT } from './env';
 /**
  * Modrinth es de donde salen los mods. El launcher los descarga directo del CDN de
  * Modrinth: no rehosteamos nada, porque varios mods del pack no lo permiten
- * (Xaero's y Simple Voice Chat son de derechos reservados).
+ * (Simple Voice Chat es de derechos reservados y el shader Complementary lo
+ * prohíbe explícitamente).
  *
  * Los términos de uso piden un User-Agent que identifique la aplicación.
  * El límite es de 300 pedidos por minuto.

@@ -25,6 +25,10 @@ ARCHIVOS = [
     ("/config/economycraft/prices.json", "economia/prices.json"),
     # La configuración del mod de los menús de cofre.
     ("/config/inventory-menu.json", "menus/inventory-menu.json"),
+    # Essential Commands: acá está qué comandos existen y cuáles no
+    # (enable_top, enable_enderchest, enable_warp...). No se puede editar con el
+    # servidor prendido: el mod reescribe el archivo al apagarse.
+    ("/config/EssentialCommands.properties", "esenciales/EssentialCommands.properties"),
 ]
 
 # Estas carpetas se bajan enteras, así que agregar un archivo nuevo del lado del

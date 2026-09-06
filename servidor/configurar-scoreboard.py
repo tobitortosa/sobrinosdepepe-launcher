@@ -42,6 +42,10 @@ OBJETIVOS = [
     # Ticks que faltan para que matar a este jugador vuelva a pagar shards.
     ("sdp_cd", "dummy", {"text": "enfriamiento de la kill"}),
     ("sdp_nv", "dummy", {"text": "vision nocturna"}),
+
+    # Ticks que faltan para que se le caiga la marca de pelea. La etiqueta
+    # sdp_combate es el candado que mira Melius; esto es el reloj que la suelta.
+    ("sdp_combate", "dummy", {"text": "ticks de pelea"}),
 ]
 
 for nombre, criterio, display in OBJETIVOS:

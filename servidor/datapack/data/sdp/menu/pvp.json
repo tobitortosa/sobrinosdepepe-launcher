@@ -508,6 +508,30 @@
               "color": "gray"
             },
             {
+              "text": "  ▪ Peleando no se puede viajar",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "",
+              "italic": false
+            },
+            {
+              "text": "  Desde que le pegas a alguien o te pegan quedas",
+              "italic": false,
+              "color": "#ff5555"
+            },
+            {
+              "text": "  EN PELEA por 15 segundos, y ahi no andan",
+              "italic": false,
+              "color": "#ff5555"
+            },
+            {
+              "text": "  /home, /spawn, /rtp, /back ni /tpa.",
+              "italic": false,
+              "color": "#ff5555"
+            },
+            {
               "text": "",
               "italic": false
             },

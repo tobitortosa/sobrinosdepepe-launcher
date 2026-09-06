@@ -1,0 +1,20 @@
+{
+  "criteria": {
+    "le_pegaron": {
+      "trigger": "minecraft:entity_hurt_player",
+      "conditions": {
+        "damage": {
+          "dealt": {
+            "min": 0.1
+          },
+          "source_entity": {
+            "type": "minecraft:player"
+          }
+        }
+      }
+    }
+  },
+  "rewards": {
+    "function": "sdp:combate"
+  }
+}

@@ -4,6 +4,16 @@
 # mataron para mirar el enfriamiento de esa victima.
 execute as @a[scores={sdp_death=1..}] run function sdp:pagar_kill
 
+# La marca de pelea baja un tick por tick y se cae sola a los quince segundos. Solo
+# corre para los conectados, asi que desconectarse no la acelera: el que sale
+# marcado vuelve marcado y tiene que quemar los 300 ticks adentro del juego.
+#
+# Morir la borra sola y no hace falta una linea para eso: ServerPlayer.restoreFrom
+# no copia las etiquetas, asi que el que respawnea ya no la tiene. El puntaje sigue
+# bajando hasta cero sin molestar a nadie.
+scoreboard players remove @a[scores={sdp_combate=1..}] sdp_combate 1
+execute as @a[tag=sdp_combate,scores={sdp_combate=..0}] run function sdp:combate_salir
+
 # El enfriamiento de cada uno baja un tick por tick. Solo corre mientras el
 # jugador esta conectado, que es lo que se quiere: desconectarse no lo acelera.
 scoreboard players remove @a[scores={sdp_cd=1..}] sdp_cd 1

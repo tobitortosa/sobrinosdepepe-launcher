@@ -504,47 +504,53 @@
         }
       },
       "sound": "click",
-      "action": {
-        "type": "message",
-        "message": {
-          "text": "",
-          "extra": [
-            {
-              "text": "  » ",
-              "italic": false,
-              "color": "dark_gray"
-            },
-            {
-              "text": "Para guardar tu casa:   ",
-              "italic": false,
-              "color": "gray"
-            },
-            {
-              "text": "/home set casa",
-              "color": "#00a6ff",
-              "bold": true,
-              "italic": false,
-              "click_event": {
-                "action": "suggest_command",
-                "command": "/home set casa"
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
               },
-              "hover_event": {
-                "action": "show_text",
-                "value": {
-                  "text": "Clickea y completa lo que falta",
-                  "italic": false,
-                  "color": "gray"
+              {
+                "text": "Para guardar tu casa:   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/home set casa",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/home set casa"
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
                 }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
               }
-            },
-            {
-              "text": "   clickealo y completalo",
-              "italic": false,
-              "color": "dark_gray"
-            }
-          ]
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
         }
-      }
+      ]
     },
     {
       "slot": [
@@ -719,47 +725,53 @@
         }
       },
       "sound": "click",
-      "action": {
-        "type": "message",
-        "message": {
-          "text": "",
-          "extra": [
-            {
-              "text": "  » ",
-              "italic": false,
-              "color": "dark_gray"
-            },
-            {
-              "text": "Para pedirle a alguien ir hasta el:   ",
-              "italic": false,
-              "color": "gray"
-            },
-            {
-              "text": "/tpa ",
-              "color": "#00a6ff",
-              "bold": true,
-              "italic": false,
-              "click_event": {
-                "action": "suggest_command",
-                "command": "/tpa "
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
               },
-              "hover_event": {
-                "action": "show_text",
-                "value": {
-                  "text": "Clickea y completa lo que falta",
-                  "italic": false,
-                  "color": "gray"
+              {
+                "text": "Para pedirle a alguien ir hasta el:   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/tpa ",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/tpa "
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
                 }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
               }
-            },
-            {
-              "text": "   clickealo y completalo",
-              "italic": false,
-              "color": "dark_gray"
-            }
-          ]
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
         }
-      }
+      ]
     },
     {
       "slot": [
@@ -854,7 +866,7 @@
     {
       "slot": [
         3,
-        4
+        5
       ],
       "type": "item",
       "item": {
@@ -892,51 +904,6 @@
       "action": {
         "type": "command",
         "command": "back",
-        "as_player": true,
-        "silent": false
-      }
-    },
-    {
-      "slot": [
-        3,
-        5
-      ],
-      "type": "item",
-      "item": {
-        "id": "minecraft:ladder",
-        "count": 1,
-        "components": {
-          "minecraft:custom_name": {
-            "text": "/top",
-            "italic": false,
-            "color": "#00a6ff",
-            "bold": true
-          },
-          "minecraft:lore": [
-            {
-              "text": "  Subir a la superficie",
-              "italic": false,
-              "color": "gray"
-            }
-          ],
-          "minecraft:tooltip_display": {
-            "hidden_components": [
-              "minecraft:attribute_modifiers",
-              "minecraft:potion_contents",
-              "minecraft:unbreakable",
-              "minecraft:stored_enchantments",
-              "minecraft:enchantments"
-            ]
-          },
-          "minecraft:custom_data": {
-            "sdp": "menu"
-          }
-        }
-      },
-      "sound": "click",
-      "action": {
-        "type": "command",
-        "command": "top",
         "as_player": true,
         "silent": false
       }

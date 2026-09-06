@@ -1,0 +1,26 @@
+{
+  "criteria": {
+    "pego": {
+      "trigger": "minecraft:player_hurt_entity",
+      "conditions": {
+        "damage": {
+          "dealt": {
+            "min": 0.1
+          }
+        },
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "type": "minecraft:player"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "function": "sdp:combate"
+  }
+}
