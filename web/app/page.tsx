@@ -11,8 +11,84 @@ const REPO = 'https://github.com/tobitortosa/sobrinosdepepe-launcher';
 
 export const metadata = {
   title: 'SOBRINOS DE PEPE · Launcher',
-  description: 'Descargá el launcher del servidor y entrá a jugar.',
+  description: 'Descargá el launcher, creá tu cuenta y entrá a jugar. Seis pasos con fotos.',
 };
+
+/**
+ * Los seis pasos, en el orden en que le pasan a quien descarga por primera vez.
+ *
+ * Cada uno es un título de tres o cuatro palabras y una sola línea de texto: la foto
+ * tiene que explicar sola, porque nadie lee. Tres llevan una nota abajo, y son
+ * justo los tres donde la gente se frena: al abrir un .exe bajado de internet, al
+ * ver el aviso de Windows, y al que le pidan crear una cuenta. La respuesta va ahí
+ * y no en un apartado al final, que nadie llega a leer.
+ */
+const pasos = [
+  {
+    n: 1,
+    titulo: 'Abrí el archivo',
+    texto: 'Doble clic en el que se te descargó.',
+    imagen: '/pasos/paso1.png',
+    alt: 'El archivo SobrinosDePepe-win-Setup.exe con el cursor encima',
+    nota: (
+      <>
+        Se instala en su propia carpeta y sin pedir permisos de administrador. Tu
+        Minecraft de siempre y tu TLauncher quedan igual que ahora.
+      </>
+    ),
+  },
+  {
+    n: 2,
+    titulo: 'Tocá "Más información"',
+    texto: 'Windows avisa porque no conoce el programa. Es normal.',
+    imagen: '/pasos/paso2.png',
+    alt: 'El aviso azul de Windows con el enlace Más información señalado',
+    nota: (
+      <>
+        Ese aviso le sale a todo programa sin un certificado de 200 dólares por año. El
+        código está entero acá:{' '}
+        <a href={REPO} target="_blank" rel="noopener noreferrer">
+          GitHub
+          <ExternalArrow />
+        </a>
+      </>
+    ),
+  },
+  {
+    n: 3,
+    titulo: 'Ejecutar de todas formas',
+    texto: 'Aparece ese botón nuevo. Apretalo y se instala solo.',
+    imagen: '/pasos/paso3.png',
+    alt: 'El mismo aviso, ahora con el botón Ejecutar de todas formas',
+  },
+  {
+    n: 4,
+    titulo: 'Creá una cuenta',
+    texto: 'Abajo del botón verde, "Crear una cuenta".',
+    imagen: '/pasos/paso4.png',
+    alt: 'La pantalla de inicio de sesión del launcher',
+    nota: (
+      <>
+        No es tu cuenta de Minecraft. Esta la creás acá y sirve solo para este servidor:
+        no hace falta tener el juego comprado.
+      </>
+    ),
+  },
+  {
+    n: 5,
+    titulo: 'Elegí tu nombre',
+    texto: 'El que pongas es tu nombre en el server. No se puede cambiar.',
+    imagen: '/pasos/paso5.png',
+    alt: 'El formulario para crear la cuenta en el launcher',
+  },
+  {
+    n: 6,
+    titulo: 'JUGAR',
+    texto: 'La primera vez tarda unos minutos: baja el Minecraft y los mods.',
+    imagen: '/pasos/paso6.png',
+    alt: 'La pantalla del launcher con el botón JUGAR',
+  },
+];
 
 /** Flecha que avisa que el enlace abre en otra pestaña. */
 function ExternalArrow() {
@@ -29,31 +105,16 @@ function ExternalArrow() {
   );
 }
 
-/** Escudo con tilde: el apartado que explica por qué el archivo se puede instalar tranquilo. */
-function ShieldIcon() {
+function DownloadIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
-        d="M12 2.5 4.5 5.2V11c0 4.6 3.2 8.7 7.5 10.1 4.3-1.4 7.5-5.5 7.5-10.1V5.2L12 2.5Z"
+        d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"
         stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-      <path
-        d="m8.8 11.9 2.2 2.2 4.2-4.4"
-        stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-    </svg>
-  );
-}
-
-function GitHubIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.4-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.8 2.7 1.3 3.4 1 .1-.7.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6A11.5 11.5 0 0 0 12 .5Z" />
     </svg>
   );
 }
@@ -63,77 +124,81 @@ export default function Home() {
 
   return (
     <main className="page">
-      <div className="card">
-        <Image src="/logo.png" alt="Sobrinos de Pepe" width={128} height={128} priority className="logo" />
+      {/* Lo primero y lo único que hay que hacer: bajarlo. */}
+      <header className="hero">
+        <Image
+          src="/logo.png"
+          alt="Sobrinos de Pepe"
+          width={124}
+          height={124}
+          priority
+          className="logo"
+        />
 
         <h1>SOBRINOS DE PEPE</h1>
-        <p className="lead">
-          Descargá el launcher, creá tu cuenta y esperá que te aprueben. Después es apretar
-          JUGAR: el Minecraft, el Java y los mods se instalan solos.
-        </p>
+        <p className="lead">El launcher instala todo solo. Vos apretás JUGAR.</p>
 
         {download ? (
           <a className="download" href={download}>
-            Descargar para Windows
+            <DownloadIcon />
+            Descargar el launcher
           </a>
         ) : (
           <p className="pending">La descarga todavía no está publicada.</p>
         )}
 
-        <p className="requisitos">
-          Windows de 64 bits · 2 GB libres · no toca tu Minecraft actual
-        </p>
+        <p className="requisitos">Windows 64 bits · gratis · no toca tu Minecraft de siempre</p>
+      </header>
 
-        <section className="seguridad">
-          <h2>
-            <ShieldIcon />
-            Se puede instalar tranquilo
-          </h2>
+      {/* Los pasos, con la foto de lo que va a ver en la pantalla. */}
+      <section className="pasos" aria-labelledby="como">
+        <h2 id="como">Cómo entrar</h2>
+        <p className="subtitulo">Seis pasos. Una sola vez.</p>
 
-          <ul>
-            <li>
-              <strong>El código está a la vista.</strong> Todo lo que hace el launcher se puede
-              leer antes de instalarlo, línea por línea.
+        <ol className="grilla">
+          {pasos.map((paso) => (
+            <li key={paso.n} className="paso">
+              <Image
+                src={paso.imagen}
+                alt={paso.alt}
+                width={500}
+                height={500}
+                className="captura"
+                sizes="(max-width: 44rem) 100vw, 22rem"
+              />
+
+              <div className="texto">
+                <span className="numero">{paso.n}</span>
+                <div>
+                  <h3>{paso.titulo}</h3>
+                  <p>{paso.texto}</p>
+                </div>
+              </div>
+
+              {paso.nota && <p className="nota">{paso.nota}</p>}
             </li>
-            <li>
-              <strong>Windows te va a mostrar un aviso.</strong> Va a decir que no conoce el
-              programa: es porque el certificado para firmarlo cuesta unos 200 dólares por año
-              y no lo vamos a pagar para un servidor de amigos. Tocá <em>Más información</em> y
-              después <em>Ejecutar de todas formas</em>.
-            </li>
-            <li>
-              <strong>No toca nada tuyo.</strong> Se instala en tu carpeta de usuario, sin pedir
-              permisos de administrador, y tu Minecraft de siempre queda como está.
-            </li>
-          </ul>
-
-          <a href={REPO} target="_blank" rel="noopener noreferrer" className="repo">
-            <GitHubIcon />
-            Ver el código en GitHub
-            <ExternalArrow />
-          </a>
-        </section>
-
-        <div className="redes">
-          {socials.map((social) => (
-            <a
-              key={social.name}
-              href={social.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="red"
-              style={{ ['--tono' as string]: social.color }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d={social.path} />
-              </svg>
-              <span className="nombre">{social.name}</span>
-              <span className="arroba">@{social.handle}</span>
-              <ExternalArrow />
-            </a>
           ))}
-        </div>
-      </div>
+        </ol>
+      </section>
+
+      <footer className="redes">
+        {socials.map((social) => (
+          <a
+            key={social.name}
+            href={social.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="red"
+            style={{ ['--tono' as string]: social.color }}
+            aria-label={`${social.name}: @${social.handle}`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d={social.path} />
+            </svg>
+            <span className="nombre">{social.name}</span>
+          </a>
+        ))}
+      </footer>
     </main>
   );
 }

@@ -27,20 +27,22 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.page {
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  padding: 2.5rem 1.25rem;
-  /* Un resplandor verde detrás de la tarjeta. */
-  background:
-    radial-gradient(60rem 40rem at 50% -10%, rgba(74, 222, 128, 0.09), transparent 60%),
-    var(--fondo);
+a {
+  color: inherit;
 }
 
-.card {
-  width: 100%;
-  max-width: 33rem;
+.page {
+  max-width: 50rem;
+  margin: 0 auto;
+  padding: 3.5rem 1.25rem 4rem;
+  /* Un resplandor verde arriba, detrás del logo. */
+  background:
+    radial-gradient(50rem 30rem at 50% 0, rgba(74, 222, 128, 0.09), transparent 65%);
+}
+
+/* ── Lo primero que se ve: bajarlo ─────────────────────────────────────────── */
+
+.hero {
   text-align: center;
 }
 
@@ -52,31 +54,40 @@ body {
 h1 {
   font-size: clamp(1.9rem, 6vw, 2.6rem);
   letter-spacing: -0.02em;
-  margin: 1.4rem 0 0.6rem;
+  margin: 1.3rem 0 0.5rem;
 }
 
 .lead {
   color: var(--suave);
-  line-height: 1.65;
+  font-size: 1.05rem;
+  line-height: 1.6;
   margin: 0 auto 2rem;
-  max-width: 27rem;
+  max-width: 24rem;
 }
 
 .download {
-  display: inline-block;
-  padding: 1rem 2.75rem;
-  border-radius: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.05rem 2.5rem;
+  border-radius: 0.75rem;
   background: var(--verde);
   color: #0f1115;
   font-weight: 650;
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   text-decoration: none;
-  transition: transform 0.12s ease, background 0.12s ease;
+  box-shadow: 0 0.75rem 2rem rgba(74, 222, 128, 0.22);
+  transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
 }
 
 .download:hover {
   background: #6ee7a0;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 1rem 2.5rem rgba(74, 222, 128, 0.3);
+}
+
+.download:active {
+  transform: translateY(0);
 }
 
 .pending {
@@ -86,121 +97,171 @@ h1 {
 .requisitos {
   color: var(--tenue);
   font-size: 0.82rem;
-  margin: 1rem 0 0;
+  margin: 1.1rem 0 0;
 }
 
-/* El apartado que explica que el archivo se puede instalar tranquilo. */
-.seguridad {
-  margin-top: 2.25rem;
-  padding: 1.4rem 1.5rem;
-  border: 1px solid var(--linea);
-  border-radius: 0.9rem;
-  background: var(--panel);
+/* ── Los pasos ─────────────────────────────────────────────────────────────── */
+
+.pasos {
+  margin-top: 4.5rem;
+  text-align: center;
+}
+
+.pasos h2 {
+  font-size: 1.6rem;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.subtitulo {
+  color: var(--tenue);
+  margin: 0.4rem 0 2rem;
+  font-size: 0.95rem;
+}
+
+.grilla {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Cada tarjeta con su altura: la del aviso de Windows lleva una nota abajo y las
+     demás no, y estiradas les quedaba un hueco negro al final. */
+  align-items: start;
   text-align: left;
 }
 
-.seguridad h2 {
+.paso {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  font-size: 1rem;
-  color: var(--verde);
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--linea);
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
 }
 
-.seguridad ul {
-  margin: 1rem 0 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
+.paso:hover {
+  border-color: #34404d;
+}
+
+/* La captura ocupa todo el ancho de la tarjeta. Es cuadrada y ya viene recortada. */
+.captura {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #0b0d10;
+  border-bottom: 1px solid var(--linea);
+}
+
+.texto {
+  display: flex;
   gap: 0.85rem;
+  padding: 1.1rem 1.2rem 1.2rem;
 }
 
-.seguridad li {
+.numero {
+  flex: none;
+  width: 1.7rem;
+  height: 1.7rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.12);
+  color: var(--verde);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.paso h3 {
+  margin: 0.15rem 0 0.3rem;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.paso .texto p {
+  margin: 0;
   color: var(--suave);
   font-size: 0.88rem;
-  line-height: 1.6;
-  padding-left: 1rem;
-  border-left: 2px solid var(--linea);
+  line-height: 1.5;
 }
 
-.seguridad strong {
-  color: var(--texto);
+/* La aclaración del aviso de Windows, pegada abajo de su paso. */
+.nota {
+  margin: 0;
+  padding: 0.8rem 1.2rem;
+  border-top: 1px dashed var(--linea);
+  background: rgba(74, 222, 128, 0.04);
+  /* Más claro que --tenue: es letra chica sobre el panel y con el gris de siempre
+     quedaba por debajo del contraste que se puede leer de un teléfono. */
+  color: #838a95;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.nota a {
+  color: var(--verde);
+  text-decoration: none;
   font-weight: 600;
-}
-
-.seguridad em {
-  color: var(--texto);
-  font-style: normal;
   white-space: nowrap;
 }
 
-.repo {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1.2rem;
-  padding: 0.6rem 0.9rem;
-  border: 1px solid var(--linea);
-  border-radius: 0.6rem;
-  color: var(--suave);
-  text-decoration: none;
-  font-size: 0.85rem;
-  transition: border-color 0.12s ease, color 0.12s ease;
+.nota a svg {
+  margin-left: 0.2rem;
+  vertical-align: -0.05em;
 }
 
-.repo:hover {
-  border-color: var(--verde);
-  color: var(--texto);
+.nota a:hover {
+  text-decoration: underline;
 }
+
+/* ── Las redes ─────────────────────────────────────────────────────────────── */
 
 .redes {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  gap: 0.6rem;
-  margin-top: 2.25rem;
+  margin-top: 2.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .red {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.75rem 0.9rem;
-  border: 1px solid var(--linea);
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
   border-radius: 0.7rem;
-  background: var(--panel);
-  color: var(--suave);
+  color: var(--tenue);
+  font-size: 0.85rem;
   text-decoration: none;
-  font-size: 0.88rem;
-  transition: border-color 0.12s ease, color 0.12s ease, transform 0.12s ease;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .red:hover {
-  border-color: var(--tono);
-  color: var(--texto);
-  transform: translateY(-1px);
-}
-
-.red svg:first-child {
   color: var(--tono);
-  flex: none;
+  background: var(--panel);
 }
 
-.red .nombre {
-  color: var(--texto);
-  font-weight: 600;
+/* ── Teléfono ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 44rem) {
+  .grilla {
+    grid-template-columns: 1fr;
+  }
+
+  .page {
+    padding-top: 2.5rem;
+  }
+
+  .pasos {
+    margin-top: 3.5rem;
+  }
 }
 
-.red .arroba {
-  margin-left: auto;
-  color: var(--tenue);
-  font-size: 0.78rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.red svg:last-child {
-  flex: none;
-  color: var(--tenue);
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
 }
