@@ -349,13 +349,14 @@ guardar("casa", {
         ("minecraft:shears", "/home delete <nombre>", ["Borrar una casa, gratis"],
          escribir("/home delete ", "Para borrar una casa:")),
         ("minecraft:book", "/home list", ["Ver que casas tenes"], correr("home list")),
-        ("minecraft:respawn_anchor", "/spawn", ["Volver al spawn"], correr("spawn")),
+        # Este menu tenia tambien /spawn, /back, /tpaccept y /tpdeny, y salieron el
+        # 2026-09-07. /spawn anda mal y no le sirve a nadie; y los dos de responder
+        # un tpa no se usan desde aca: cuando te llega la solicitud, el mensaje del
+        # chat ya es clickeable y es mas rapido apretar ahi que abrir un menu.
+        # Los comandos siguen existiendo: lo que se saco es el boton.
         ("minecraft:ender_pearl", "/rtp", ["Tirarte a un lugar random"], correr("rtp")),
         ("minecraft:compass", "/tpa", ["Pedirle ir hasta el a alguien"],
          escribir("/tpa ", "Para pedirle a alguien ir hasta el:")),
-        ("minecraft:lime_dye", "/tpaccept", ["Aceptar que alguien venga"], correr("tpaccept")),
-        ("minecraft:red_dye", "/tpdeny", ["Rechazar el pedido"], correr("tpdeny")),
-        ("minecraft:recovery_compass", "/back", ["Volver a tu ultimo viaje"], correr("back")),
     ]) + [volver(fila=5)],
 })
 

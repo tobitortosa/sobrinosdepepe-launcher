@@ -5,8 +5,13 @@ Arma el resource pack propio del servidor y lo publica.
     python servidor/generar-recursos.py            solo lo arma
     python servidor/generar-recursos.py --publicar lo sube a GitHub y apunta el servidor
 
-Hoy tiene una sola cosa adentro: el cartel rojo que aparece cuando alguien intenta
-romper un bloque en el spawn.
+Tiene dos cosas adentro, y las dos son textos que escribe el cliente y que desde el
+servidor no se pueden tocar de ninguna otra forma:
+
+1. El cartel rojo que aparece cuando alguien intenta romper un bloque en el spawn.
+2. El toast de "Los mensajes del chat no se pueden verificar" que sale al entrar.
+   No se puede sacar (el porqué está al lado de `TOAST`, más abajo): lo único que
+   se puede es cambiar lo que dice, y eso es lo que hace este pack.
 
 ## Por qué hace falta un pack para eso
 
@@ -99,6 +104,41 @@ MENSAJES = {
              + "  move a few blocks away and you can build again",
 }
 
+# El toast de "Los mensajes del chat no se pueden verificar" que sale al entrar.
+#
+# NO se puede sacar, y conviene saber por qué antes de intentarlo nunca más:
+#
+# 1. Lo dispara el cliente en `ClientPacketListener.handleLogin`, con
+#    `if (serverData != null && !seenInsecureChatWarning && !enforcesSecureChat())`.
+# 2. `seenInsecureChatWarning` es un campo de la conexión y NO se guarda en
+#    `servers.dat`, así que se reinicia en cada entrada. Por eso aparece siempre y
+#    no hay ninguna bandera que el launcher pueda dejar puesta de antemano.
+# 3. `enforcesSecureChat()` sale de lo que manda el servidor, y en offline-mode no
+#    se puede prender: los jugadores no tienen clave de perfil de Mojang, así que
+#    con `enforce-secure-profile` en true no podrían escribir en el chat.
+# 4. Dejar los textos vacíos NO lo esconde: `SystemToast.multiline` calcula el
+#    ancho con `Math.max(200, ...)`, la altura con `20 + max(lineas, 1) * 12`, y
+#    dibuja el fondo siempre. Quedaría una caja vacía de 230x32, que es peor.
+#
+# Lo único que se puede es cambiar lo que dice, que es justo lo que hace este pack.
+# Y el texto tiene que seguir siendo verdad: el chat de acá no se firma. Lo que se
+# saca es el tono de alarma, no la información.
+TOAST = {
+    "es": (AMARILLO + "SOBRINOS DE PEPE",
+           "Las cuentas son del launcher y no de Mojang, asi que el chat no se firma. Es normal."),
+    "en": (AMARILLO + "SOBRINOS DE PEPE",
+           "Accounts come from the launcher, not Mojang, so chat isn't signed. This is normal here."),
+}
+
+
+def toast(idioma):
+    """Las dos claves del toast, en castellano para todos los es_* y en ingles el resto."""
+    titulo, cuerpo = TOAST["es" if idioma.startswith("es") else "en"]
+    return {
+        "multiplayer.unsecureserver.toast.title": titulo,
+        "multiplayer.unsecureserver.toast": cuerpo,
+    }
+
 
 def armar():
     os.makedirs(DESTINO, exist_ok=True)
@@ -120,9 +160,10 @@ def armar():
 
         poner("pack.mcmeta", json.dumps(meta, indent=2, ensure_ascii=False) + "\n")
         for idioma in sorted(MENSAJES):
+            claves = {"build.spawn_protection": MENSAJES[idioma]}
+            claves.update(toast(idioma))
             poner("assets/minecraft/lang/%s.json" % idioma,
-                  json.dumps({"build.spawn_protection": MENSAJES[idioma]},
-                             indent=2, ensure_ascii=False) + "\n")
+                  json.dumps(claves, indent=2, ensure_ascii=False) + "\n")
 
     sha1 = hashlib.sha1(open(ZIP, "rb").read()).hexdigest()
     print("  %s  %d bytes  sha1 %s" % (os.path.basename(ZIP), os.path.getsize(ZIP), sha1))

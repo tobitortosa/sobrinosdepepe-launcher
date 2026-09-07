@@ -831,51 +831,6 @@
       ],
       "type": "item",
       "item": {
-        "id": "minecraft:respawn_anchor",
-        "count": 1,
-        "components": {
-          "minecraft:custom_name": {
-            "text": "/spawn",
-            "italic": false,
-            "color": "#00a6ff",
-            "bold": true
-          },
-          "minecraft:lore": [
-            {
-              "text": "  Volver al spawn",
-              "italic": false,
-              "color": "gray"
-            }
-          ],
-          "minecraft:tooltip_display": {
-            "hidden_components": [
-              "minecraft:attribute_modifiers",
-              "minecraft:potion_contents",
-              "minecraft:unbreakable",
-              "minecraft:stored_enchantments",
-              "minecraft:enchantments"
-            ]
-          },
-          "minecraft:custom_data": {
-            "sdp": "menu"
-          }
-        }
-      },
-      "sound": "click",
-      "action": {
-        "type": "command",
-        "command": "spawn",
-        "as_player": true,
-        "silent": false
-      }
-    },
-    {
-      "slot": [
-        2,
-        8
-      ],
-      "type": "item",
-      "item": {
         "id": "minecraft:ender_pearl",
         "count": 1,
         "components": {
@@ -916,8 +871,8 @@
     },
     {
       "slot": [
-        3,
-        3
+        2,
+        8
       ],
       "type": "item",
       "item": {
@@ -999,141 +954,6 @@
           "action": "close"
         }
       ]
-    },
-    {
-      "slot": [
-        3,
-        4
-      ],
-      "type": "item",
-      "item": {
-        "id": "minecraft:lime_dye",
-        "count": 1,
-        "components": {
-          "minecraft:custom_name": {
-            "text": "/tpaccept",
-            "italic": false,
-            "color": "#00a6ff",
-            "bold": true
-          },
-          "minecraft:lore": [
-            {
-              "text": "  Aceptar que alguien venga",
-              "italic": false,
-              "color": "gray"
-            }
-          ],
-          "minecraft:tooltip_display": {
-            "hidden_components": [
-              "minecraft:attribute_modifiers",
-              "minecraft:potion_contents",
-              "minecraft:unbreakable",
-              "minecraft:stored_enchantments",
-              "minecraft:enchantments"
-            ]
-          },
-          "minecraft:custom_data": {
-            "sdp": "menu"
-          }
-        }
-      },
-      "sound": "click",
-      "action": {
-        "type": "command",
-        "command": "tpaccept",
-        "as_player": true,
-        "silent": false
-      }
-    },
-    {
-      "slot": [
-        3,
-        5
-      ],
-      "type": "item",
-      "item": {
-        "id": "minecraft:red_dye",
-        "count": 1,
-        "components": {
-          "minecraft:custom_name": {
-            "text": "/tpdeny",
-            "italic": false,
-            "color": "#00a6ff",
-            "bold": true
-          },
-          "minecraft:lore": [
-            {
-              "text": "  Rechazar el pedido",
-              "italic": false,
-              "color": "gray"
-            }
-          ],
-          "minecraft:tooltip_display": {
-            "hidden_components": [
-              "minecraft:attribute_modifiers",
-              "minecraft:potion_contents",
-              "minecraft:unbreakable",
-              "minecraft:stored_enchantments",
-              "minecraft:enchantments"
-            ]
-          },
-          "minecraft:custom_data": {
-            "sdp": "menu"
-          }
-        }
-      },
-      "sound": "click",
-      "action": {
-        "type": "command",
-        "command": "tpdeny",
-        "as_player": true,
-        "silent": false
-      }
-    },
-    {
-      "slot": [
-        3,
-        6
-      ],
-      "type": "item",
-      "item": {
-        "id": "minecraft:recovery_compass",
-        "count": 1,
-        "components": {
-          "minecraft:custom_name": {
-            "text": "/back",
-            "italic": false,
-            "color": "#00a6ff",
-            "bold": true
-          },
-          "minecraft:lore": [
-            {
-              "text": "  Volver a tu ultimo viaje",
-              "italic": false,
-              "color": "gray"
-            }
-          ],
-          "minecraft:tooltip_display": {
-            "hidden_components": [
-              "minecraft:attribute_modifiers",
-              "minecraft:potion_contents",
-              "minecraft:unbreakable",
-              "minecraft:stored_enchantments",
-              "minecraft:enchantments"
-            ]
-          },
-          "minecraft:custom_data": {
-            "sdp": "menu"
-          }
-        }
-      },
-      "sound": "click",
-      "action": {
-        "type": "command",
-        "command": "back",
-        "as_player": true,
-        "silent": false
-      }
     },
     {
       "slot": [
