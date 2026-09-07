@@ -542,9 +542,19 @@ jugador rompa un bloque desde un datapack, por eso es un mod y no una función.
 
 Cómo se usa, y es todo lo que hay que saber:
 
-    /sz givewand <vos>            (o /give <vos> minecraft:debug_stick)
+    /give <vos> minecraft:debug_stick[enchantments={vanishing_curse:1},custom_name={text:"Varita de zonas",color:"#ffb02e",italic:false}] 1
     click derecho en una esquina
-    click derecho en la esquina opuesta
+    click derecho en la esquina opuesta (en un bloque DISTINTO)
+    /clear <vos> minecraft:debug_stick          para guardarla
+
+**La varita va con maldición de desaparición a propósito.** `keep_inventory` está
+en `false`, así que sin eso al morir se te cae y la levanta el que te mató. Con la
+maldición el ítem **se destruye al morir** y no llega al suelo. `/sz givewand` da
+una sin la maldición, así que conviene el `give` de arriba.
+
+Aunque alguien la consiguiera igual no podría hacer nada: su límite de zonas es 0,
+y para tocar una zona ajena `hasWandAccess` pide ser el dueño, estar confiado o ser
+operador. La maldición es para que ni siquiera aparezca la pregunta.
 
 Para sacarla: click derecho adentro con la varita y confirmar, o `/sz remove`
 parado adentro. `/sz list` las lista y `/sz info` cuenta la de donde estás parado.

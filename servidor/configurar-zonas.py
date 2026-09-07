@@ -44,9 +44,14 @@ menos para lo que se proteja a mano. Tres cosas independientes lo cierran:
 
 ## Cómo se usa
 
-    /give <vos> minecraft:debug_stick        (o /sz givewand)
+    /give <vos> minecraft:debug_stick[enchantments={vanishing_curse:1},custom_name={text:"Varita de zonas",color:"#ffb02e",italic:false}] 1
     click derecho en una esquina
     click derecho en la esquina opuesta      -> queda protegido
+    /clear <vos> minecraft:debug_stick       para guardarla
+
+La maldicion de desaparicion no es decoracion: keep_inventory esta en false, asi
+que sin eso al morir la varita se cae y la levanta el que te mato. Con la maldicion
+el item se destruye al morir. `/sz givewand` da una sin la maldicion.
 
 Y para sacarlo, click derecho adentro con la varita y confirmar, o `/sz remove`.
 
