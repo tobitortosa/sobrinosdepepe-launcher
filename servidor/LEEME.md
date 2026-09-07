@@ -1126,8 +1126,62 @@ clase intacta. Eso importa porque para compilarlo hace falta un JDK 25 y en esta
 PC no hay ninguno (solo un JRE 17 y el JRE 25 que baja el launcher).
 
 El jar nuevo queda en `mod-precios/build/libs/` y **hay que publicarlo desde el
-panel** para que llegue a los jugadores. Eso los obliga a actualizar, así que
-conviene hacerlo cuando no haya nadie jugando.
+panel** para que llegue a los jugadores.
+
+**Publicar el pack NO interrumpe a nadie.** El launcher pide el pack y sincroniza
+los mods adentro del flujo de JUGAR (`PackAsync` y después `PackInstaller.
+ApplyAsync`, en `HomeViewModel`), y no hay ningún vigilante en segundo plano: a
+quien está jugando no le pasa nada y el jar nuevo le llega la próxima vez que
+aprieta JUGAR. Y como este mod es `environment: client`, al servidor no le
+importa el desfase. Acá decía que convenía publicar sin nadie conectado: no hace
+falta.
+
+### Sí se puede compilar en esta PC
+
+Acá decía que no había ningún JDK 25 y que por eso el mod solo se podía rearmar
+cambiándole el `precios.json` adentro del zip. Cambiar la clase **sí** se puede:
+se baja un JDK 25 y se le pasa a Gradle por `JAVA_HOME`, sin instalar nada ni
+tocar el proyecto.
+
+```
+curl -sL -o jdk25.zip https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.4.1%2B1/OpenJDK25U-jdk_x64_windows_hotspot_25.0.4.1_1.zip
+cd mod-precios
+JAVA_HOME=<donde se extrajo>/jdk-25.0.4.1+1 ./gradlew build
+```
+
+El `build.gradle` pide `options.release = 25` y el JDK 17 que hay instalado no
+puede: los `.class` de 26.1 son formato 69, o sea Java 25.
+
+### El precio adentro de un cofre
+
+Hasta el 2026-09-07 el precio **no aparecía adentro de un cofre**, y eso era un
+filtro puesto a propósito que se llevaba puesto el caso más útil. El mod tenía un
+`esTuyo()` que solo mostraba el precio si el `ItemStack` era el mismo objeto que
+alguno de los slots del inventario del jugador. Los items de un cofre son copias
+aparte, así que nunca coincidían.
+
+El filtro existía por una razón real: adentro del `/shop` de EconomyCraft nuestra
+línea quedaba repetida, porque el mod ya escribe ahí cuánto sale y cuánto paga. Y
+del lado del cliente **un cofre y el menú de una tienda son los dos un
+`ChestMenu`**: no hay forma de distinguirlos.
+
+La versión 1.7.0 lo cambia por un chequeo de contenido, `yaMuestraPrecio()`, que
+no necesita distinguirlos: **si el tooltip ya tiene un `$` seguido de un dígito,
+no se agrega nada.** El ancla es que `EconomyCraft.formatMoney` siempre arranca
+con `"$"` (`return "$" + new DecimalFormat("#,##0", symbols).format(amount)`), así
+que cualquier precio que dibuje el mod —en el `/shop`, en el `/ah`, en las
+órdenes o en el `/eco admin`— lo trae.
+
+Es mejor que filtrar por el título del menú: `MenuUiSupport.openMenu` recibe el
+título como un `String` literal del código que lo llama, así que atarse a esos
+textos se rompe en silencio en cuanto el mod cambia una palabra.
+
+Los botones de nuestros propios menús siguen tapados por `esBoton()`, que lee la
+marca `custom_data.sdp`. Lo único que se pierde: un item que alguien renombre con
+algo como "$5" no muestra el precio.
+
+Ahora el precio se ve en el inventario, en la mano y adentro de cualquier
+contenedor de verdad: cofres, barriles, shulkers y el cofre de ender.
 
 ## Un error conocido en el log
 

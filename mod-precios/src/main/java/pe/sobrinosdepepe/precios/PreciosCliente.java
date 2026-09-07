@@ -6,13 +6,10 @@ import com.google.gson.JsonParser;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import org.slf4j.Logger;
@@ -27,6 +24,11 @@ import java.util.Map;
 /**
  * Muestra en la descripcion de cada item cuanta plata paga el servidor por
  * venderlo, para no tener que abrir la tienda ni escribir /worth cada vez.
+ *
+ * Aparece en el inventario, en la mano y adentro de cualquier contenedor de
+ * verdad: cofres, barriles, shulkers, el cofre de ender. Donde NO aparece es
+ * donde ya hay un precio escrito, que son los menus de EconomyCraft, y en los
+ * botones de nuestros propios menus de cofre.
  *
  * Los precios viajan adentro del mod: son los mismos que tiene el servidor en
  * config/economycraft/prices.json. Si alguna vez cambian, hay que rearmar el
@@ -47,7 +49,7 @@ public class PreciosCliente implements ClientModInitializer {
 				return;
 			}
 
-			if (esBoton(pila) || !esTuyo(pila)) return;
+			if (esBoton(pila) || yaMuestraPrecio(lineas)) return;
 
 			var id = BuiltInRegistries.ITEM.getKey(pila.getItem());
 			Integer unidad = VENTA.get(id.toString());
@@ -103,33 +105,42 @@ public class PreciosCliente implements ClientModInitializer {
 	}
 
 	/**
-	 * El precio se muestra solo en lo que el jugador tiene EN LA MANO O EN EL
-	 * INVENTARIO, y no en cualquier item que aparezca en una pantalla.
+	 * No repetir el precio donde ya hay uno escrito.
 	 *
-	 * La marca de custom_data alcanza para nuestros menus, pero no para los de
-	 * EconomyCraft: sus botones salen de MenuUiSupport.button() y sus items de un
-	 * new ItemStack() pelado, o sea que no traen ninguna senal que se pueda leer
-	 * desde afuera. Adentro del /shop nuestra linea encima era ademas repetida,
-	 * porque EconomyCraft ya escribe ahi cuanto sale y cuanto paga.
+	 * Es el reemplazo de un filtro anterior que solo mostraba el precio en el
+	 * inventario del jugador, comparando por identidad de ItemStack contra los
+	 * slots del inventario. Ese filtro cumplia su objetivo (no ensuciar el /shop
+	 * de EconomyCraft, que ya escribe cuanto sale y cuanto paga) pero se llevaba
+	 * puesto justo el caso mas util: abrir un cofre y ver por cuanto se vende
+	 * cada cosa. Los items de un cofre son copias aparte y nunca coincidian.
 	 *
-	 * Se compara por IDENTIDAD y no por contenido. Los slots del inventario del
-	 * jugador devuelven el mismo objeto ItemStack que tiene el inventario, asi que
-	 * la comparacion es exacta; los items que dibuja un menu son copias aparte y
-	 * nunca coinciden. Compararlos por contenido daria falsos positivos con
-	 * cualquier item de la tienda que el jugador tambien tenga.
+	 * Este chequeo mira el contenido en vez del contenedor, y por eso acierta en
+	 * los dos lados sin tener que distinguirlos: del lado del cliente un cofre y
+	 * el menu de una tienda son los dos un ChestMenu y no hay forma de saber cual
+	 * es cual.
 	 *
-	 * Lo que se pierde: los items adentro de un cofre abierto dejan de mostrar el
-	 * precio, porque no estan en el inventario. Del lado del cliente un cofre y
-	 * el menu de una tienda son los dos un ChestMenu y no hay forma de
-	 * distinguirlos.
+	 * El ancla es que EconomyCraft.formatMoney SIEMPRE arranca con "$"
+	 * (return "$" + new DecimalFormat("#,##0", symbols).format(amount)), asi que
+	 * cualquier precio que el mod dibuje (en el /shop, en el /ah, en las ordenes o
+	 * en el /eco admin) trae un signo peso seguido de un digito. Donde aparezca
+	 * eso, nos callamos.
+	 *
+	 * Es preferible a filtrar por el titulo del menu: MenuUiSupport.openMenu recibe
+	 * el titulo como un String literal del codigo que llama, asi que atarse a esos
+	 * textos se rompe en silencio en cuanto el mod cambia una palabra.
+	 *
+	 * Lo unico que se pierde: un item que alguien haya renombrado con algo como
+	 * "$5" no muestra el precio. No molesta a nadie.
 	 */
-	private static boolean esTuyo(ItemStack pila) {
-		LocalPlayer jugador = Minecraft.getInstance().player;
-		if (jugador == null) return false;
+	private static boolean yaMuestraPrecio(java.util.List<Component> lineas) {
+		for (Component linea : lineas) {
+			String texto = linea.getString();
+			int peso = texto.indexOf('$');
 
-		Inventory inventario = jugador.getInventory();
-		for (int i = 0; i < inventario.getContainerSize(); i++) {
-			if (inventario.getItem(i) == pila) return true;
+			while (peso >= 0) {
+				if (peso + 1 < texto.length() && Character.isDigit(texto.charAt(peso + 1))) return true;
+				peso = texto.indexOf('$', peso + 1);
+			}
 		}
 
 		return false;
