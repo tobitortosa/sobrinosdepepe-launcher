@@ -203,35 +203,47 @@ volver atrás es moverlos de nuevo a `/mods`:
 
 ## El borde del mundo
 
-8.000 bloques de lado, centrado en 0 0, **igual en las tres dimensiones**. Lo
-pone `configurar-borde.py` y es idempotente: correrlo de nuevo contesta "Nothing
-changed".
+**12.000 bloques de lado** desde el 2026-09-07, centrado en 0 0, **igual en las
+tres dimensiones**. Lo pone `configurar-borde.py` y es idempotente: correrlo de
+nuevo contesta "Nothing changed". El spawn está en (48, 97, 0), o sea a 48 bloques
+del centro: no se nota.
 
-El número no es una corazonada. Antes de ponerlo se midió el mundo que ya
-existe, leyendo los `.dat` de los jugadores y los nombres de los archivos de
-región:
+El número nunca fue una corazonada: las dos veces se midió el mundo antes de
+tocarlo, leyendo los `.dat` de los jugadores y los nombres de los archivos de
+región.
 
-| Qué | Dónde llega |
-|---|---|
-| Regiones generadas del overworld | 2.560 bloques |
-| Regiones generadas del Nether | 1.024 bloques |
-| El End | todavía no existe |
-| Jugador más lejos (Titit0N) | z = -1.860 |
-| Cama más lejos (Felix_1256) | (922, -1.593) |
+| Qué | 2026-09-04 (se pone en 8.000) | 2026-09-07 (se agranda a 12.000) |
+|---|---|---|
+| Regiones generadas del overworld | 2.560 bloques | **4.000: tocaron la pared** |
+| Regiones generadas del Nether | 1.024 bloques | 4.000, también |
+| El End | no existía | 4.000, también |
+| Jugador más lejos | Titit0N, z = -1.860 | — |
+| Cama más lejos | Felix_1256, (922, -1.593) | — |
+| El mundo en disco | — | 1,3 GB, y el plan está en ilimitado |
 
-Con 4.000 de radio **no queda afuera ni un chunk de los que ya existen**, y
-todavía sobran 1.440 bloques de frontera nueva en cada dirección. El spawn está
-en (48, 97, 0), o sea a 48 bloques del centro: no se nota.
+Con 4.000 de radio no quedó afuera ni un chunk de los que existían, y sobraban
+1.440 bloques de frontera nueva. Tres días después estaba consumida.
+
+**Se eligió 6.000 de radio y no el doble a propósito.** El borde no está para que
+el mundo sea chico porque sí: está para que la gente se cruce, que es de lo que
+vive un servidor de PvP. Con 6.000 hay 50% más de distancia en cada dirección y
+2,25 veces más tierra — cruzarlo corriendo pasa de 12 a 18 minutos — y encontrarse
+sigue siendo algo que pasa. Con 8.000 de radio serían cuatro veces más tierra y
+cruzarse pasaría a ser casualidad.
+
+**Agrandar es una puerta de una sola dirección.** Achicarlo después deja del lado
+de afuera todo lo que hayan construido en la tierra nueva, así que conviene subir
+de a poco y volver a subir, y no de una.
 
 Hay cuatro regiones generadas a 250.000 bloques. **No son de nadie**: salieron de
 probar spawners el 2026-09-04, y está en el log
 (`Changed the block at 250000, 100, 250000`).
 
-El Nether lleva el mismo número y **no la octava parte**. Achicarlo a 500 de
-radio para que coincidiera geográficamente con el overworld cortaría chunks que
-ya están generados. Y no abre ningún agujero para escaparse, porque el juego
-recorta el portal de vuelta contra el borde del overworld: caminar 4.000 bloques
-de Nether no deja a nadie a 32.000 del spawn.
+El Nether lleva el mismo número y **no la octava parte**. Achicarlo para que
+coincidiera geográficamente con el overworld cortaría chunks que ya están
+generados. Y no abre ningún agujero para escaparse, porque el juego
+recorta el portal de vuelta contra el borde del overworld: caminar 6.000 bloques
+de Nether no deja a nadie a 48.000 del spawn.
 
 ## Los shards
 

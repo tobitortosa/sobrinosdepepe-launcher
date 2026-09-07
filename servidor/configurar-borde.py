@@ -11,22 +11,34 @@ un `/worldborder set` suelto en la consola configura solamente el overworld y en
 el Nether se sigue caminando hasta el infinito. Por eso cada comando va con
 `execute in <dimensión>`.
 
-El tamaño sale de medir el mundo, no de una corazonada:
+El tamaño sale de medir el mundo, no de una corazonada.
 
-  - las regiones ya generadas llegan a 2.560 bloques en el overworld y a 1.024 en
-    el Nether (el End todavía no existe);
-  - la posición más lejana de un jugador es la de Titit0N, en z = -1.860;
-  - la cama más lejana es la de Felix_1256, en (922, -1.593).
+**2026-09-04, cuando se puso el borde por primera vez en 8.000:** las regiones
+generadas llegaban a 2.560 bloques en el overworld y a 1.024 en el Nether, el End
+no existía, el jugador más lejos era Titit0N en z = -1.860 y la cama más lejana la
+de Felix_1256 en (922, -1.593). Con 4.000 de radio no quedaba afuera ni un chunk
+de los que ya existían.
 
-Con 4.000 de radio no queda afuera ni un chunk de los que ya existen, así que no
-se pierde nada de lo construido, y todavía sobran 1.440 bloques de frontera nueva
-para explorar en cada dirección.
+**2026-09-07, agrandado a 12.000:** se les quedó chico. Las regiones generadas del
+overworld llegan hasta los 4.000 exactos, o sea que ya tocaron la pared; el Nether
+igual, y el End —que en septiembre ni existía— también. El disco no es una traba:
+el plan de Minehost está en ilimitado y el mundo entero pesa 1,3 GB.
 
-El Nether lleva el mismo número y no la octava parte. Achicarlo a 500 de radio
-para que coincidiera geográficamente con el overworld cortaría chunks que ya
-están generados, que es justo lo que no queremos. Y no abre ningún agujero para
+Se eligió 6.000 de radio y no el doble a propósito. El borde no está para que el
+mundo sea chico porque sí: está para que la gente se cruce, que es de lo que vive
+un servidor de PvP. Con 6.000 hay 50% más de distancia en cada dirección y 2,25
+veces más tierra —cruzarlo corriendo pasa de 12 a 18 minutos— y encontrarse sigue
+siendo algo que pasa. Con 8.000 de radio serían cuatro veces más tierra y cruzarse
+pasaría a ser casualidad.
+
+Y agrandar es una puerta de una sola dirección: achicarlo después dejaría afuera
+todo lo que hayan construido en la tierra nueva.
+
+El Nether lleva el mismo número y no la octava parte. Achicarlo para que
+coincidiera geográficamente con el overworld cortaría chunks que ya están
+generados, que es justo lo que no queremos. Y no abre ningún agujero para
 escaparse: el juego recorta el portal de vuelta contra el borde del overworld, así
-que caminar 4.000 bloques de Nether no deja a nadie a 32.000 del spawn.
+que caminar 6.000 bloques de Nether no deja a nadie a 48.000 del spawn.
 """
 import json
 import os
@@ -42,7 +54,7 @@ import mc
 # El spawn está en (48, 97, 0), o sea a 48 bloques del centro: la diferencia no se
 # nota ni caminando, y los números redondos hacen que el borde se explique solo.
 CENTRO_X, CENTRO_Z = 0, 0
-TAMANO = 8000
+TAMANO = 12000
 RADIO = TAMANO // 2
 
 # El aviso vanilla son 5 bloques, que es encima del borde. A 32 la pantalla se
@@ -109,7 +121,10 @@ def verificar():
 
 if __name__ == "__main__":
     aplicar()
-    anunciar()
+    # El anuncio va solo si se pide. La primera vez que se puso el borde valía la
+    # pena avisar, porque era una pared nueva; agrandarlo no le saca nada a nadie.
+    if "--anunciar" in sys.argv:
+        anunciar()
     print("verificación:")
     if verificar() != len(DIMENSIONES):
         sys.exit("el servidor no confirmó el borde en las tres dimensiones")
