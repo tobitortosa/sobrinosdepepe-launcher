@@ -549,6 +549,19 @@ Cómo se usa, y es todo lo que hay que saber:
 Para sacarla: click derecho adentro con la varita y confirmar, o `/sz remove`
 parado adentro. `/sz list` las lista y `/sz info` cuenta la de donde estás parado.
 
+### Dejar entrar a alguien
+
+Una zona tiene un dueño y una lista de **confiados**, que pueden construir adentro
+sin ser operadores. Las dos formas piden el id de la zona, que sale de `/sz list` o
+de pararse adentro y tirar `/claim here`:
+
+    /sz trust <id> <jugador>       lo agrega directo
+    /sz untrust <id> <jugador>     lo saca
+    /claim trust <id>              abre un menú de cofre para agregar y sacar
+
+El menú es más cómodo si son varios. `/claim` está tapado por operador 4, así que
+solo lo ve quien administra — pero funciona igual para él.
+
 ### Los tres candados, porque de fábrica esto era para todos
 
 El mod viene como un sistema de reclamos **para cualquier jugador**, y así como
@@ -581,6 +594,12 @@ cosas independientes, todas en `configurar-zonas.py`:
   validación para eso ("Safe zones only work in the Overworld").
 - **Cada zona mide como máximo 128 x 128**, que es lo que quedó en
   `maxClaimWidth`/`maxClaimDepth`. Si una base no entra, se hacen dos pegadas.
+- **Los dos clicks tienen que ser en bloques distintos.** Clickeando dos veces el
+  mismo bloque sale una zona de 1x1, que es lo que pasó las dos primeras veces que
+  se probó. No es un error del mod: `ProtectionListener.onUseBlock` filtra
+  `MAIN_HAND`, así que el click dispara una sola vez y el primero guarda la esquina.
+  La altura de los clicks no importa: la zona es la columna entera igual, y el `y`
+  que queda en `claims.json` es solo donde se clickeó.
 - **El aviso al jugador que intenta romper está en inglés:** "You cannot build
   here". Son strings de Java hardcodeados en `SafeZoneText` y no claves de
   traducción, así que **no se pueden cambiar con un resource pack**. Se cambiarían
@@ -599,12 +618,13 @@ que no alcanza con que nadie pueda crearlas: no tiene que haber ni rastro.
   `/sz` y `/safezone` ya venían con `requires(GAMEMASTERS)`.
 - **Nadie recibe ningún mensaje del mod al entrar**, porque el kit inicial está
   apagado. El título "Claim wand ready" que salía era de eso.
-- **Las tres azadas que alcanzó a repartir se sacaron** con
+- **Las cuatro azadas que alcanzó a repartir se sacaron** con
   `clear <jugador> minecraft:golden_hoe 1`. Una sola por jugador y no todas: la que
   daba el mod era una azada común, sin nombre ni componentes, indistinguible de una
   crafteada, así que sacando una queda neutro el regalo sin llevarse la que alguien
-  se haya hecho. Fueron Titit0N, Luquitas1410 y lanuerademari; a PEPE no, que es el
-  operador.
+  se haya hecho. Fueron los cuatro de `starter_kit_recipients.json` — PEPE, Titit0N,
+  Luquitas1410 y lanuerademari — y quedó auditado con `clear @a
+  minecraft:golden_hoe 0`, que cuenta sin sacar: "No items were found on 4 players".
 - Lo único que un jugador puede llegar a ver es **"You cannot build here"** si
   intenta romper adentro de una zona, y eso tiene que estar: si no, parecería que el
   juego se rompió. El operador recibe el aviso de que alguien lo intentó.
