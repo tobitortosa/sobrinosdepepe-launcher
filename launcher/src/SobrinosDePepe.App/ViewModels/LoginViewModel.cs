@@ -16,6 +16,13 @@ public partial class LoginViewModel : ObservableObject
     [ObservableProperty] private string? _notice;
     [ObservableProperty] private bool _isBusy;
 
+    /// <summary>
+    /// Uno solo para los dos campos: apretar el ojo muestra la contraseña y la
+    /// repetición juntas. Con uno por campo hay que apretar dos veces para
+    /// comparar, que es justo para lo que se usa.
+    /// </summary>
+    [ObservableProperty] private bool _mostrarContrasena;
+
     public LoginViewModel(ShellViewModel shell) => _shell = shell;
 
     public string Title => IsRegistering ? "Crear una cuenta" : "Iniciar sesión";

@@ -14,9 +14,9 @@
 
       <Border Classes="card">
         <StackPanel Spacing="12">
-          <TextBlock Classes="title" Text="Falta que te aprueben" HorizontalAlignment="Center" />
+          <TextBlock Classes="title" Text="Falta un paso" HorizontalAlignment="Center" />
           <TextBlock Classes="muted" TextWrapping="Wrap" TextAlignment="Center"
-                     Text="{Binding Username, StringFormat='Tu cuenta {0} ya está creada. Cuando el administrador la apruebe, esta pantalla cambia sola.'}" />
+                     Text="{Binding Username, StringFormat='Tu cuenta {0} ya está creada, pero justo ahora no pude avisarle al servidor. Esta pantalla cambia sola cuando se destrabe: podés esperar o cerrar y volver a entrar. Si tarda, avisale al administrador.'}" />
         </StackPanel>
       </Border>
 

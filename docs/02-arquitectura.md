@@ -120,7 +120,7 @@ Dos cosas que no son fallbacks y se quedan: **reintentar** una descarga que se c
 ### 4.3 Cuentas
 
 ```
-Se registra → pendiente → vos aprobás → activo → whitelist add
+Se registra → activo y en la whitelist, en el mismo pedido (2026-09-07). Queda pendiente solo si el panel no contestó, y se reintenta al volver a iniciar sesión.
                                           │
                                           └─ vos baneás → banned → whitelist remove + kick
 ```
@@ -138,7 +138,7 @@ El backend ejecuta en el server, vía la API de Pterodactyl: `whitelist add <nom
 
 Si el server está apagado, la API responde con error y el panel te dice: **"El servidor está apagado. Prendelo y volvé a apretar Aprobar. No se cambió nada."** No hay cola ni reintento silencioso.
 
-Mientras una cuenta está pendiente, `GET /api/pack` le responde 403: ni siquiera puede descargar el juego. La pantalla de espera consulta su estado cada 30 segundos y pasa sola al Home cuando la aprobás.
+Mientras una cuenta está pendiente, `GET /api/pack` le responde 403: ni siquiera puede descargar el juego. La pantalla de espera consulta su estado cada 20 segundos y pasa sola al Home cuando se destraba. Desde el 2026-09-07 el registro aprueba solo, así que a esa pantalla solo se llega si el panel de Minehost no contestó justo en ese momento.
 
 **Límite honesto, para que lo tengas presente:** en modo offline la whitelist filtra por nombre, no autentica. Alguien con TLauncher que sepa el nombre de un jugador aprobado entra igual. Con cinco amigos no importa; con viewers de stream, el día que a alguien le den ganas de romper, el ban no lo frena. Lo que lo cierra es un mod en el servidor que valide un token del launcher, y está diseñado en la fase 4 como opcional. No lo construimos ahora.
 
@@ -187,7 +187,7 @@ El UUID offline no se guarda: se calcula del nombre cuando hace falta, y la whit
 
 | Método | Ruta | Auth | Qué hace |
 |---|---|---|---|
-| POST | `/api/auth/register` | público | crea la cuenta en estado pendiente |
+| POST | `/api/auth/register` | público | crea la cuenta, la activa y la mete en la whitelist |
 | POST | `/api/auth/login` | público | devuelve token de sesión, rol y estado |
 | GET | `/api/me` | sesión | estado de la cuenta |
 | GET | `/api/pack` | cuenta activa | el pack a instalar; una cuenta pendiente recibe 403 |

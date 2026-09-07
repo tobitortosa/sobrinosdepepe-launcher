@@ -5,8 +5,12 @@ using SobrinosDePepe.Core;
 namespace SobrinosDePepe.App.ViewModels;
 
 /// <summary>
-/// La cuenta existe pero todavía no fue aprobada. Se consulta cada 20 segundos y,
-/// cuando la aprueban, la pantalla cambia sola.
+/// La cuenta existe pero todavía no está habilitada en el servidor. Desde que el
+/// registro aprueba solo, la única forma de llegar acá es que el panel de Minehost
+/// no haya contestado justo en ese momento.
+///
+/// Se consulta cada 20 segundos y la pantalla cambia sola. Volver a iniciar sesión
+/// también reintenta la activación, así que cerrar y abrir el launcher alcanza.
 /// </summary>
 public partial class PendingViewModel : ObservableObject, IDisposable
 {

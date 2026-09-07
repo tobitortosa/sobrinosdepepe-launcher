@@ -27,6 +27,27 @@ export function offlineUuid(username: string): string {
  * identificador, así que la entrada no le sirve y queda afuera. Escribiendo el archivo
  * nosotros, cada entrada lleva el identificador que el servidor realmente va a usar.
  */
+/**
+ * Deja la cuenta activa y la mete en la whitelist del servidor, todo junto.
+ *
+ * El orden es al revés que en aprobar: primero la base y después el servidor, porque
+ * la whitelist se arma leyendo las cuentas activas y la cuenta tiene que existir para
+ * poder escribirla. Por eso, si el panel no contesta, se deshace: nunca queda una
+ * cuenta marcada como activa que el servidor rechaza.
+ *
+ * Devuelve `false` cuando el panel falló y la cuenta quedó pendiente.
+ */
+export async function activarCuenta(id: number): Promise<boolean> {
+  await db.update(users).set({ status: 'active', approvedAt: new Date(), bannedAt: null }).where(eq(users.id, id));
+  try {
+    await syncWhitelist();
+    return true;
+  } catch {
+    await db.update(users).set({ status: 'pending', approvedAt: null }).where(eq(users.id, id));
+    return false;
+  }
+}
+
 export async function syncWhitelist(): Promise<{ count: number; names: string[] }> {
   const active = await db
     .select({ username: users.username })

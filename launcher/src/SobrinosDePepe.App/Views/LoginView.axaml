@@ -17,11 +17,23 @@
       <TextBox Text="{Binding Username}" PlaceholderText="Tu nombre en el juego" />
 
       <TextBlock Classes="label" Text="Contraseña" Margin="0,16,0,6" />
-      <TextBox Text="{Binding Password}" PasswordChar="•" />
+      <TextBox Text="{Binding Password}" PasswordChar="&#x2022;"
+               RevealPassword="{Binding MostrarContrasena}">
+        <TextBox.InnerRightContent>
+          <ToggleButton Classes="ojo" IsChecked="{Binding MostrarContrasena}"
+                        ToolTip.Tip="Mostrar u ocultar la contraseña" />
+        </TextBox.InnerRightContent>
+      </TextBox>
 
       <StackPanel IsVisible="{Binding IsRegistering}">
         <TextBlock Classes="label" Text="Repetí la contraseña" Margin="0,16,0,6" />
-        <TextBox Text="{Binding ConfirmPassword}" PasswordChar="•" />
+        <TextBox Text="{Binding ConfirmPassword}" PasswordChar="&#x2022;"
+                 RevealPassword="{Binding MostrarContrasena}">
+          <TextBox.InnerRightContent>
+            <ToggleButton Classes="ojo" IsChecked="{Binding MostrarContrasena}"
+                          ToolTip.Tip="Mostrar u ocultar la contraseña" />
+          </TextBox.InnerRightContent>
+        </TextBox>
       </StackPanel>
 
       <TextBlock Classes="faint" TextWrapping="Wrap" Margin="0,12,0,0"

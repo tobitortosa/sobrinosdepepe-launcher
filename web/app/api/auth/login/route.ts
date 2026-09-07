@@ -5,6 +5,7 @@ import { checkPassword, createSession } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { normalize } from '@/lib/username';
+import { activarCuenta } from '@/lib/whitelist';
 
 const Body = z.object({ username: z.string(), password: z.string() });
 
@@ -26,12 +27,17 @@ export async function POST(request: Request) {
 
   if (user.status === 'banned') return fail('Tu cuenta está baneada.', 403, { status: 'banned' });
 
+  // Una cuenta solo queda pendiente si el panel no contestó cuando se registró. Se
+  // reintenta acá porque cerrar y abrir el launcher es lo primero que hace cualquiera
+  // cuando algo no anda, y así se destraba sola sin que nadie apruebe nada.
+  const status = user.status === 'pending' && (await activarCuenta(user.id)) ? 'active' : user.status;
+
   const token = await createSession(user.id);
   return ok({
     token,
     user: {
       username: user.username,
-      status: user.status,
+      status,
       role: user.role,
       mustChangePassword: user.mustChangePassword,
     },

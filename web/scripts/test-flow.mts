@@ -36,6 +36,7 @@ process.env.PTERODACTYL_KEY ??= 'ptlc_de_prueba';
 const PANEL = process.env.PTERODACTYL_URL ?? 'https://pterodactyl.minehost.com.ar';
 
 const commands: string[] = [];
+const archivos = new Map<string, string>();
 let panelOffline = false;
 const realFetch = globalThis.fetch;
 
@@ -48,6 +49,12 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   if (url.endsWith('/command')) {
     const body = JSON.parse(String(init?.body ?? '{}')) as { command?: string };
     if (body.command) commands.push(body.command);
+    return new Response(null, { status: 204 });
+  }
+
+  if (url.includes('/files/write')) {
+    const ruta = decodeURIComponent(new URL(url).searchParams.get('file') ?? '');
+    archivos.set(ruta, String(init?.body ?? ''));
     return new Response(null, { status: 204 });
   }
 
@@ -106,6 +113,13 @@ function get(url: string, token?: string) {
 
 const params = (id: number) => ({ params: Promise.resolve({ id: String(id) }) });
 
+/** Los nombres que quedaron en la whitelist que el backend le escribió al servidor. */
+function enLaWhitelist(): string[] {
+  const crudo = archivos.get('/whitelist.json');
+  if (!crudo) return [];
+  return (JSON.parse(crudo) as { name: string; uuid: string }[]).map((e) => e.name);
+}
+
 async function body<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
 }
@@ -116,7 +130,11 @@ console.log('\nCuentas');
 let response: Response = await register(post('/api/auth/register', { username: 'PEPE', password: 'secreto1' }));
 const admin = await body<{ token: string; user: { status: string } }>(response);
 check('se puede registrar', response.status === 201, `status ${response.status}`);
-check('la cuenta nueva queda pendiente', admin.user.status === 'pending');
+check('la cuenta nueva queda activa sola', admin.user.status === 'active', admin.user.status);
+check('y entra en la whitelist en el mismo pedido', enLaWhitelist().includes('PEPE'));
+check('con el identificador de offline y no el de Mojang',
+  (JSON.parse(archivos.get('/whitelist.json') ?? '[]') as { uuid: string }[])[0].uuid
+    === '7a067f19-b48d-3c6e-9039-8f37f64def1f');
 
 // Convertir a PEPE en admin activo, como haría el script de siembra.
 const { eq } = await import('drizzle-orm');
@@ -141,6 +159,17 @@ check('rechaza un nombre con espacios', response.status === 400);
 response = await register(post('/api/auth/register', { username: 'Viewer_01', password: 'clave123' }));
 const viewer = await body<{ token: string }>(response);
 
+// Con el panel caído la cuenta se crea igual pero vuelve a quedar pendiente: el
+// servidor la rechazaría, así que es preferible la pantalla de espera antes que un
+// JUGAR que no funciona.
+panelOffline = true;
+response = await register(post('/api/auth/register', { username: 'SinPanel', password: 'clave123' }));
+const sinPanel = await body<{ token: string; user: { status: string } }>(response);
+check('si el panel no contesta, la cuenta nueva queda pendiente', sinPanel.user.status === 'pending',
+  sinPanel.user.status);
+check('y no se cuela en la whitelist', !enLaWhitelist().includes('SinPanel'));
+panelOffline = false;
+
 response = await login(post('/api/auth/login', { username: 'PEPE', password: 'malísima' }));
 check('no entra con la contraseña incorrecta', response.status === 401);
 
@@ -150,6 +179,17 @@ check('entra sin importar las mayúsculas del nombre', response.status === 200);
 check('el rol viaja en el login', adminLogin.user.role === 'admin');
 
 const adminToken = adminLogin.token;
+
+// Con el panel de vuelta, volver a entrar destraba la cuenta sin que nadie apruebe.
+response = await login(post('/api/auth/login', { username: 'SinPanel', password: 'clave123' }));
+const reintento = await body<{ user: { status: string } }>(response);
+check('volver a entrar destraba la cuenta que quedó pendiente', reintento.user.status === 'active',
+  reintento.user.status);
+check('y ahí sí entra en la whitelist', enLaWhitelist().includes('SinPanel'));
+
+// Se la vuelve a dejar pendiente para las pruebas de más abajo, que necesitan una.
+await database.update(schema.users).set({ status: 'pending', approvedAt: null })
+  .where(eq(schema.users.usernameLower, 'sinpanel'));
 
 response = await me(get('/api/me', viewer.token));
 check('una sesión válida se identifica', response.status === 200);
@@ -165,21 +205,27 @@ check('un jugador no entra al panel de admin', response.status === 403);
 
 const viewerId = await idOf('Viewer_01');
 const adminId = await idOf('PEPE');
+const sinPanelId = await idOf('SinPanel');
 
 response = await listUsers(get('/api/admin/users', adminToken));
 const list = await body<{ users: { username: string; status: string }[] }>(response);
-check('el admin ve la lista de cuentas', response.status === 200 && list.users.length === 2, `vio ${list.users.length}`);
+check('el admin ve la lista de cuentas', response.status === 200 && list.users.length === 3, `vio ${list.users.length}`);
 check('las pendientes aparecen primero', list.users[0].status === 'pending');
 
-response = await packRoute(get('/api/pack', viewer.token));
+response = await packRoute(get('/api/pack', sinPanel.token));
 check('una cuenta pendiente no descarga el pack', response.status === 403);
+
+response = await packRoute(get('/api/pack', viewer.token));
+check('la que se registró con el panel arriba sí lo descarga', response.status !== 403, `status ${response.status}`);
 
 // ---------------------------------------------------------------- Aprobar y banear
 console.log('\nAprobar y banear');
 
-response = await approve(post(`/api/admin/users/${viewerId}/approve`, undefined, adminToken), params(viewerId));
+// Aprobar a mano sigue existiendo para las que quedaron pendientes por una caída.
+response = await approve(post(`/api/admin/users/${sinPanelId}/approve`, undefined, adminToken), params(sinPanelId));
 check('aprobar responde bien', response.status === 200, `status ${response.status}`);
-check('aprobar mete el nombre en la whitelist', commands.includes('whitelist add Viewer_01'));
+check('aprobar mete el nombre en la whitelist', enLaWhitelist().includes('SinPanel'));
+check('y recarga la whitelist en el servidor', commands.includes('whitelist reload'));
 
 panelOffline = true;
 response = await ban(post(`/api/admin/users/${viewerId}/ban`, { reason: 'prueba' }, adminToken), params(viewerId));
@@ -193,7 +239,7 @@ panelOffline = false;
 
 response = await ban(post(`/api/admin/users/${viewerId}/ban`, { reason: 'prueba' }, adminToken), params(viewerId));
 check('banear responde bien', response.status === 200);
-check('banear saca de la whitelist', commands.includes('whitelist remove Viewer_01'));
+check('banear saca de la whitelist', !enLaWhitelist().includes('Viewer_01'));
 
 response = await me(get('/api/me', viewer.token));
 check('al banear se corta su sesión', response.status === 401 || response.status === 403);

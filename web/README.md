@@ -49,8 +49,8 @@ Todo lo del launcher va con `Authorization: Bearer <token>`. El token sale de re
 
 | Método | Ruta | Quién | Qué hace |
 |---|---|---|---|
-| POST | `/api/auth/register` | cualquiera | crea la cuenta, que queda pendiente de aprobación |
-| POST | `/api/auth/login` | cualquiera | devuelve el token, el estado y el rol |
+| POST | `/api/auth/register` | cualquiera | crea la cuenta, la activa y la mete en la whitelist |
+| POST | `/api/auth/login` | cualquiera | devuelve el token, el estado y el rol; reintenta activar una cuenta que quedó pendiente |
 | POST | `/api/auth/logout` | con sesión | cierra la sesión |
 | GET | `/api/me` | con sesión | estado de la cuenta; la pantalla de espera consulta esto |
 | GET | `/api/pack` | cuenta activa | el pack a instalar; una cuenta pendiente recibe 403 |
@@ -72,6 +72,10 @@ Todo lo del launcher va con `Authorization: Bearer <token>`. El token sale de re
 ## Decisiones que conviene conocer antes de tocar el código
 
 **Primero el servidor, después la base.** Aprobar y banear ejecutan el comando en el servidor y solo entonces escriben en la base. Al revés, si el panel falla quedaría una cuenta marcada como aprobada que el servidor rechaza, y nadie entendería por qué. Cuando el panel falla, la respuesta lo dice y aclara que no se cambió nada.
+
+**Registrarse aprueba solo.** Quien se registra queda activo y en la whitelist en el mismo pedido: aprieta JUGAR y entra. El único filtro que queda es quién tiene el instalador, así que el link del launcher es la puerta del servidor.
+
+Ahí el orden se invierte, y por un motivo: la whitelist se arma leyendo las cuentas activas, así que la cuenta tiene que existir en la base para poder escribirla. Si el panel no contesta se deshace y la cuenta queda pendiente, que es el estado honesto — el servidor la rechazaría igual. Se reintenta en el próximo inicio de sesión, así que cerrar y abrir el launcher la destraba sin que nadie apruebe nada. El botón de aprobar del panel sigue estando para ese caso.
 
 **Los mods se suben como archivo.** El admin elige los `.jar` y el backend hace el resto: calcula los hashes, guarda el archivo y averigua el nombre, la versión y si el mod es de cliente o de servidor. Para eso primero le pregunta a Modrinth por el hash del archivo; si no lo conoce, lee la ficha que todo mod de Fabric lleva adentro. Los archivos quedan en la base: el pack completo pesa unos 20 MB.
 

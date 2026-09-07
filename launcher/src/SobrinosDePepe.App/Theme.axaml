@@ -76,6 +76,61 @@
     <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
   </Style>
 
+  <!--
+    El ojito que muestra la contraseña. Va adentro del campo con
+    TextBox.InnerRightContent, que es una propiedad del propio TextBox y no un
+    Grid encima: así el texto nunca se mete abajo del botón.
+
+    El ícono es un Path y no un carácter a propósito. El ojo de Unicode (U+1F441)
+    está en el plano 1 y sale como un cuadrado vacío si la fuente del sistema no lo
+    trae, que es el mismo motivo por el que los símbolos del servidor son todos del
+    plano 0. Dibujado no depende de ninguna fuente.
+
+    Focusable en false para que el Tab siga yendo de un campo al siguiente y no se
+    quede en el botón.
+  -->
+  <Style Selector="ToggleButton.ojo">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="10,0,4,0" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Focusable" Value="False" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Foreground" Value="{StaticResource FaintBrush}" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+          <Panel Width="20" Height="20">
+            <!-- Tapada: se ve el ojo, que invita a mirar. -->
+            <Path Name="PART_Ojo"
+                  Stroke="{TemplateBinding Foreground}" StrokeThickness="1.6"
+                  StrokeLineCap="Round" StrokeJoin="Round"
+                  Data="M 1.7,10 C 3.6,6.2 6.6,4.3 10,4.3 C 13.4,4.3 16.4,6.2 18.3,10
+                        C 16.4,13.8 13.4,15.7 10,15.7 C 6.6,15.7 3.6,13.8 1.7,10 Z
+                        M 12.4,10 A 2.4,2.4 0 1 1 7.6,10 A 2.4,2.4 0 1 1 12.4,10 Z" />
+            <!-- Mostrándose: el mismo ojo tachado. -->
+            <Path Name="PART_OjoTachado" IsVisible="False"
+                  Stroke="{TemplateBinding Foreground}" StrokeThickness="1.6"
+                  StrokeLineCap="Round" StrokeJoin="Round"
+                  Data="M 1.7,10 C 3.6,6.2 6.6,4.3 10,4.3 C 13.4,4.3 16.4,6.2 18.3,10
+                        C 16.4,13.8 13.4,15.7 10,15.7 C 6.6,15.7 3.6,13.8 1.7,10 Z
+                        M 12.4,10 A 2.4,2.4 0 1 1 7.6,10 A 2.4,2.4 0 1 1 12.4,10 Z
+                        M 3.4,3.4 L 16.6,16.6" />
+          </Panel>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="ToggleButton.ojo:checked /template/ Path#PART_Ojo">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="ToggleButton.ojo:checked /template/ Path#PART_OjoTachado">
+    <Setter Property="IsVisible" Value="True" />
+  </Style>
+  <Style Selector="ToggleButton.ojo:pointerover">
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+
   <!-- Botón principal -->
   <Style Selector="Button.primary">
     <Setter Property="Background" Value="{StaticResource AccentBrush}" />

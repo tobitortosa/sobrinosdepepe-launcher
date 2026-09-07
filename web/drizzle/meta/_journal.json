@@ -8,6 +8,13 @@
       "when": 1788470456571,
       "tag": "0000_shallow_wrecker",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788751918139,
+      "tag": "0001_vengeful_bullseye",
+      "breakpoints": true
     }
   ]
 }

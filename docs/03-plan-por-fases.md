@@ -58,13 +58,13 @@ Después, si hace falta: mod de verificación en el servidor (fase 4, opcional, 
 
 `launcher/`, Avalonia 12 sobre el núcleo de la fase 0, empaquetado con Velopack.
 
-- Pantallas: crear cuenta, iniciar sesión, esperando aprobación, Home con JUGAR y el punto de estado del server, progreso de descarga, error con "Copiar detalles".
+- Pantallas: crear cuenta, iniciar sesión, Home con JUGAR y el punto de estado del server, progreso de descarga, error con "Copiar detalles". La de espera quedó solo para cuando el panel no contesta al registrarse.
 - Instalación incremental: sincroniza `mods/` con el pack y borra lo que no esté; escribe `config/` y `options.txt` solo si no existen.
 - Botón "Reparar instalación", que reusa el mismo código.
 - Sesión cifrada con DPAPI. Chequeo de disco libre, de Windows 64 bits y de que no haya otro launcher abierto.
 - `Setup.exe` con auto-update desde GitHub Releases.
 
-**Listo cuando:** un amigo baja el instalador, se registra, vos lo aprobás, aprieta JUGAR y entra. Y cuando publicás una versión nueva, se actualiza solo al abrir.
+**Listo cuando:** un amigo baja el instalador, se registra, aprieta JUGAR y entra. Y cuando publicás una versión nueva, se actualiza solo al abrir.
 
 ---
 

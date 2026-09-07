@@ -1,6 +1,6 @@
 # SOBRINOS DE PEPE Launcher
 
-Launcher de Windows para el server de Minecraft "SOBRINOS DE PEPE" (`sobrinosdepepe.minehost.pro`, Fabric 26.1). El viewer lo baja, se crea la cuenta, Tobías la aprueba, aprieta **JUGAR** y entra al server con la versión, el Java y los mods correctos. Con la cuenta de admin, el mismo launcher gestiona los mods y las cuentas.
+Launcher de Windows para el server de Minecraft "SOBRINOS DE PEPE" (`sobrinosdepepe.minehost.pro`, Fabric 26.1). El viewer lo baja, se crea la cuenta, aprieta **JUGAR** y entra al server con la versión, el Java y los mods correctos. Con la cuenta de admin, el mismo launcher gestiona los mods y las cuentas.
 
 **Estado:** fases 0 y 1 listas y probadas. El instalador entra al server con el inventario intacto, y el backend maneja cuentas, subida de mods y publicación del pack. Falta la interfaz (fase 2) y el panel de admin dentro del launcher (fase 3).
 
@@ -76,7 +76,7 @@ Backend: ver [`web/README.md`](web/README.md) para la puesta en marcha real.
 
 ## Las reglas del proyecto
 
-1. El jugador no configura nada: crear cuenta, esperar la aprobación, JUGAR.
+1. El jugador no configura nada: crear cuenta y JUGAR. La cuenta se activa sola al registrarse; el único filtro es quién tiene el instalador.
 2. Instalación aislada. Nunca se toca la instalación de TLauncher.
 3. Minecraft, Fabric, Java y los mods se descargan de sus servidores oficiales a la PC del jugador. Nunca rehosteamos nada.
 4. El launcher no contiene ningún secreto. Descompilarlo no da más poder que ser un usuario.

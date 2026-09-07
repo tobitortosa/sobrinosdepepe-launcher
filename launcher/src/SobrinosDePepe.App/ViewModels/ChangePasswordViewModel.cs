@@ -20,6 +20,9 @@ public partial class ChangePasswordViewModel : ObservableObject
     [ObservableProperty] private string? _error;
     [ObservableProperty] private bool _isBusy;
 
+    /// <summary>Uno solo para los dos campos, igual que en la pantalla de inicio.</summary>
+    [ObservableProperty] private bool _mostrarContrasena;
+
     public ChangePasswordViewModel(ShellViewModel shell, string token, Account account)
     {
         _shell = shell;
