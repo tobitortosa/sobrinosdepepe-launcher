@@ -1,0 +1,11 @@
+{
+  "executes": [
+    {
+      "command": "daily",
+      "silent": false,
+      "as_console": false,
+      "op_level": 4
+    }
+  ],
+  "id": "diario"
+}

@@ -39,6 +39,18 @@ def accion(comando):
     return {"command": comando, "silent": True, "as_console": False, "op_level": 4}
 
 
+def accion_hablada(comando):
+    """
+    Igual que accion() pero SIN silent, para envolver comandos de otro mod que
+    contestan por `source.sendFailure`.
+
+    `silent: true` le pone `withSuppressedOutput()` a la fuente, y eso se come los
+    mensajes de error del comando envuelto. En /diario eso seria lo peor posible:
+    el que ya lo reclamo apretaria enter y no pasaria absolutamente nada.
+    """
+    return {"command": comando, "silent": False, "as_console": False, "op_level": 4}
+
+
 def guardar(cid, doc):
     doc = dict(doc, id=cid)
     texto = json.dumps(doc, indent=2, ensure_ascii=False)
@@ -112,6 +124,20 @@ guardar("casa", {
     ],
 })
 
+# ------------------------------------------------------------------------ /diario
+# El regalo diario de EconomyCraft se llama `/daily` y no tiene ningun alias
+# (Commands.literal("daily"), sin mas). En un servidor donde todo lo demas esta en
+# castellano —/ayuda, /casa, /tienda, /economia, /shards— ese es el unico comando
+# que hay que escribir en ingles, y escrito mal ("dayly", "dayli") el juego contesta
+# "Unknown or incomplete command", que se lee como que el comando esta roto.
+#
+# /daily sigue existiendo y funcionando: esto es un nombre mas, no un reemplazo.
+#
+# Va con accion_hablada y no con accion: los dos mensajes que puede contestar
+# —"Already claimed today" y "Daily reward could not be added to your balance"—
+# salen por source.sendFailure, y con silent se perderian.
+guardar("diario", {"executes": [accion_hablada("daily")]})
+
 # Los que llaman a una funcion del datapack.
 for cid, funcion in [
     ("nv", "sdp:nv"),
@@ -131,7 +157,9 @@ for cid, funcion in [
 # se ejecutan solos van con run_command, asi es un click y listo.
 GRUPOS = [
     ("PLATA", e.PLATA, [
-        ("/bal", False), ("/bal top", False), ("/daily", False), ("/shop", False),
+        # Se anuncia /diario y no /daily, por lo mismo que se anuncia /ayuda y no
+        # /comandos: es el nombre que un hispanohablante escribe sin equivocarse.
+        ("/bal", False), ("/bal top", False), ("/diario", False), ("/shop", False),
         ("/sell", False), ("/worth", False), ("/ah", False), ("/orders", False),
         ("/transactions", False), ("/pay ", True),
     ]),
