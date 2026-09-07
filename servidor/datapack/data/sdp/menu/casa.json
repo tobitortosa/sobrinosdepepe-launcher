@@ -487,6 +487,11 @@
               "text": "  Guardar donde estas parado",
               "italic": false,
               "color": "gray"
+            },
+            {
+              "text": "  Tu casa principal es gratis",
+              "italic": false,
+              "color": "gray"
             }
           ],
           "minecraft:tooltip_display": {
@@ -604,6 +609,228 @@
       ],
       "type": "item",
       "item": {
+        "id": "minecraft:cyan_bed",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "/home set <nombre>",
+            "italic": false,
+            "color": "#00a6ff",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  Una casa extra: 50.000 de plata",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  El tope son 3 casas",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "click",
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
+              },
+              {
+                "text": "Para una casa extra (50.000 de plata):   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/home set ",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/home set "
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
+                }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
+              }
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
+        }
+      ]
+    },
+    {
+      "slot": [
+        2,
+        5
+      ],
+      "type": "item",
+      "item": {
+        "id": "minecraft:shears",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "/home delete <nombre>",
+            "italic": false,
+            "color": "#00a6ff",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  Borrar una casa, gratis",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "click",
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
+              },
+              {
+                "text": "Para borrar una casa:   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/home delete ",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/home delete "
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
+                }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
+              }
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
+        }
+      ]
+    },
+    {
+      "slot": [
+        2,
+        6
+      ],
+      "type": "item",
+      "item": {
+        "id": "minecraft:book",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "/home list",
+            "italic": false,
+            "color": "#00a6ff",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  Ver que casas tenes",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "click",
+      "action": {
+        "type": "command",
+        "command": "home list",
+        "as_player": true,
+        "silent": false
+      }
+    },
+    {
+      "slot": [
+        2,
+        7
+      ],
+      "type": "item",
+      "item": {
         "id": "minecraft:respawn_anchor",
         "count": 1,
         "components": {
@@ -645,7 +872,7 @@
     {
       "slot": [
         2,
-        5
+        8
       ],
       "type": "item",
       "item": {
@@ -689,8 +916,8 @@
     },
     {
       "slot": [
-        2,
-        6
+        3,
+        3
       ],
       "type": "item",
       "item": {
@@ -775,8 +1002,8 @@
     },
     {
       "slot": [
-        2,
-        7
+        3,
+        4
       ],
       "type": "item",
       "item": {
@@ -820,8 +1047,8 @@
     },
     {
       "slot": [
-        2,
-        8
+        3,
+        5
       ],
       "type": "item",
       "item": {
@@ -866,7 +1093,7 @@
     {
       "slot": [
         3,
-        5
+        6
       ],
       "type": "item",
       "item": {

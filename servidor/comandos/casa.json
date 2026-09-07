@@ -7,5 +7,24 @@
       "op_level": 4
     }
   ],
+  "literals": [
+    {
+      "id": "pagar",
+      "arguments": [
+        {
+          "id": "nombre",
+          "type": "brigadier:string word",
+          "executes": [
+            {
+              "command": "function sdp:casa_cobrar {nombre:\"${nombre}\"}",
+              "silent": true,
+              "as_console": false,
+              "op_level": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "id": "casa"
 }

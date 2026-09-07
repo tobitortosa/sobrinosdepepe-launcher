@@ -1,0 +1,27 @@
+{
+  "type": "node:strict",
+  "paths": [
+    "casa.pagar.nombre"
+  ],
+  "execution_modifiers": [
+    {
+      "type": "predicate:add",
+      "predicate": {
+        "type": "more_or_equal",
+        "value_1": {
+          "type": "placeholder",
+          "placeholder": "economycraft:balance"
+        },
+        "value_2": 50000
+      },
+      "failure": [
+        {
+          "command": "function sdp:casa_sin_plata",
+          "silent": true,
+          "as_console": false,
+          "op_level": 4
+        }
+      ]
+    }
+  ]
+}

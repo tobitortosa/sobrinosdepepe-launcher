@@ -32,7 +32,81 @@ conectado. Una hora de juego son **72.000 ticks**, así que:
     veces por hora = 72000 / chance
 
 Con eso, lo que queda configurado acá es: un jugador que mina una hora escucha
-algo unas tres veces, y ve la figura una vez cada cuatro horas más o menos.
+algo unas cuatro veces, y ve la figura una vez cada cuatro horas más o menos.
+
+## Los dados se tiran POR JUGADOR, no se elige uno al azar
+
+Medido en el bytecode: las cinco tiradas viven en `ServerPlayerMixin`, inyectado
+en `ServerPlayer.tick()` con `@At("TAIL")`. Cada jugador conectado tira sus
+propios dados una vez por tick, y no hay ningún `getRandomPlayer()`. O sea que
+la tasa por jugador **no** se divide por cuánta gente hay conectada, y no hay
+nada que compensar. Tampoco hay filtro por operador, gamemode, dimensión, luz ni
+altura: que al admin le pase y a los demás no es sesgo de muestra chica, no es un
+privilegio.
+
+Lo que sí es real, y explica que cada uno crea que le pasa solo a él: **todos los
+efectos son locales**. Los sonidos salen con `level.playSound`, que llega a 16
+bloques, y las partículas a 32. En un servidor con el borde en 12.000 nadie está
+a 16 bloques de nadie, así que nadie presencia el evento de otro y cada uno
+cuenta nada más que los propios.
+
+## El 48% de los sonidos no los escucha nadie
+
+`playScarySound` tira la posición del sonido a un offset uniforme de -16 a +15
+bloques en **cada** eje, y el radio audible es 16. De las 32.768 combinaciones
+posibles solo el 51,8% cae a menos de 16 bloques del propio jugador: el resto se
+emite en un punto donde no hay nadie y se pierde. El radio está fijo en el mixin
+y no se configura. Por eso `scary_sound_chance` va en 50.000 y no en 100.000: es
+compensar la pérdida, no subir la frecuencia.
+
+## Dos huecos que conviene conocer antes de que alguien los descubra
+
+- **Quien va montado no recibe ninguna tirada.** El bucle de entidades saltea a
+  quien tiene vehículo (`ServerLevel.tick` corta si `getVehicle()` no es null) y
+  le llama `rideTick()` en lugar de `tick()`. A caballo, en bote o en vagoneta no
+  pasa nada, nunca.
+- **El jumpscare exige estar perfectamente quieto tres ticks.** Compara la
+  posición contra las dos anteriores, así que solo le toca a quien está
+  construyendo, mirando un cofre o AFK. Y si el jugador se desconecta con el
+  jumpscare pendiente, se pierde: la lista `TO_BE_JUMP_SCARED` guarda el
+  `ServerPlayer`, y al reconectarse es otro objeto con otro id de entidad.
+
+## `herobrine_starer` es el único que no se sube, y por qué
+
+Cada aparición hace **dos pedidos HTTP sincrónicos a Mojang** en el hilo del
+servidor, sin caché y sin timeout (`getSkin` pega a `api.mojang.com` y a
+`sessionserver.mojang.com`), y después recorre un cubo de radio 40 —531.441
+candidatos— haciendo raycasts. La versión vieja de este archivo decía que la skin
+viene adentro del jar y que no sale a internet: **es falso**, y conviene tenerlo
+escrito.
+
+Peor: el `catch` de `getSkin` llama a `getSkin("MarsThePlanet_")`, que es
+exactamente el nombre que ya estaba pidiendo. Si Mojang no contesta, eso es
+recursión infinita hasta el StackOverflowError, adentro de un tick. Subir la
+frecuencia multiplica esa lotería, así que queda en 300.000 (una cada cuatro
+horas por jugador) y ahí se queda.
+
+Lo que sí da esto: cuando aparece, el nombre `MarsThePlanet_` entra en la lista
+de TAB de **todos** los conectados hasta 20 minutos, porque los paquetes van con
+`broadcastAll` sin filtro de distancia. Es la única prueba compartida y objetiva
+de que el evento pasó.
+
+## El log no sirve para contar eventos
+
+De los cinco prendidos, el único `LOG.info` del camino automático es cuando el
+herobrine **no** encuentra dónde pararse. Los eventos que salen bien no dejan
+rastro, así que "no aparece nada en el log" no distingue "no pasó" de "pasó
+bien". Para medirlo de verdad habría que contarlo desde el datapack.
+
+## Un mixin que corre siempre y no se puede apagar
+
+`FurnaceBlockEntityMixin` se inyecta en el `serverTick` de **todos** los hornos,
+ahumadores y altos hornos, sin ningún gate de configuración, y si el slot de
+arriba tiene bedrock, structure_void, structure_block, jigsaw o barrier, cambia
+bloques del mundo. Solo se desactiva si el mundo se llama "Renovating Villager
+Houses" o "Traps"; el nuestro se llama "world". Riesgo bajo (hay que ser
+operador en creativo para tener esos bloques) pero no es cero, y no hay forma de
+apagarlo desde la config.
 
 ## Lo que está apagado a propósito
 
@@ -89,19 +163,21 @@ HORA = 72000  # ticks de una hora de juego, para leer los numeros de abajo
 PRENDIDOS = {
     # pasos que no son de nadie
     "fake_steps_enable": True,
-    "fake_steps_chance": 60000,            # 1,2 por hora
+    "fake_steps_chance": 45000,            # 1,6 por hora
     # alguien picando piedra en algun lado
     "fake_mining_enable": True,
-    "fake_mining_chance": 60000,           # 1,2 por hora
-    # un sonido raro de la lista de abajo
+    "fake_mining_chance": 45000,           # 1,6 por hora
+    # un sonido raro de la lista de abajo. El numero es la mitad de lo que
+    # pediria la cuenta ingenua, y es por el 48% que se pierde (ver abajo).
     "scary_sound_enable": True,
-    "scary_sound_chance": 100000,          # 0,7 por hora
-    # la figura que aparece, te mira y se va. Es la unica que se ve.
+    "scary_sound_chance": 50000,           # 1,44 por hora tirados, 0,75 oidos
+    # la figura que aparece, te mira y se va. Es la unica que se ve, y la unica
+    # que NO se sube: cada aparicion sale a internet. Ver abajo.
     "herobrine_starer_enable": True,
     "herobrine_starer_chance": 300000,     # una cada 4 horas
     # particulas rojas de golpe. No hace daño: es DustParticleOptions y nada mas.
     "jumpscare_enable": True,
-    "jumpscare_chance": 500000,            # una cada 7 horas
+    "jumpscare_chance": 300000,            # una cada 4 horas, y solo si esta quieto
 }
 
 APAGADOS = [

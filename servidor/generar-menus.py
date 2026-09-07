@@ -331,9 +331,24 @@ guardar("casa", {
     "name": texto("CASA Y VIAJES", e.MARCA, negrita=True),
     "rows": 5,
     "items": marco(5, saltar=[(5, 5)]) + lista([
-        ("minecraft:red_bed", "/home set casa", ["Guardar donde estas parado"],
+        # La casa que se llama "casa" es la principal y es GRATIS, todas las
+        # veces que se quiera. Cualquier otro nombre sale 50.000 de plata, y el
+        # tope son 3 casas. El precio no lo cobra este menu: /home set esta
+        # interceptado por modificadores/casa-cobro.json, que saca el cartel con
+        # el boton de confirmar. Ver LEEME.md, "Lo que sale la casa".
+        ("minecraft:red_bed", "/home set casa", ["Guardar donde estas parado", "Tu casa principal es gratis"],
          escribir("/home set casa", "Para guardar tu casa:")),
         ("minecraft:oak_door", "/home casa", ["Viajar a tu casa"], correr("home casa")),
+        # Cama celeste y no bloque de amatista: el violeta de la amatista es el
+        # color de los shards en todo el servidor, y esto se paga con plata.
+        # Y nada de minecraft:barrier para borrar: cuando Inventory Menu no
+        # puede resolver un item dibuja justo una barrera que dice "Invalid menu
+        # item", asi que una barrera de verdad se lee como un menu roto.
+        ("minecraft:cyan_bed", "/home set <nombre>", ["Una casa extra: 50.000 de plata", "El tope son 3 casas"],
+         escribir("/home set ", "Para una casa extra (50.000 de plata):")),
+        ("minecraft:shears", "/home delete <nombre>", ["Borrar una casa, gratis"],
+         escribir("/home delete ", "Para borrar una casa:")),
+        ("minecraft:book", "/home list", ["Ver que casas tenes"], correr("home list")),
         ("minecraft:respawn_anchor", "/spawn", ["Volver al spawn"], correr("spawn")),
         ("minecraft:ender_pearl", "/rtp", ["Tirarte a un lugar random"], correr("rtp")),
         ("minecraft:compass", "/tpa", ["Pedirle ir hasta el a alguien"],

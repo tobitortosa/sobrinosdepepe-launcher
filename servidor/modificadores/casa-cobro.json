@@ -1,0 +1,23 @@
+{
+  "type": "command:regex",
+  "regexes": [
+    "home set (?!casa$)\\S+",
+    "essentialcommands home set (?!casa$)\\S+"
+  ],
+  "execution_modifiers": [
+    {
+      "type": "predicate:add",
+      "predicate": {
+        "type": "always_false"
+      },
+      "failure": [
+        {
+          "command": "function sdp:casa_precio {nombre:\"${home_name}\"}",
+          "silent": true,
+          "as_console": false,
+          "op_level": 4
+        }
+      ]
+    }
+  ]
+}

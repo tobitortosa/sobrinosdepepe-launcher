@@ -69,11 +69,48 @@ for cid, menu in [
     ("ayuda", "sdp:comandos"),
     ("tienda", "sdp:tienda"),
     ("economia", "sdp:economia"),
-    ("casa", "sdp:casa"),
     ("pvp", "sdp:pvp"),
     ("extras", "sdp:extras"),
 ]:
     guardar(cid, {"executes": [accion("menu " + menu)]})
+
+# ------------------------------------------------------------------------ /casa
+# Abre el menu como los de arriba, y ademas tiene el subcomando que COBRA las
+# casas extra: /casa pagar <nombre>.
+#
+# Por que el cobro vive en un comando propio y no adentro del /home set de
+# Essential Commands: un modificador de Melius solo puede BLOQUEAR antes de que
+# el comando corra (ContextChainMixin prueba los IsExecutableModifier y, si uno
+# falla, corre su "failure" y devuelve sin ejecutar el original). No existe
+# ningun modificador que corra algo DESPUES, asi que "cobrale y despues dejalo
+# pasar" no se puede armar. Lo que si se puede es interceptar /home set,
+# mostrar el precio, y hacer todo el trabajo desde este comando.
+#
+# El portero de saldo esta en modificadores/casa-pagar.json, sobre el nodo
+# casa.pagar.nombre, y es la unica pieza de todo el servidor capaz de LEER la
+# plata de EconomyCraft: el predicado `placeholder` de la predicate-api (que
+# viene adentro del jar de Melius) resuelve %economycraft:balance% y
+# more_or_equal lo compara con 50000. Ningun comando de EconomyCraft devuelve el
+# saldo a Brigadier, asi que sin ese predicado no habria forma de verificar.
+#
+# El nombre de la casa viaja como ${nombre}: CommandAction arma su parser con
+# los placeholders de servidor y con los ARGUMENTOS del comando, los dos con el
+# formato ${...}, asi que ${nombre} se reemplaza por lo que tipeo el jugador.
+guardar("casa", {
+    "executes": [accion("menu sdp:casa")],
+    "literals": [
+        {
+            "id": "pagar",
+            "arguments": [
+                {
+                    "id": "nombre",
+                    "type": "brigadier:string word",
+                    "executes": [accion('function sdp:casa_cobrar {nombre:"${nombre}"}')],
+                }
+            ],
+        }
+    ],
+})
 
 # Los que llaman a una funcion del datapack.
 for cid, funcion in [

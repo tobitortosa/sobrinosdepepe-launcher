@@ -1,0 +1,13 @@
+{
+  "type": "node:starts_with",
+  "paths": [
+    "essentialcommands.overwritehome"
+  ],
+  "requirement_modifier": {
+    "type": "requirement:replace",
+    "predicate": {
+      "type": "operator",
+      "operator": 2
+    }
+  }
+}

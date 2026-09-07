@@ -63,6 +63,10 @@ import mc
 OTORGAR = [
     ("essentialcommands.home.tp", "/home casa"),
     ("essentialcommands.home.set", "/home set casa"),
+    # Sin este nodo /home delete no le funcionaba a nadie, y con el tope en 3
+    # casas hace falta: llegar al tope sin poder borrar deja al jugador trabado
+    # para siempre. Borrar es gratis a proposito, aunque la casa se haya pagado.
+    ("essentialcommands.home.delete", "/home delete <nombre>"),
     ("essentialcommands.spawn.tp", "/spawn"),
     ("essentialcommands.back", "/back"),
     ("essentialcommands.randomteleport", "/rtp y /randomteleport"),

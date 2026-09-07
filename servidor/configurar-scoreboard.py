@@ -46,6 +46,11 @@ OBJETIVOS = [
     # Ticks que faltan para que se le caiga la marca de pelea. La etiqueta
     # sdp_combate es el candado que mira Melius; esto es el reloj que la suelta.
     ("sdp_combate", "dummy", {"text": "ticks de pelea"}),
+    # Lo usa sdp:casa_guardar y sdp:casa_cobrar con el portador falso #casa:
+    # guarda si el "essentialcommands overwritehome" tuvo exito, que es la unica
+    # forma de saber si el jugador se paso del tope de 3 casas. De eso depende
+    # que se le cobren o no los 50.000.
+    ("sdp_ok", "dummy", {"text": "salio bien lo ultimo"}),
 ]
 
 for nombre, criterio, display in OBJETIVOS:

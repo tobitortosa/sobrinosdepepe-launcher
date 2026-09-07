@@ -163,6 +163,80 @@ reparar y el chequeo queda en cero.
    pero explotan los de esmeralda → equipo, y el peor pasa de 1.920 a 5.824 por
    uso. El precio de la esmeralda no tiene una banda que cierre las dos puntas.
 
+### La netherita no se craftea: se compra con shards
+
+**Las doce recetas de smithing de netherita están apagadas** desde el
+2026-09-07. La armadura, las armas y las herramientas de netherita salen ahora
+de un solo lado: la tienda de shards, que las entrega con `give` y por lo tanto
+no pasa por ninguna receta. Es la asimetría que hace que el equipo de fin del
+juego se pague matando gente, que es de lo que vive el servidor.
+
+Se apaga con **un archivo**:
+
+```
+datapack/data/minecraft/tags/item/netherite_tool_materials.json
+{"replace": true, "values": []}
+```
+
+Las doce recetas usan esa etiqueta como `addition` — verificado abriendo el jar
+de 26.1, doce de trece: la que sobra es
+`netherite_upgrade_smithing_template`, la de duplicar la plantilla, que sin
+smithing no sirve para nada. Se recarga con `/reload`, no pide reinicio y no
+toca el launcher. En el log quedan **doce WARN** que son la confirmación de que
+funcionó, no un problema:
+
+```
+Recipe minecraft:netherite_axe_smithing can't be placed due to empty ingredients and will be ignored
+```
+
+Por qué se eligió esta palanca y no las otras, con los números que había:
+
+- **El netherite no había inundado nada.** En toda la historia del servidor se
+  minaron 67 bloques de ancient debris y se craftearon 14 lingotes, con **un
+  solo set completo** (Luquitas1410, en 38,6 horas jugadas). El problema no era
+  la cantidad, era la tasa: el set de 16 debris sale en 11 a 22 horas de juego
+  medidas sobre tres mineros reales, y los mismos 800 shards que cuesta el set
+  en la tienda salen 133 horas a 6 shards por hora. **Minar era 6 a 12 veces más
+  rápido que matar**, así que nadie "se salteó" los shards: los shards nunca
+  compitieron.
+- **No se saca el netherite del mapa.** El ancient debris se sigue minando y se
+  sigue vendiendo — 4.200 el bloque, 21.000 el scrap, 175.000 el lingote — así
+  que bajar al Nether sigue pagando, pero paga en **plata** y no en equipo. Las
+  dos monedas quedan con su propia actividad y no se pisan.
+- **No se tocó la generación del mundo.** Sobreescribir los `configured_feature`
+  del debris solo afecta chunks nuevos (los registros de worldgen se cargan al
+  abrir el mundo, no con `/reload`), y es el único cambio que puede dejar el
+  servidor sin arrancar si el JSON no valida. Con el Nether generado en 24
+  archivos de región no hacía falta correr ese riesgo.
+- **No se tocó la lotería del drop.** Un debris que dropea al 5% se lee como un
+  bug ("miné quince y no me dio nada") y encima ya no hace falta.
+
+Lo que se rompe, y hay que saberlo:
+
+- **Las herramientas y armas de netherita ya no se reparan con lingote en el
+  yunque.** Esa etiqueta es también el `repairItems` de `ToolMaterial.NETHERITE`
+  (es el sexto campo del record, verificado en el bytecode de 26.1). Mending
+  sigue andando, y la tienda de shards las entrega con Mending, así que en la
+  práctica no se nota. **La armadura no se toca**: usa
+  `repairs_netherite_armor`, que quedó intacta a propósito para no castigar al
+  que ya se ganó su set.
+- **El que ya tiene netherita la conserva**, y por un buen rato va a ser el más
+  fuerte del servidor. Es equipo que se ganó minando cuando se podía.
+- No bloquea ningún contenido: en 26.1 el pico de **diamante mina todo**
+  (`incorrect_for_diamond_tool` está vacía) y la armadura de diamante da los
+  **mismos puntos de armadura** que la de netherita. La netherita suma dureza y
+  resistencia al empuje, no acceso.
+
+**Ojo con lo que se creía de DonutSMP.** Allá el netherite **no** está gateado
+por shards: se compra con plata en el `/ah`, y un jugador nuevo llega al set en
+su primer día. Lo que hace que allá dure es la densidad —decenas de miles de
+jugadores vaciando un Nether de ±57.000 durante dos años, sin resets— y eso no
+se puede copiar con nueve perfiles. Y hay algo más: **Donut eliminó los shards
+por kill el 2026-06-02**; hoy allá el único ingreso de shards es 1 cada 10
+minutos jugados. Nosotros copiamos las tasas viejas (10 por kill más 1 cada 10
+minutos) con los precios divididos por 7,5, o sea que nuestra tienda de shards
+es mucho más barata de lo que fue Donut incluso cuando Donut era generoso.
+
 Nunca poner un **multiplicador de venta** que suba con el volumen. Es
 exactamente lo que rompió Donut: los jugadores compraban en las órdenes por
 debajo de `precio_base x multiplicador` y le vendían al servidor. Uno solo llegó
@@ -312,6 +386,148 @@ Los precios de la tienda de shards son los de Donut escalados por el spawner:
 allá sale 1.500 y acá 200, o sea todo por 0,133. Lo que se mantiene es la
 relación entre los items, que es la que define qué conviene comprar primero.
 
+## Lo que sale la casa
+
+**Tres casas por jugador. La primera es gratis y cada una de las otras dos sale
+50.000 de plata.** Antes de esto el tope no se estaba aplicando: había seis
+jugadores sin OP con dos y tres casas cada uno, y nada frenaba que fueran 500.
+
+| | Crear | Mover | Borrar |
+|---|---|---|---|
+| la casa que se llama `casa` | gratis | gratis | gratis |
+| cualquier otro nombre | **50.000** | 50.000 | gratis |
+
+Mover una casa extra vuelve a cobrar, y eso **no** es un descuido: ni Melius ni
+un datapack pueden saber si una casa ya existe, así que "crear" y "mover" son
+indistinguibles desde afuera. Distinguirlas pedía llevar la cuenta de casas de
+cada jugador en un scoreboard y hacer pasar `/home set`, `overwritehome` y
+`/home delete` por comandos propios; un contador que se desincroniza o cobra de
+más o regala casas, y se eligió no tenerlo. El cartel de confirmación lo avisa
+antes de cobrar.
+
+### El tope son tres y sale de un solo número
+
+`home_limit` pasó de `[1, 2, 5]` a **`[3]`**. Esa lista **no** es un número: el
+mod la convierte en un grupo de permisos numéricos
+(`essentialcommands.home.limit.<n>`) con
+`ECPerms.makeNumericPermissionGroup`, y `getHighestNumericPermission` arranca en
+el **menor** de la lista porque `grant_lowest_numeric_by_default=true` y después
+lo sube por cada nodo que el jugador tenga otorgado. Con un solo valor el piso y
+el techo son el mismo: todos tienen exactamente 3, sin depender de LuckPerms.
+
+Un operador tiene infinitas: `getHighestNumericPermission` devuelve
+`Integer.MAX_VALUE` si `isSuperAdmin(source)`. Y `ops_bypass_teleport_rules` no
+tiene nada que ver con esto, es solo de los teleports.
+
+**Este archivo no se puede editar con el servidor prendido**: el mod lo
+reescribe al apagarse. Va con el servidor detenido, igual que
+`EssentialCommands.properties` siempre.
+
+### El único lector de saldo que hay en el servidor
+
+La plata de EconomyCraft **no vive en ningún scoreboard** y ninguno de sus
+comandos la devuelve a Brigadier: `bal` devuelve 1 siempre, y `eco removemoney`
+y `pay` también devuelven 1 aunque no alcance
+(`EconomyCommands.java:375` y `:515`). O sea que `execute store result` no sirve
+para leer el saldo, y por eso el sistema de recompensas en plata se había
+descartado.
+
+Lo que sí existe es **el predicado `placeholder` de la `predicate-api`**, que
+viene adentro del jar de Melius (`META-INF/jars/predicate-api-0.8.1+26.1.jar`).
+Se registra solo si está la placeholder-api, que también viene ahí. Con eso:
+
+```json
+{"type": "more_or_equal",
+ "value_1": {"type": "placeholder", "placeholder": "economycraft:balance"},
+ "value_2": 50000}
+```
+
+Tres detalles que lo hacen funcionar, y sin los cuales no anda:
+
+- **Va `balance` pelado y nunca `balance_formatted` ni `balance_short`.**
+  `NumberPredicate` compara con `GenericObject.toNumber`, que hace
+  `Double.parseDouble` del texto. `balance` es `String.valueOf(long)` sin
+  separadores; los otros dos pasan por `formatMoney`, que mete los puntos de
+  miles, y `Double.parseDouble("1.234.567")` explota. El `catch` devuelve
+  entonces `success ? 1.0 : 0.0`, o sea **1**: el jugador rico quedaría
+  bloqueado y el bug sería invisible.
+- **`value_1` acepta un predicado anidado** porque `GenericObject.CODEC` es un
+  `either(predicado, either(string, double))`.
+- **Falla cerrado.** Si el placeholder dejara de existir, `toNumber` devuelve 0
+  y nadie puede comprar una casa extra. Nadie se lleva una casa gratis.
+
+### Por qué el cobro no puede vivir en un modificador
+
+Un `execution_modifier` solo puede **bloquear antes** de que el comando corra:
+`ContextChainMixin` prueba los `IsExecutableModifier` y, en el primero que
+falla, corre su `failure` y devuelve sin ejecutar el original. **No existe
+ningún modificador que corra algo después**, y el `onSuccess` corre *antes* del
+comando y solo lo implementa `cooldown:set`. Así que "cobrale y después dejalo
+pasar" no se puede armar.
+
+La salida es interceptar `/home set` con un predicado `always_false` — que manda
+todo al `failure` — y hacer el trabajo desde ahí. Son cinco modificadores:
+
+| Archivo | Qué agarra | Qué hace |
+|---|---|---|
+| `casa-gratis.json` | `home set casa` | `sdp:casa_guardar`: guarda gratis |
+| `casa-cobro.json` | `home set <otro>` | `sdp:casa_precio`: el cartel con el precio y el botón |
+| `casa-sinnombre.json` | `home set` pelado | explica que hay que ponerle nombre |
+| `casa-pagar.json` | el nodo `casa.pagar.nombre` | el portero de saldo |
+| `casa-overwrite.json` | `essentialcommands.overwritehome` | lo tapa con operador 2 |
+
+Los tres primeros son `command:regex` y no `node:*` **a propósito**: el matcher
+de nodo no puede mirar el argumento, y toda la gracia es distinguir `casa` de
+cualquier otro nombre sin guardar estado. `RegexCommandMatcher` hace
+`context.getInput().matches(regex)`, que es match **completo** de la línea, así
+que `home set (?!casa$)\S+` agarra `home set tienda` y no `home set casa`.
+
+Ese match completo es además lo que evita el bucle: la función corre
+`execute store success score #casa sdp_ok run essentialcommands overwritehome
+$(nombre)`, y esa línea empieza con `execute`, así que no matchea ninguno de los
+regex.
+
+### Las tres trampas que costaron una vuelta cada una
+
+- **`/essentialcommands overwritehome <nombre nuevo>` CREA la casa.**
+  `HomeOverwriteCommand` hace `removeHome` y después `addHome`, así que sobre un
+  nombre que no existe la crea igual, y suelto era la puerta gratis para las tres
+  casas. Está tapado con `casa-overwrite.json`.
+- **Va con operador 2 y no con operador 4**, que es lo que usa el resto de
+  `modificadores/`. Los datapacks se parsean con una fuente de **nivel 2**, así
+  que con operador 4 el nodo queda invisible al compilar y
+  `sdp:casa_guardar` no carga: `Failed to load function sdp:casa_guardar ...
+  Incorrect argument for command at position 63`. Con 2 la función compila y el
+  jugador —que es nivel 0— sigue afuera.
+- **`/home set` sin nombre guardaba una casa llamada `unnamed`.** Es
+  `HomeSetCommand.runDefault`, y era una casa gratis más, porque el cobro se
+  engancha al nombre. Lo tapa `casa-sinnombre.json`.
+
+Y una que no es trampa pero conviene saber: **`HomeSetCommand` devuelve 0
+siempre**, igual que `HomeOverwriteCommand`, así que `store result` no dice
+nada. Lo que sí distingue es la excepción: `PlayerData.addHome` tira
+`CommandSyntaxException` al pasarse del tope, y ahí `store success` queda en 0.
+Por eso las funciones **guardan primero y cobran después, y solo si guardaron**:
+al revés, el que ya tiene las tres casas pagaba 50.000 por nada.
+
+### El permiso que faltaba
+
+`essentialcommands.home.delete` no estaba otorgado, o sea que **`/home delete`
+no le funcionaba a nadie**. Con el tope en tres es imprescindible: llegar al
+tope sin poder borrar deja al jugador trabado para siempre. Borrar es gratis
+aunque la casa se haya pagado.
+
+### Nada de esto sirve para escapar de una pelea
+
+`sdp:casa_guardar` y `sdp:casa_cobrar` arrancan con
+`execute if entity @s[tag=sdp_combate] run return run function
+sdp:combate_bloqueado`. El chequeo va **adentro de la función** y no se delega a
+`combate.json`, porque el `failure` de un modificador corre como cualquier
+acción: si la marca de pelea bloqueara el `/home set` por su lado,
+`ContextChainMixin` ya habría corrido mi `failure` primero y la casa quedaría
+guardada igual. El orden entre modificadores no está garantizado, así que el
+candado tiene que estar donde se hace el trabajo.
+
 ## La marca de pelea
 
 Quince segundos desde el último golpe entre jugadores en los que **no se puede
@@ -432,7 +648,49 @@ que importa saber acá:
 
 - **La probabilidad se cuenta en "1 en N por tick y por jugador".** Una hora de
   juego son 72.000 ticks, así que `veces por hora = 72000 / chance`. Hoy son unos
-  tres ruidos por hora y una figura cada cuatro horas.
+  cuatro ruidos por hora y una figura cada cuatro horas.
+- **Los dados se tiran por jugador y no se elige uno al azar.** Las cinco
+  tiradas viven en `ServerPlayerMixin`, inyectado en `ServerPlayer.tick()` con
+  `@At("TAIL")`: cada conectado tira las suyas una vez por tick, y no hay ningún
+  `getRandomPlayer()`. La tasa por jugador no se divide por cuánta gente hay.
+  Tampoco hay filtro por operador, gamemode, dimensión, luz ni altura.
+- **Pero todos los efectos son locales**, y eso es lo que hace creer que le pasa
+  a uno solo: los sonidos salen con `level.playSound` y llegan a **16 bloques**,
+  las partículas a 32. Con el borde en 12.000 nadie está a 16 bloques de nadie,
+  así que nadie presencia el evento de otro y cada uno cuenta nada más que los
+  propios. Si a los demás no les pasa nada, no es que el mod los saltee.
+- **El 48% de los sonidos no los escucha nadie.** `playScarySound` tira la
+  posición a un offset de -16 a +15 bloques en cada eje y el radio audible es 16:
+  solo el 51,8% de las 32.768 combinaciones cae adentro. El radio está fijo en el
+  mixin. Por eso `scary_sound_chance` es 50.000 y no 100.000: compensa la
+  pérdida, no sube la frecuencia.
+- **Quien va montado no recibe ninguna tirada.** El bucle de entidades saltea a
+  quien tiene vehículo y le llama `rideTick()` en vez de `tick()`. A caballo, en
+  bote o en vagoneta no pasa nada, nunca.
+- **El jumpscare exige estar quieto tres ticks**, así que solo le toca a quien
+  está construyendo, mirando un cofre o AFK. Y si el jugador se desconecta con
+  uno pendiente se pierde: `TO_BE_JUMP_SCARED` guarda el `ServerPlayer` y al
+  reconectarse es otro objeto con otro id.
+- **`herobrine_starer` es el único que no se sube.** Cada aparición hace **dos
+  pedidos HTTP sincrónicos a Mojang** en el hilo del servidor, sin caché ni
+  timeout, y después recorre un cubo de radio 40 (531.441 candidatos) con
+  raycasts. Y el `catch` de `getSkin` llama a `getSkin("MarsThePlanet_")`, que es
+  el mismo nombre que estaba pidiendo: si Mojang no contesta, es recursión
+  infinita hasta el StackOverflowError adentro de un tick. Acá se decía que la
+  skin venía adentro del jar y que no salía a internet: **es falso.**
+- Cuando el herobrine aparece, el nombre `MarsThePlanet_` entra en la lista de
+  **TAB de todos** los conectados hasta 20 minutos, porque los paquetes van con
+  `broadcastAll` sin filtro de distancia. Es la única prueba compartida de que el
+  evento pasó.
+- **El log no sirve para contar eventos.** De los cinco prendidos, el único
+  `LOG.info` es cuando el herobrine no encuentra dónde pararse; los que salen
+  bien no dejan rastro. "No aparece nada en el log" no distingue "no pasó" de
+  "pasó bien".
+- **`FurnaceBlockEntityMixin` corre siempre y no se puede apagar.** Se inyecta en
+  el `serverTick` de todos los hornos, ahumadores y altos hornos, sin gate de
+  config, y si el slot de arriba tiene bedrock, structure_void, structure_block,
+  jigsaw o barrier, cambia bloques del mundo. Solo se desactiva si el mundo se
+  llama "Renovating Villager Houses" o "Traps"; el nuestro se llama `world`.
 - **De los 28 eventos que trae, quedan cinco prendidos.** El mod viene con la
   mitad activada, y varios acá serían griefing y no terror: te tira un rayo, te
   quema la casa, te apaga las antorchas, te pone trampas con vagoneta de TNT, te
@@ -908,6 +1166,7 @@ Se aplican con `/reload`.
 | `sidebar`, `styledsidebars` | Cualquiera podía escribir `/sidebar disable` y quedarse sin cartel para siempre. |
 | `warp` | No hay ningún lugar creado, así que solo podía fallar. Se destapa borrando el archivo cuando existan. |
 | `workbench`, `anvil`, `stonecutter` | Mesas portátiles. La idea es que cada uno tenga su mesa de crafteo de verdad, no llevarla en el bolsillo. |
+| `essentialcommands overwritehome` | Suelto es la puerta gratis para crear casas: `HomeOverwriteCommand` hace `removeHome` y después `addHome`, así que sobre un nombre que no existe la crea igual. Va con **operador 2** y no con 4, porque los datapacks se parsean con una fuente de nivel 2 y con 4 la función `sdp:casa_guardar` no compila. Ver "Lo que sale la casa". |
 | `claim`, `claims` | Los comandos de jugador de Safe Zone. **No traen `requires`**: sin este archivo los ve y los puede tipear cualquiera, y las zonas protegidas dejan de ser algo que solo existe para el operador. `/sz` y `/safezone` no hacen falta acá: esos sí se registran con `requires(GAMEMASTERS)`. |
 
 Y `combate.json`, que es de otra clase: no reemplaza el requisito del nodo sino
