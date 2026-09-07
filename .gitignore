@@ -30,6 +30,10 @@ desktop.ini
 launcher/artifacts/
 launcher/releases/
 
+# El resource pack armado. generar-recursos.py lo rehace byte por byte igual:
+# el zip no lleva fecha adentro, así que el sha1 sale siempre el mismo.
+servidor/recursos/
+
 # Capturas sueltas
 Sin *.png
 *-fullsize.jpg

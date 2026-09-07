@@ -17,7 +17,7 @@ subir tal cual y todo queda como estaba.
 | `configurar-borde.py` | Pone el borde del mundo, igual en las tres dimensiones. |
 | `configurar-permisos.py` | Le da al grupo `default` de LuckPerms los permisos de los comandos que la guía promete. |
 | `configurar-horror.py` | Deja Server-Side Horror en modo "una pizca": ruidos y nada que toque el mundo. |
-| `configurar-resourcepack.py` | Le pone al servidor el pack de sonidos de cueva, que cada jugador se baja al entrar. |
+| `generar-recursos.py` | Arma el resource pack propio del servidor, lo publica en GitHub y apunta el servidor. |
 | `ajustar-saldos.py` | Deja el saldo de cada uno en proporción a las horas jugadas. |
 | `estilo.py` | Los colores y los símbolos, en un solo lugar. |
 
@@ -443,47 +443,6 @@ Dynamic Sound Filters — no existen para 26.1**: se quedaron en 1.21.1. Y el ec
 los sonidos amortiguados de las cuevas ya los da **Sound Physics Remastered**, que
 está en el pack desde el principio.
 
-### Los sonidos de la cueva
-
-El mod de arriba pone ruidos **encima** de los del juego. Los de la cueva en sí
-son `ambient.cave`, que es contenido del cliente, y se cambian con un resource
-pack: **Remade Cave Ambient 1.2**, que el servidor le pide a cada jugador al
-entrar (`resource-pack` en `server.properties`, lo pone
-`configurar-resourcepack.py`).
-
-Por qué así y no de otra forma:
-
-| Camino | Problema |
-|---|---|
-| Un mod de sonidos en el pack del launcher | Los tres candidatos (Expanded Cave Sounds, Horror Cave Sounds, Scary Ambience) **no existen para 26.1**. Expanded Cave Sounds llega hasta 1.21.1 y es solo de cliente. |
-| El zip en `resourcepacks/` del launcher | `ConfigSeeder` no pisa `options.txt` si ya existe — y existe en la PC de todos. El pack llegaría apagado. |
-| **`resource-pack` en `server.properties`** | Ninguno. El cliente lo baja al entrar y lo aplica solo, arriba de lo que cada uno tenga puesto, y no hay que publicar nada. |
-
-Y no se rehostea nada: la URL apunta al CDN de Modrinth, igual que los mods del
-launcher, y el `sha1` está puesto, así que si devolviera otra cosa el cliente la
-rechaza.
-
-Ese pack y no otro porque declara `pack_format: 84`, que es exactamente el
-`resource_major` de 26.1 (`version.json` del jar), y porque adentro trae
-`cave1.ogg` … `cave23.ogg`: reemplaza **los 23 sonidos de vanilla uno por uno**,
-sin `sounds.json`. O sea que no cambia ni la frecuencia, ni el fade, ni el audio
-posicional. El otro candidato con 26.1, `cave-dweller-cave-sounds`, trae **4**
-sonidos con `replace: true`: cambia 23 por 4 y se vuelve repetitivo enseguida.
-
-Dos cosas medidas al ponerlo:
-
-- **`require-resource-pack` queda en `false`.** Modrinth no garantiza permanencia
-  de sus archivos; si un día el CDN falla, el jugador ve un aviso y entra igual.
-  En `true` no entraría nadie.
-- **En `resource-pack-prompt` los saltos de línea van con DOS barras invertidas.**
-  `server.properties` lo lee `java.util.Properties`, que se come una barra: con una
-  sola, al parser de JSON le llega un salto de línea real adentro de un string y
-  el arranque escupe `Unescaped control characters are not allowed in strict mode`.
-  El pack se aplica igual, pero el cartel queda sin texto.
-
-**`server.properties` no se respalda en este repositorio**: tiene `rcon.password`
-y `management-server-secret`.
-
 Lo que se descartó a propósito: cualquier *dweller* (Schizo Cave Dweller y Verity
 Dweller sí están para 26.1). Un monstruo que te caza en un servidor donde perdés
 todo al morir hace que la gente deje de bajar a minar.
@@ -492,6 +451,60 @@ Y **Enhanced Darkness** (cuevas negras de verdad, de cliente, MIT, 26.1) quedó
 afuera por un motivo puntual: `/nv` lo anula por completo, y está gratis e
 infinito en EXTRAS. Si alguna vez se quiere, primero hay que decidir qué pasa con
 `/nv`.
+
+## El resource pack del servidor
+
+Hay cosas que **las escribe el cliente y no el servidor**, así que desde acá no se
+pueden cambiar ni con un comando ni con un mod de servidor. La única llave es un
+resource pack, y el servidor puede pedirle uno a cada jugador al entrar
+(`resource-pack` en `server.properties`). Lo arma y lo publica
+`generar-recursos.py`.
+
+Hoy tiene una sola cosa adentro: **el cartel del spawn**. Cuando alguien intenta
+romper un bloque adentro de los 16 bloques de `spawn-protection`, el servidor manda
+`Component.translatable("build.spawn_protection")` y cada cliente lo traduce con su
+idioma. El texto de fábrica no explica nada — el jugador nuevo no entiende por qué no
+puede picar ni qué tiene que hacer. El nuestro dice qué es y cómo se sale.
+
+**El rojo no se puede cambiar desde el pack.** En el bytecode de 26.1 el componente
+se arma con `.withStyle(ChatFormatting.RED)` y eso está fijo en el servidor. Lo que
+sí se puede es empezar el texto con un código `§` heredado, que el dibujante aplica
+igual y pisa el rojo de ahí en adelante.
+
+Dos cosas que hay que respetar al tocarlo:
+
+- **Se aloja en una _prerelease_ de GitHub, y tiene que seguir siéndolo.** Si fuera
+  una release normal pasaría a ser la "latest" del repositorio y rompería dos cosas
+  de una: `releases/latest/download/SobrinosDePepe-win-Setup.exe`, que es el botón de
+  descarga de la página, y `releases/latest/download/releases.win.json`, que es de
+  donde el launcher lee si hay versión nueva. GitHub excluye las prereleases de
+  "latest".
+- **`require-resource-pack` queda en `false`.** Si un día GitHub no contesta, el
+  jugador ve un aviso y entra igual. En `true` no entraría nadie.
+
+El formato del `pack.mcmeta` va con `min_format` y `max_format` en **84**, que es el
+`resource_major` de 26.1 (sale del `version.json` del jar). Sin `pack_format`: desde
+el formato 82 ese campo dejó de estar permitido, igual que en el datapack.
+
+Acá vivió un rato **Remade Cave Ambient**, un pack de terceros que cambiaba los 23
+sonidos de cueva de vanilla. Se sacó el 2026-09-07 por pedido: un pack del servidor
+se le aplica a todo el mundo arriba de lo que cada uno tenga puesto, y no da gusto
+hacer eso con las texturas ajenas. El nuestro pisa una sola línea de texto.
+
+## Los items del que muere duran diez minutos
+
+Vanilla los borra a los cinco. `Age` cuenta hasta 6000 ticks y ahí el item se
+descarta; arrancando en **-6000** la cuenta tarda 12000, que son diez minutos. El
+valor mágico -32768 sería "no desaparece nunca".
+
+La línea vive en `sdp:tick` y va **solo sobre lo que cayó al morir**, recorriendo
+doce bloques alrededor del muerto. Sobre todos los items del mundo duplicaría las
+entidades tiradas de cualquier granja, y no es lo que se quiso: la idea es darle al
+que murió tiempo de volver a buscar sus cosas.
+
+Corre en el tick siguiente a la muerte, que es cuando el criterio `deathCount` ya
+subió: ahí el inventario ya se soltó y el jugador todavía no respawneó, así que
+sigue parado donde murió.
 
 ## Los permisos de LuckPerms
 

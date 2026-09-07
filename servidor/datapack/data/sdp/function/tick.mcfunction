@@ -4,6 +4,16 @@
 # mataron para mirar el enfriamiento de esa victima.
 execute as @a[scores={sdp_death=1..}] run function sdp:pagar_kill
 
+# Lo que solto el que murio dura diez minutos y no cinco, asi se puede volver a
+# buscarlo. Age cuenta hasta 6000 ticks y ahi el item se borra; arrancando en -6000
+# la cuenta tarda 12000, que son diez minutos. El -32768 seria "no desaparece nunca".
+#
+# Va solo sobre lo que cayo al morir y no sobre todos los items del mundo, que
+# duplicaria las entidades tiradas de cualquier granja. Se recorre desde la posicion
+# del muerto y esto corre en el tick siguiente a la muerte, cuando el inventario ya
+# se solto y el jugador todavia no respawneo, asi que sigue parado donde murio.
+execute as @a[scores={sdp_death=1..}] at @s as @e[type=item,distance=..12] run data modify entity @s Age set value -6000s
+
 # La marca de pelea baja un tick por tick y se cae sola a los quince segundos. Solo
 # corre para los conectados, asi que desconectarse no la acelera: el que sale
 # marcado vuelve marcado y tiene que quemar los 300 ticks adentro del juego.
