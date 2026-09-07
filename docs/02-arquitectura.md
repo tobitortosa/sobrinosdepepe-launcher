@@ -165,11 +165,36 @@ Todo se verifica en cada arranque a propósito. Es rápido cuando no cambió nad
 %LOCALAPPDATA%\SobrinosDePepe\
 ├── game\      versions· libraries· assets· runtime(Java 25)· mods· config· logs
 ├── pack\      el .mrpack actual
+├── mods-propios.txt   opcional: los mods que la sincronización no borra
 ├── session.dat
 └── launcher.log
 ```
 
 Sin permisos de administrador. No toca `%APPDATA%\.minecraft`, así que TLauncher les sigue funcionando. Requiere Windows 64 bits (Mojang no publica Java 25 para 32) y ~1,5 GB libres, que el launcher chequea antes de empezar.
+
+### Mods propios
+
+`mods\` y `shaderpacks\` son carpetas **del pack**, no del jugador: `ModSynchronizer`
+borra todo `.jar` que no esté en la lista publicada. Eso es a propósito y no es
+paranoia — un jar que sobrevive a un cambio de pack crashea el juego al arrancar, y
+el jugador no tiene forma de diagnosticarlo.
+
+La excepción es `mods-propios.txt`, en la raíz: un nombre de archivo por línea (se
+ignoran las vacías y las que empiezan con `#`), y esos jars se dejan como están.
+
+```
+# Los mods que puse a mano y quiero conservar, uno por linea.
+nowheel-fabric-1.4.0+mc26.1.jar
+```
+
+Es para el mod de cliente que uno quiere para sí mismo y no para todo el servidor.
+Hay que escribir el nombre a mano a propósito: así nadie termina con un jar viejo
+adentro sin darse cuenta. Si el archivo no existe o no se puede leer, la lista queda
+vacía y se sincroniza como siempre, que es el lado que no deja el juego sin arrancar.
+
+Vive en la raíz y no adentro de `mods\` justamente porque `mods\` se sincroniza.
+Un mod que además necesite config puede dejarla en `game\config\`: `ConfigSeeder`
+nunca borra, solo escribe lo que falta.
 
 ## 6. Base de datos
 

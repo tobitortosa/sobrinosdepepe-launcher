@@ -34,6 +34,7 @@ launcher/
     │   ├── OfflineIdentity    UUID derivado del nombre, igual al que calcula el server
     │   ├── HashedDownloader   descarga con reintentos y verificación de hash
     │   ├── ModSynchronizer    deja mods/ igual al pack, borra lo que sobra
+    │   │                      salvo lo nombrado en mods-propios.txt
     │   ├── GameSetup          Minecraft + Java 25 + perfil de Fabric
     │   ├── GameRunner         arranca el juego y captura su salida
     │   ├── ServerStatus       resuelve el SRV y pregunta si el server está online

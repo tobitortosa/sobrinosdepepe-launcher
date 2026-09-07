@@ -18,6 +18,17 @@ public static class LauncherPaths
     public static string LauncherLog => Path.Combine(Root, "launcher.log");
     public static string SessionFile => Path.Combine(Root, "session.dat");
 
+    /// <summary>
+    /// Los mods que el jugador puso a mano y quiere conservar, uno por línea.
+    /// Sin este archivo, la sincronización borra cualquier .jar que no esté en el
+    /// pack, y eso es a propósito: un jar viejo que sobrevive a un cambio de pack
+    /// crashea el juego al arrancar. Esto es la excepción explícita para quien sabe
+    /// lo que está haciendo, y por eso hay que escribir el nombre a mano.
+    ///
+    /// Vive en la raíz y no adentro de mods/, que es una carpeta del pack.
+    /// </summary>
+    public static string OwnModsFile => Path.Combine(Root, "mods-propios.txt");
+
     public static void EnsureCreated()
     {
         Directory.CreateDirectory(Root);
