@@ -481,6 +481,13 @@ Dos cosas que hay que respetar al tocarlo:
   "latest".
 - **`require-resource-pack` queda en `false`.** Si un día GitHub no contesta, el
   jugador ve un aviso y entra igual. En `true` no entraría nadie.
+- **El cartel de "¿querés descargar el pack?" lo saca el launcher, no el servidor.**
+  Esa decisión se guarda **por servidor** en `servers.dat`, en el campo
+  `acceptTextures`; no hay ninguna opción global en `options.txt`. Desde la 1.10.4 el
+  launcher escribe ese campo en la entrada del servidor cada vez que se aprieta
+  JUGAR, así que nadie tiene que contestar nada. Los servidores que la persona haya
+  agregado por su cuenta se leen y se vuelven a escribir tal cual: a esos se les
+  sigue preguntando, que es lo correcto.
 
 El formato del `pack.mcmeta` va con `min_format` y `max_format` en **84**, que es el
 `resource_major` de 26.1 (sale del `version.json` del jar). Sin `pack_format`: desde

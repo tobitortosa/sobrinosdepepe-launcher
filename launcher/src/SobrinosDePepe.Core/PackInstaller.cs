@@ -56,10 +56,14 @@ public sealed class PackInstaller
 
         // El servidor, cargado en el menú multijugador. Al apretar JUGAR se entra
         // directo, pero si alguien se desconecta y va al menú lo tiene que encontrar ahí.
+        //
+        // Va con AcceptTextures en true: el servidor manda un resource pack chiquito con
+        // los carteles en castellano, y sin esto Minecraft pregunta si lo quiere bajar la
+        // primera vez que entra. Es un cartel que nadie sabe qué contestar.
         var added = ServerList.Ensure(
             Path.Combine(LauncherPaths.GameDir, "servers.dat"),
-            new SavedServer(pack.Server.Name, pack.Server.Address));
-        if (added) detail?.Report($"servidor {pack.Server.Name} agregado al menú multijugador");
+            new SavedServer(pack.Server.Name, pack.Server.Address, AcceptTextures: true));
+        if (added) detail?.Report($"servidor {pack.Server.Name} listo en el menú multijugador");
 
         MarkInstalled(pack.PackVersion);
 

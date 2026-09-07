@@ -47,12 +47,23 @@ if (args.Contains("--estado-juego"))
 }
 
 // Muestra la lista de servidores del menú multijugador, para diagnosticar.
+// Con --ensure corre encima lo mismo que corre al instalar, para ver qué queda.
 if (args.Contains("--lista-servidores"))
 {
     var archivo = Value("--archivo") ?? Path.Combine(LauncherPaths.GameDir, "servers.dat");
     Console.WriteLine($"Archivo: {archivo}");
+
+    if (args.Contains("--ensure"))
+    {
+        var cambio = ServerList.Ensure(archivo,
+            new SavedServer(Value("--nombre") ?? "SOBRINOS DE PEPE",
+                            Value("--direccion") ?? "sobrinosdepepe.minehost.pro",
+                            AcceptTextures: true));
+        Console.WriteLine(cambio ? "  (se reescribió el archivo)" : "  (ya estaba como tenía que estar)");
+    }
+
     foreach (var s in ServerList.Read(archivo))
-        Console.WriteLine($"  {s.Name,-24} {s.Address}");
+        Console.WriteLine($"  {s.Name,-24} {s.Address,-38} pack: {(s.AcceptTextures ? "acepta solo" : "pregunta")}");
     return 0;
 }
 

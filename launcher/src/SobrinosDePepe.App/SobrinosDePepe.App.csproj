@@ -11,7 +11,7 @@
          Tiene que ir a la par de la última publicada: si queda atrás y alguien compila
          sin pasar -p:Version, el .exe se cree viejo y se queda pegado en la pantalla de
          actualización obligatoria contra sí mismo. -->
-    <Version>1.10.3</Version>
+    <Version>1.10.4</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>

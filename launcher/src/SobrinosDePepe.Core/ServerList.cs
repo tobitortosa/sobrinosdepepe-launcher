@@ -3,7 +3,13 @@ using System.Text;
 
 namespace SobrinosDePepe.Core;
 
-public sealed record SavedServer(string Name, string Address);
+/// <param name="AcceptTextures">
+/// Si el cliente acepta solo el resource pack que manda ese servidor. Es el campo
+/// <c>acceptTextures</c> del archivo, y es POR SERVIDOR: no hay ninguna opción global
+/// en options.txt. Sin él, Minecraft pregunta "¿querés descargar el pack?" la primera
+/// vez que entrás, y para el jugador es un cartel raro que nadie sabe qué contesta.
+/// </param>
+public sealed record SavedServer(string Name, string Address, bool AcceptTextures = false);
 
 /// <summary>
 /// La lista de servidores del menú multijugador, el archivo servers.dat.
@@ -26,19 +32,24 @@ public static class ServerList
     private const byte TagCompound = 10;
 
     /// <summary>
-    /// Deja el servidor en la lista. Si ya está, no hace nada; si hay otros, los conserva.
-    /// Devuelve true cuando tuvo que agregarlo.
+    /// Deja el servidor en la lista, primero y aceptando su resource pack. Si ya está
+    /// pero le falta lo segundo, lo corrige; si hay otros servidores, los conserva.
+    /// Devuelve true cuando tuvo que tocar el archivo.
+    ///
+    /// Se revisa en cada JUGAR y no solo la primera vez, porque el que ya tenía el
+    /// servidor cargado de antes también tiene que dejar de ver el cartel del pack.
     /// </summary>
     public static bool Ensure(string path, SavedServer server)
     {
         var existing = Read(path);
+        var mismo = existing.FirstOrDefault(
+            s => string.Equals(s.Address, server.Address, StringComparison.OrdinalIgnoreCase));
 
-        if (existing.Any(s => string.Equals(s.Address, server.Address, StringComparison.OrdinalIgnoreCase)))
-            return false;
+        if (mismo is not null && mismo.AcceptTextures == server.AcceptTextures) return false;
 
         // El servidor de la comunidad va primero: es el que van a usar.
         var updated = new List<SavedServer> { server };
-        updated.AddRange(existing);
+        updated.AddRange(existing.Where(s => !ReferenceEquals(s, mismo)));
 
         Write(path, updated);
         return true;
@@ -84,6 +95,15 @@ public static class ServerList
             body.Add(TagString);
             WriteName(body, "name");
             WriteText(body, server.Name);
+
+            // Solo se escribe cuando es true. Ausente significa "preguntar", que es lo
+            // que corresponde para los servidores que la persona agregó por su cuenta.
+            if (server.AcceptTextures)
+            {
+                body.Add(TagByte);
+                WriteName(body, "acceptTextures");
+                body.Add(1);
+            }
 
             body.Add(TagEnd);
         }
@@ -142,6 +162,7 @@ public static class ServerList
 
             string? name = null;
             string? ip = null;
+            var acceptTextures = false;
 
             while (true)
             {
@@ -152,10 +173,13 @@ public static class ServerList
 
                 if (type == TagString && field == "name") name = ReadText(data, ref at);
                 else if (type == TagString && field == "ip") ip = ReadText(data, ref at);
+                // Se lee para no pisárselo a los servidores que agregó la persona:
+                // reescribir el archivo sin esto los devolvería a "preguntar".
+                else if (type == TagByte && field == "acceptTextures") acceptTextures = Read1(data, ref at) != 0;
                 else SkipPayload(data, ref at, type);
             }
 
-            if (!string.IsNullOrEmpty(ip)) found.Add(new SavedServer(name ?? ip, ip));
+            if (!string.IsNullOrEmpty(ip)) found.Add(new SavedServer(name ?? ip, ip, acceptTextures));
         }
     }
 
