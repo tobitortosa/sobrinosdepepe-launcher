@@ -18,6 +18,7 @@ subir tal cual y todo queda como estaba.
 | `configurar-permisos.py` | Le da al grupo `default` de LuckPerms los permisos de los comandos que la guía promete. |
 | `configurar-horror.py` | Deja Server-Side Horror en modo "una pizca": ruidos y nada que toque el mundo. |
 | `generar-recursos.py` | Arma el resource pack propio del servidor, lo publica en GitHub y apunta el servidor. |
+| `configurar-zonas.py` | Deja Safe Zone como herramienta de administrador: nadie más puede proteger zonas. |
 | `ajustar-saldos.py` | Deja el saldo de cada uno en proporción a las horas jugadas. |
 | `estilo.py` | Los colores y los símbolos, en un solo lugar. |
 
@@ -524,6 +525,74 @@ que murió tiempo de volver a buscar sus cosas.
 Corre en el tick siguiente a la muerte, que es cuando el criterio `deathCount` ya
 subió: ahí el inventario ya se soltó y el jugador todavía no respawneó, así que
 sigue parado donde murió.
+
+## Las zonas protegidas
+
+**Safe Zone 1.5.0** (`safe-zone`), `environment: server`: no va al pack del
+launcher y nadie tiene que actualizar nada. Depende de fabric-api, que ya está.
+
+Sirve para proteger una base: se eligen dos esquinas con una varita y toda la
+columna —de la roca madre al cielo— queda irrompible. No se puede romper ni poner
+un bloque adentro, ni con TNT, ni con fuego, ni tirando lava: el mod parchea la
+explosión, el fuego, el fluido y el balde. Si la base está bajo tierra, no hay
+forma de cavar para entrar.
+
+Un datapack **no puede** hacer esto. No existe ninguna forma de cancelar que un
+jugador rompa un bloque desde un datapack, por eso es un mod y no una función.
+
+Cómo se usa, y es todo lo que hay que saber:
+
+    /sz givewand <vos>            (o /give <vos> minecraft:debug_stick)
+    click derecho en una esquina
+    click derecho en la esquina opuesta
+
+Para sacarla: click derecho adentro con la varita y confirmar, o `/sz remove`
+parado adentro. `/sz list` las lista y `/sz info` cuenta la de donde estás parado.
+
+### Los tres candados, porque de fábrica esto era para todos
+
+El mod viene como un sistema de reclamos **para cualquier jugador**, y así como
+viene mataría el raideo, que es el alma de este servidor: el cartel de `/pvp` dice
+"las bases NO están protegidas" y tiene que seguir siendo verdad. Lo cierran tres
+cosas independientes, todas en `configurar-zonas.py`:
+
+1. **`defaultMaxClaims` en 0.** El límite es por jugador y se chequea al crear la
+   zona, así que con 0 nadie puede crear ninguna. La cuenta de administrador tiene
+   un límite propio de 20, puesto con `/sz limits PEPE 20`, que se guarda en
+   `player_limits.json` con el UUID de offline. **Este es el candado que importa.**
+2. **`starterKitEnabled` en false.** Venía en **true**: le regalaba una varita a
+   cada jugador nuevo al entrar. Al instalarlo el 2026-09-07 alcanzó a repartir
+   cuatro antes de que se apagara — quedaron cuatro azadas de oro comunes por ahí,
+   que ya no sirven de nada, y no se crearon zonas.
+3. **La varita es el palo de depuración y no la azada de oro.**
+   `ModItems.isClaimWand` mira **solo el tipo de ítem** (`stack.is(item)`), no el
+   nombre ni ningún componente, así que con la varita de fábrica **cualquier azada
+   de oro sirve** — y eso se craftea con dos lingotes y dos palos. El palo de
+   depuración no tiene receta ni aparece en ningún cofre: la única forma de tenerlo
+   es que un operador lo dé.
+
+   **Ojo con el creativo:** el palo de depuración cambia estados de bloque cuando
+   `canUseGameMasterBlocks()` da true, o sea siendo operador **y** en creativo. En
+   supervivencia no hace nada por su cuenta y la varita anda bien.
+
+### Lo que no da
+
+- **Las zonas son solo del overworld.** `ClaimWandHandler` tiene un mensaje de
+  validación para eso ("Safe zones only work in the Overworld").
+- **Cada zona mide como máximo 128 x 128**, que es lo que quedó en
+  `maxClaimWidth`/`maxClaimDepth`. Si una base no entra, se hacen dos pegadas.
+- **El aviso al jugador que intenta romper está en inglés:** "You cannot build
+  here". Son strings de Java hardcodeados en `SafeZoneText` y no claves de
+  traducción, así que **no se pueden cambiar con un resource pack**. Se cambiarían
+  editando el jar, que es MIT y lo permite, pero habría que rehacerlo en cada
+  actualización del mod.
+- La protección **no impide entrar caminando** por una abertura que ya exista: lo
+  que no se puede es abrir una nueva.
+
+`createDataBackups` y `recoverFromBackupOnLoadFailure` van en true a propósito:
+`claims.json` es la única copia de qué está protegido, y si se corrompe la base
+queda abierta sin que nadie se entere. El `auditLogEnabled` deja en
+`safe-zone_audit.log` quién creó o borró cada zona.
 
 ## Los permisos de LuckPerms
 

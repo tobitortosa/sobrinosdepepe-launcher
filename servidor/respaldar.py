@@ -31,6 +31,11 @@ ARCHIVOS = [
     ("/config/EssentialCommands.properties", "esenciales/EssentialCommands.properties"),
     # Server-Side Horror: qué sustos están prendidos y cada cuánto.
     ("/config/serversidehorror.json", "horror/serversidehorror.json"),
+    # Safe Zone: quién puede proteger zonas y con qué ítem. Ojo que vive adentro
+    # de /world y no de /config, así que se va con el mundo si se rearma.
+    ("/world/safe-zone/config.json", "zonas/config.json"),
+    ("/world/safe-zone/claims.json", "zonas/claims.json"),
+    ("/world/safe-zone/player_limits.json", "zonas/player_limits.json"),
 ]
 
 # Estas carpetas se bajan enteras, así que agregar un archivo nuevo del lado del

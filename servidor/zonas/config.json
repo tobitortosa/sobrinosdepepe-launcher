@@ -1,0 +1,27 @@
+{
+  "gameplay": {
+    "claimWandItemId": "minecraft:debug_stick",
+    "starterKitEnabled": false,
+    "dropStarterKitWhenInventoryFull": false,
+    "defaultMaxClaims": 0,
+    "maxClaimWidth": 128,
+    "maxClaimDepth": 128,
+    "claimGapEnforced": false,
+    "claimGapMinDistance": 10,
+    "claimExpiryDays": 0,
+    "notificationsEnabled": true,
+    "notificationRetentionDays": 30,
+    "wandRemoveConfirmSeconds": 5,
+    "commandRemoveConfirmSeconds": 10,
+    "wandSelectionRangeBlocks": 64,
+    "wandOutlineStep": 4,
+    "wandConfirmDisplaySeconds": 3,
+    "windChargeKnockbackInClaims": true
+  },
+  "ops": {
+    "auditLogEnabled": true,
+    "mirrorAuditToServerLog": false,
+    "createDataBackups": true,
+    "recoverFromBackupOnLoadFailure": true
+  }
+}
