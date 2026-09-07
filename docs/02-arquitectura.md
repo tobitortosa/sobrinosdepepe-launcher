@@ -222,7 +222,24 @@ El pack fija Minecraft **26.1** (la del server, protocolo 775) y Fabric Loader *
 
 ## 10. Distribución
 
-`Setup.exe` de Velopack en GitHub Releases, sin firma de código. La primera vez Windows muestra "Windows protegió tu PC": hay que escribir "Más información → Ejecutar de todas formas" donde compartas el link. Después el launcher se actualiza solo y el aviso no vuelve a aparecer.
+`Setup.exe` de Velopack en GitHub Releases, sin firma de código. La primera vez Windows muestra "Windows protegió tu PC": la página de descarga lo explica con las capturas de pantalla paso por paso. Después el launcher se actualiza solo y el aviso no vuelve a aparecer.
+
+### Desinstalar
+
+Desde "Aplicaciones instaladas" de Windows, como cualquier programa. La entrada la crea
+Velopack apuntando a su propio `Update.exe`, que desinstala sin mostrar nada; el launcher
+la reescribe en cada arranque para que apunte a sí mismo con `--uninstall` y aparezca la
+pantalla de despedida: qué se borra, botón, barra de progreso y "listo, no quedó nada".
+
+El reparto es: la pantalla borra lo pesado (`game`, `pack`, la sesión y el log) mientras lo
+cuenta, y al cerrar le pasa la posta a Velopack, que se borra a sí mismo, los accesos
+directos y la entrada del registro. Un `cmd` suelto, fuera de la carpeta, remata la raíz por
+si quedó algo. No se puede hacer al revés: lo primero que hace Velopack es matar los
+procesos que corren desde esa carpeta.
+
+`QuietUninstallString` queda como la dejó Velopack, para las herramientas que desinstalan
+sin intervención. Ese camino también limpia: Velopack avisa antes de borrar
+(`OnBeforeUninstallFastCallback`) y ahí se hace la misma limpieza sin pantalla.
 
 ## 11. Créditos
 

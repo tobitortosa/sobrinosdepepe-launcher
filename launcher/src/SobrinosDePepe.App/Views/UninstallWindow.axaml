@@ -1,0 +1,139 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SobrinosDePepe.App.ViewModels"
+        xmlns:app="using:SobrinosDePepe.App"
+        x:Class="SobrinosDePepe.App.Views.UninstallWindow"
+        x:DataType="vm:UninstallViewModel"
+        Title="Desinstalar SOBRINOS DE PEPE"
+        Icon="avares://SobrinosDePepe/Assets/icon.ico"
+        Width="440" Height="560"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource GroundBrush}">
+
+  <Grid RowDefinitions="*,Auto">
+
+    <Panel Grid.Row="0" Margin="34,32,34,0">
+
+      <!-- 1. La pregunta -->
+      <StackPanel VerticalAlignment="Center" IsVisible="{Binding IsAsking}">
+
+        <Image Source="avares://SobrinosDePepe/Assets/logo.png"
+               Width="88" Height="88" HorizontalAlignment="Center" Margin="0,0,0,22" />
+
+        <TextBlock Classes="title" Text="Qué lástima que te vas" FontSize="22"
+                   HorizontalAlignment="Center" TextAlignment="Center" />
+
+        <TextBlock Classes="muted" TextWrapping="Wrap" TextAlignment="Center" Margin="0,12,0,0"
+                   Text="Gracias por haber jugado con nosotros. Si algún día volvés, tu cuenta te sigue esperando." />
+
+        <!-- Qué se borra, dicho sin vueltas -->
+        <Border Classes="card" Padding="18" Margin="0,24,0,0">
+          <StackPanel Spacing="10">
+
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="•" Classes="faint" />
+              <TextBlock Classes="muted" TextWrapping="Wrap" Width="290"
+                         Text="Se borra el launcher, el Minecraft que instalamos, el Java y los mods." />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="•" Classes="faint" />
+              <TextBlock Classes="muted" TextWrapping="Wrap" Width="290"
+                         Text="Tu Minecraft de siempre no se toca: nunca estuvo mezclado con esto." />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="•" Classes="faint" />
+              <TextBlock Classes="muted" TextWrapping="Wrap" Width="290"
+                         Text="Lo que construiste en el servidor queda ahí, guardado." />
+            </StackPanel>
+
+          </StackPanel>
+        </Border>
+
+        <TextBlock Classes="faint" HorizontalAlignment="Center" Margin="0,14,0,0"
+                   IsVisible="{Binding Size, Converter={x:Static ObjectConverters.IsNotNull}}"
+                   Text="{Binding Size, StringFormat='Vas a liberar {0}'}" />
+
+      </StackPanel>
+
+      <!-- 2. Borrando -->
+      <StackPanel VerticalAlignment="Center" IsVisible="{Binding IsWorking}" Spacing="0">
+
+        <Image Source="avares://SobrinosDePepe/Assets/logo.png"
+               Width="72" Height="72" HorizontalAlignment="Center" Margin="0,0,0,26" Opacity="0.5" />
+
+        <TextBlock Classes="title" Text="Desinstalando" FontSize="20"
+                   HorizontalAlignment="Center" />
+
+        <ProgressBar Margin="0,22,0,0" Value="{Binding Percent}" Maximum="100" />
+
+        <TextBlock Classes="muted" Text="{Binding Message}" Margin="0,14,0,0"
+                   HorizontalAlignment="Center" TextAlignment="Center" />
+
+        <TextBlock Classes="faint" Margin="0,8,0,0" HorizontalAlignment="Center"
+                   Text="No cierres esta ventana." />
+
+      </StackPanel>
+
+      <!-- 3. La despedida -->
+      <StackPanel VerticalAlignment="Center" IsVisible="{Binding IsDone}">
+
+        <Image Source="avares://SobrinosDePepe/Assets/logo.png"
+               Width="88" Height="88" HorizontalAlignment="Center" Margin="0,0,0,22" />
+
+        <TextBlock Classes="title" Text="Listo, no quedó nada" FontSize="22"
+                   HorizontalAlignment="Center" TextAlignment="Center" />
+
+        <TextBlock Classes="muted" TextWrapping="Wrap" TextAlignment="Center" Margin="0,12,0,0"
+                   Text="Se borró todo lo que el launcher había puesto en tu PC. Ni un archivo suelto." />
+
+        <TextBlock Classes="muted" TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,0"
+                   Text="Cuando quieras volver, el launcher está siempre en el mismo lugar." />
+
+        <Button Classes="link" Content="sobrinosdepepe.vercel.app"
+                Command="{Binding OpenLinkCommand}"
+                CommandParameter="https://sobrinosdepepe.vercel.app"
+                HorizontalAlignment="Center" Margin="0,4,0,0" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="2" Margin="0,20,0,0">
+          <Button Classes="link social" Content="Kick" Command="{Binding OpenLinkCommand}"
+                  CommandParameter="https://kick.com/elsobrinodepepe" />
+          <Button Classes="link social" Content="YouTube" Command="{Binding OpenLinkCommand}"
+                  CommandParameter="https://www.youtube.com/@elsobrinodepepe" />
+          <Button Classes="link social" Content="Instagram" Command="{Binding OpenLinkCommand}"
+                  CommandParameter="https://www.instagram.com/elsobrinodepepe/" />
+          <Button Classes="link social" Content="TikTok" Command="{Binding OpenLinkCommand}"
+                  CommandParameter="https://www.tiktok.com/@sobrinodepepe" />
+        </StackPanel>
+
+      </StackPanel>
+
+    </Panel>
+
+    <!-- Los botones, siempre abajo -->
+    <StackPanel Grid.Row="1" Margin="34,24,34,14" Spacing="10">
+
+      <Button Classes="primary" Content="DESINSTALAR"
+              Command="{Binding RemoveCommand}"
+              IsVisible="{Binding IsAsking}"
+              HorizontalAlignment="Stretch" />
+
+      <Button Classes="link" Content="Mejor me quedo"
+              Command="{Binding CancelCommand}"
+              IsVisible="{Binding IsAsking}"
+              HorizontalAlignment="Center" />
+
+      <Button Classes="primary" Content="CERRAR"
+              Command="{Binding FinishCommand}"
+              IsVisible="{Binding IsDone}"
+              HorizontalAlignment="Stretch" />
+
+      <TextBlock Classes="faint" Text="{x:Static app:AppVersion.Label}"
+                 HorizontalAlignment="Center" Margin="0,4,0,0" />
+
+    </StackPanel>
+
+  </Grid>
+</Window>

@@ -40,7 +40,8 @@ launcher/
     │   ├── LauncherApi        cuentas y pack contra el backend
     │   ├── SessionStore       token guardado cifrado con la cuenta de Windows
     │   ├── PackInstaller      deja la instalación igual al pack publicado
-    │   └── ConfigSeeder       configs solo si no existen
+    │   ├── ConfigSeeder       configs solo si no existen
+    │   └── Uninstall          borra todo lo que dejó el launcher, sin residuos
     └── SobrinosDePepe.Spike/       app de consola de la fase 0
 ```
 
