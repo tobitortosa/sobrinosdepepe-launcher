@@ -589,6 +589,26 @@ cosas independientes, todas en `configurar-zonas.py`:
 - La protección **no impide entrar caminando** por una abertura que ya exista: lo
   que no se puede es abrir una nueva.
 
+### Que no se vea
+
+La idea es que las zonas protegidas sean algo que solo existe para el operador, así
+que no alcanza con que nadie pueda crearlas: no tiene que haber ni rastro.
+
+- **`/claim` y `/claims` están tapados** con `modificadores/safezone.json`, porque
+  el mod los registra sin `requires` y cualquiera los veía en el autocompletado.
+  `/sz` y `/safezone` ya venían con `requires(GAMEMASTERS)`.
+- **Nadie recibe ningún mensaje del mod al entrar**, porque el kit inicial está
+  apagado. El título "Claim wand ready" que salía era de eso.
+- **Las tres azadas que alcanzó a repartir se sacaron** con
+  `clear <jugador> minecraft:golden_hoe 1`. Una sola por jugador y no todas: la que
+  daba el mod era una azada común, sin nombre ni componentes, indistinguible de una
+  crafteada, así que sacando una queda neutro el regalo sin llevarse la que alguien
+  se haya hecho. Fueron Titit0N, Luquitas1410 y lanuerademari; a PEPE no, que es el
+  operador.
+- Lo único que un jugador puede llegar a ver es **"You cannot build here"** si
+  intenta romper adentro de una zona, y eso tiene que estar: si no, parecería que el
+  juego se rompió. El operador recibe el aviso de que alguien lo intentó.
+
 `createDataBackups` y `recoverFromBackupOnLoadFailure` van en true a propósito:
 `claims.json` es la única copia de qué está protegido, y si se corrompe la base
 queda abierta sin que nadie se entere. El `auditLogEnabled` deja en
@@ -858,6 +878,7 @@ Se aplican con `/reload`.
 | `sidebar`, `styledsidebars` | Cualquiera podía escribir `/sidebar disable` y quedarse sin cartel para siempre. |
 | `warp` | No hay ningún lugar creado, así que solo podía fallar. Se destapa borrando el archivo cuando existan. |
 | `workbench`, `anvil`, `stonecutter` | Mesas portátiles. La idea es que cada uno tenga su mesa de crafteo de verdad, no llevarla en el bolsillo. |
+| `claim`, `claims` | Los comandos de jugador de Safe Zone. **No traen `requires`**: sin este archivo los ve y los puede tipear cualquiera, y las zonas protegidas dejan de ser algo que solo existe para el operador. `/sz` y `/safezone` no hacen falta acá: esos sí se registran con `requires(GAMEMASTERS)`. |
 
 Y `combate.json`, que es de otra clase: no reemplaza el requisito del nodo sino
 que le agrega un predicado a la **ejecución**. Está explicado abajo, en "La marca
