@@ -12,6 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.ItemLore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +27,13 @@ import java.util.Map;
  * venderlo, para no tener que abrir la tienda ni escribir /worth cada vez.
  *
  * Aparece en el inventario, en la mano y adentro de cualquier contenedor de
- * verdad: cofres, barriles, shulkers, el cofre de ender. Donde NO aparece es
- * donde ya hay un precio escrito, que son los menus de EconomyCraft, y en los
- * botones de nuestros propios menus de cofre.
+ * verdad: cofres, barriles, shulkers, el cofre de ender.
+ *
+ * Donde NO aparece es en los menus: ni en los nuestros ni en los de
+ * EconomyCraft (/shop, /sell, /ah, /orders, /eco admin), ni en la pantalla de
+ * categorias del /shop, que es la que se habia escapado. Ahi los items no son
+ * objetos, son botones, y ponerles "Precio: $180" no informa nada. La senal para
+ * distinguirlos esta en esDeUnMenu().
  *
  * Los precios viajan adentro del mod: son los mismos que tiene el servidor en
  * config/economycraft/prices.json. Si alguna vez cambian, hay que rearmar el
@@ -49,7 +54,7 @@ public class PreciosCliente implements ClientModInitializer {
 				return;
 			}
 
-			if (esBoton(pila) || yaMuestraPrecio(lineas)) return;
+			if (esBoton(pila) || esDeUnMenu(pila)) return;
 
 			var id = BuiltInRegistries.ITEM.getKey(pila.getItem());
 			Integer unidad = VENTA.get(id.toString());
@@ -105,45 +110,42 @@ public class PreciosCliente implements ClientModInitializer {
 	}
 
 	/**
-	 * No repetir el precio donde ya hay uno escrito.
+	 * Los items de un menu de cofre no llevan precio, y los de un cofre de verdad si.
 	 *
-	 * Es el reemplazo de un filtro anterior que solo mostraba el precio en el
-	 * inventario del jugador, comparando por identidad de ItemStack contra los
-	 * slots del inventario. Ese filtro cumplia su objetivo (no ensuciar el /shop
-	 * de EconomyCraft, que ya escribe cuanto sale y cuanto paga) pero se llevaba
-	 * puesto justo el caso mas util: abrir un cofre y ver por cuanto se vende
-	 * cada cosa. Los items de un cofre son copias aparte y nunca coincidian.
+	 * La senal es el LORE NO VACIO. Un item que esta en un cofre es un item pelado:
+	 * su lore es ItemLore.EMPTY. Un item que dibuja un menu siempre trae lore escrito
+	 * a mano, porque es un boton y tiene que explicar que hace: el /shop de
+	 * EconomyCraft le pone "Buy: $2.800 | Sell: $840" a cada articulo
+	 * (ShopUi, DataComponents.LORE) y "Click to view items" a los iconos de
+	 * categoria, y el /ah y las ordenes hacen lo mismo.
 	 *
-	 * Este chequeo mira el contenido en vez del contenedor, y por eso acierta en
-	 * los dos lados sin tener que distinguirlos: del lado del cliente un cofre y
-	 * el menu de una tienda son los dos un ChestMenu y no hay forma de saber cual
-	 * es cual.
+	 * OJO CON EL CHEQUEO, que aca ya nos comimos este error una vez: no alcanza con
+	 * preguntar si el componente EXISTE. LORE esta en COMMON_ITEM_COMPONENTS con
+	 * ItemLore.EMPTY de default, o sea que TODOS los items lo traen y preguntar por
+	 * null daria verdadero siempre. Es exactamente lo que paso con tooltip_display,
+	 * que hizo desaparecer el precio del inventario entero. Hay que mirar lines().
 	 *
-	 * El ancla es que EconomyCraft.formatMoney SIEMPRE arranca con "$"
-	 * (return "$" + new DecimalFormat("#,##0", symbols).format(amount)), asi que
-	 * cualquier precio que el mod dibuje (en el /shop, en el /ah, en las ordenes o
-	 * en el /eco admin) trae un signo peso seguido de un digito. Donde aparezca
-	 * eso, nos callamos.
+	 * Por que esto y no mirar el texto: la primera version buscaba un "$" seguido de
+	 * un digito, apoyandose en que EconomyCraft.formatMoney siempre arranca con "$".
+	 * Andaba adentro de una categoria del /shop pero NO en la pantalla de categorias,
+	 * donde los iconos solo dicen "Click to view items" y no tienen ningun precio:
+	 * ahi les pegaba el cartelito igual. Y buscar "Click" seria peor, porque es texto
+	 * en ingles hardcodeado de otro mod.
 	 *
-	 * Es preferible a filtrar por el titulo del menu: MenuUiSupport.openMenu recibe
-	 * el titulo como un String literal del codigo que llama, asi que atarse a esos
-	 * textos se rompe en silencio en cuanto el mod cambia una palabra.
+	 * Por que no filtrar por el titulo del menu: MenuUiSupport.openMenu recibe el
+	 * titulo como un String literal del codigo que lo llama, asi que atarse a esos
+	 * textos se rompe en silencio en cuanto el mod cambia una palabra. Y del lado del
+	 * cliente un cofre y el menu de una tienda son los dos un ChestMenu: no hay
+	 * ninguna forma estructural de distinguirlos, asi que la senal tiene que estar en
+	 * el item.
 	 *
-	 * Lo unico que se pierde: un item que alguien haya renombrado con algo como
-	 * "$5" no muestra el precio. No molesta a nadie.
+	 * Lo unico que se pierde: un item con lore de verdad guardado en un cofre no
+	 * muestra el precio. Son los que alguien decoro a mano, y no son los que uno mira
+	 * para saber cuanto valen.
 	 */
-	private static boolean yaMuestraPrecio(java.util.List<Component> lineas) {
-		for (Component linea : lineas) {
-			String texto = linea.getString();
-			int peso = texto.indexOf('$');
-
-			while (peso >= 0) {
-				if (peso + 1 < texto.length() && Character.isDigit(texto.charAt(peso + 1))) return true;
-				peso = texto.indexOf('$', peso + 1);
-			}
-		}
-
-		return false;
+	private static boolean esDeUnMenu(ItemStack pila) {
+		ItemLore lore = pila.get(DataComponents.LORE);
+		return lore != null && !lore.lines().isEmpty();
 	}
 
 	/** "Precio: $2" y, cuando hay varios, cuanto vale el monton entero. */
