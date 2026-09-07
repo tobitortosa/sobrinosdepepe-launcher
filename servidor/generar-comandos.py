@@ -135,10 +135,27 @@ GRUPOS = [
         ("/sell", False), ("/worth", False), ("/ah", False), ("/orders", False),
         ("/transactions", False), ("/pay ", True),
     ]),
+    # Esta lista y el menu de cofre de /casa tienen que decir lo mismo: son las
+    # dos caras de la misma guia y un jugador que ve un comando en una y no en la
+    # otra piensa que algo se rompio.
+    #
+    # El 2026-09-07 salieron cuatro de aca, los mismos cuatro que salieron del menu:
+    #
+    #   /spawn                anda mal y no le sirve a nadie.
+    #   /back                 no se usaba.
+    #   /tpaccept, /tpdeny    no hacen falta anunciarlos: cuando llega una
+    #                         solicitud, Essential Commands manda un
+    #                         ChatConfirmationPrompt con [Aceptar] y [Rechazar]
+    #                         clickeables y el nombre del otro ya puesto
+    #                         (TeleportAskCommand). Apretar ahi es mas rapido que
+    #                         escribir el comando, y ademas no hay que acordarse
+    #                         de a quien.
+    #
+    # Los comandos siguen existiendo y funcionando: lo que se saco es el anuncio.
     ("VIAJES", e.ACENTO, [
-        ("/spawn", False), ("/home casa", False), ("/home set casa", False),
-        ("/rtp", False), ("/back", False),
-        ("/tpa ", True), ("/tpaccept", False), ("/tpdeny", False),
+        ("/home casa", False), ("/home set casa", False),
+        ("/home set ", True), ("/home delete ", True), ("/home list", False),
+        ("/rtp", False), ("/tpa ", True),
     ]),
     ("PELEA", e.KILLS, [
         ("/shards", False), ("/tienda", False),
