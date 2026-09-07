@@ -17,6 +17,7 @@ subir tal cual y todo queda como estaba.
 | `configurar-borde.py` | Pone el borde del mundo, igual en las tres dimensiones. |
 | `configurar-permisos.py` | Le da al grupo `default` de LuckPerms los permisos de los comandos que la guía promete. |
 | `configurar-horror.py` | Deja Server-Side Horror en modo "una pizca": ruidos y nada que toque el mundo. |
+| `configurar-resourcepack.py` | Le pone al servidor el pack de sonidos de cueva, que cada jugador se baja al entrar. |
 | `ajustar-saldos.py` | Deja el saldo de cada uno en proporción a las horas jugadas. |
 | `estilo.py` | Los colores y los símbolos, en un solo lugar. |
 
@@ -441,6 +442,47 @@ Los otros tres mods que se habían mirado para esto — **Silent Caves, Shy Dwel
 Dynamic Sound Filters — no existen para 26.1**: se quedaron en 1.21.1. Y el eco y
 los sonidos amortiguados de las cuevas ya los da **Sound Physics Remastered**, que
 está en el pack desde el principio.
+
+### Los sonidos de la cueva
+
+El mod de arriba pone ruidos **encima** de los del juego. Los de la cueva en sí
+son `ambient.cave`, que es contenido del cliente, y se cambian con un resource
+pack: **Remade Cave Ambient 1.2**, que el servidor le pide a cada jugador al
+entrar (`resource-pack` en `server.properties`, lo pone
+`configurar-resourcepack.py`).
+
+Por qué así y no de otra forma:
+
+| Camino | Problema |
+|---|---|
+| Un mod de sonidos en el pack del launcher | Los tres candidatos (Expanded Cave Sounds, Horror Cave Sounds, Scary Ambience) **no existen para 26.1**. Expanded Cave Sounds llega hasta 1.21.1 y es solo de cliente. |
+| El zip en `resourcepacks/` del launcher | `ConfigSeeder` no pisa `options.txt` si ya existe — y existe en la PC de todos. El pack llegaría apagado. |
+| **`resource-pack` en `server.properties`** | Ninguno. El cliente lo baja al entrar y lo aplica solo, arriba de lo que cada uno tenga puesto, y no hay que publicar nada. |
+
+Y no se rehostea nada: la URL apunta al CDN de Modrinth, igual que los mods del
+launcher, y el `sha1` está puesto, así que si devolviera otra cosa el cliente la
+rechaza.
+
+Ese pack y no otro porque declara `pack_format: 84`, que es exactamente el
+`resource_major` de 26.1 (`version.json` del jar), y porque adentro trae
+`cave1.ogg` … `cave23.ogg`: reemplaza **los 23 sonidos de vanilla uno por uno**,
+sin `sounds.json`. O sea que no cambia ni la frecuencia, ni el fade, ni el audio
+posicional. El otro candidato con 26.1, `cave-dweller-cave-sounds`, trae **4**
+sonidos con `replace: true`: cambia 23 por 4 y se vuelve repetitivo enseguida.
+
+Dos cosas medidas al ponerlo:
+
+- **`require-resource-pack` queda en `false`.** Modrinth no garantiza permanencia
+  de sus archivos; si un día el CDN falla, el jugador ve un aviso y entra igual.
+  En `true` no entraría nadie.
+- **En `resource-pack-prompt` los saltos de línea van con DOS barras invertidas.**
+  `server.properties` lo lee `java.util.Properties`, que se come una barra: con una
+  sola, al parser de JSON le llega un salto de línea real adentro de un string y
+  el arranque escupe `Unescaped control characters are not allowed in strict mode`.
+  El pack se aplica igual, pero el cartel queda sin texto.
+
+**`server.properties` no se respalda en este repositorio**: tiene `rcon.password`
+y `management-server-secret`.
 
 Lo que se descartó a propósito: cualquier *dweller* (Schizo Cave Dweller y Verity
 Dweller sí están para 26.1). Un monstruo que te caza en un servidor donde perdés
