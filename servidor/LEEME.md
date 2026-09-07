@@ -16,6 +16,7 @@ subir tal cual y todo queda como estaba.
 | `configurar-scoreboard.py` | Rehace los objetivos y los lugares del scoreboard, que el juego guarda dentro del mundo. |
 | `configurar-borde.py` | Pone el borde del mundo, igual en las tres dimensiones. |
 | `configurar-permisos.py` | Le da al grupo `default` de LuckPerms los permisos de los comandos que la guía promete. |
+| `configurar-horror.py` | Deja Server-Side Horror en modo "una pizca": ruidos y nada que toque el mundo. |
 | `ajustar-saldos.py` | Deja el saldo de cada uno en proporción a las horas jugadas. |
 | `estilo.py` | Los colores y los símbolos, en un solo lugar. |
 
@@ -169,10 +170,11 @@ eso `dynamic_prices_enabled` queda en `false`.
 ## Qué mods van en el servidor y cuáles en el launcher
 
 Son dos listas distintas y no tienen por qué coincidir. Al 2026-09-06 el
-servidor tiene **14 jars** en `/mods` y el pack que baja el launcher tiene **14
+servidor tiene **16 jars** en `/mods` y el pack que baja el launcher tiene **14
 entradas** (13 mods y el shader). **Los 6 que están en los dos lados son el mismo
 archivo**, verificado por hash: fabric-api, cloth-config, lithium, modernfix,
-sound-physics y voicechat.
+sound-physics y voicechat. Los otros diez del servidor no los tiene nadie en su
+PC, y está bien: son `environment: server` o `*` sin nada de cliente.
 
 Cómo se decide dónde va cada uno: se lee el `fabric.mod.json` del jar.
 
@@ -398,6 +400,56 @@ descubra jugando:
 
 Si algún día se habilita `/tpahere` o `/warp`, hay que agregarlos a
 `combate.json`: son las otras dos formas de salir de un lugar.
+
+## El terror de las cuevas
+
+**Server-Side Horror 4.2** (más `deimos`, que es su librería de configuración y no
+viene embebida). Los dos son de solo servidor: `client_side: unsupported`, así que
+**no van al pack del launcher** y nadie tiene que actualizar nada. Se sacan
+moviéndolos a `/mods-apagados` y reiniciando.
+
+Lo que hace: pasos que no son de nadie, alguien picando piedra en algún lado, un
+sonido raro cada tanto y, muy de vez en cuando, una figura que aparece a lo lejos,
+te mira y desaparece. La gracia es que el jugador nunca sabe si lo escuchó de
+verdad.
+
+Todo lo configura `configurar-horror.py`, y ahí está el porqué de cada número. Lo
+que importa saber acá:
+
+- **La probabilidad se cuenta en "1 en N por tick y por jugador".** Una hora de
+  juego son 72.000 ticks, así que `veces por hora = 72000 / chance`. Hoy son unos
+  tres ruidos por hora y una figura cada cuatro horas.
+- **De los 28 eventos que trae, quedan cinco prendidos.** El mod viene con la
+  mitad activada, y varios acá serían griefing y no terror: te tira un rayo, te
+  quema la casa, te apaga las antorchas, te pone trampas con vagoneta de TNT, te
+  reaparece adentro de un dungeon. Con PvP libre y sin `keep_inventory`, cualquier
+  cosa que te mate te cuesta el inventario entero.
+- **La lista de sonidos de fábrica no sirve en un servidor de PvP.** Trae
+  `entity.tnt.primed`, `entity.creeper.primed`, `entity.arrow.hit` y
+  `item.crossbow.hit`: eso no da miedo, hace creer que te están atacando. La
+  nuestra son sonidos de cueva ambiguos — el `ambient.cave` de siempre, el enderman
+  mirándote y los del Warden y el sculk.
+- **El mod no distingue una cueva de la superficie.** Tira los dados una vez por
+  tick contra cada jugador, sin mirar dónde está: los pasos también suenan arriba
+  a pleno día. Para que pase solo bajo tierra habría que hacerlo con el datapack,
+  que ya tiene `sdp:tick`.
+- **No tiene comando de recarga.** Probado: `deimos`, `deimosconfig` y
+  `serversidehorror` no existen como comandos. Después de tocar la config hay que
+  reiniciar el servidor.
+
+Los otros tres mods que se habían mirado para esto — **Silent Caves, Shy Dweller y
+Dynamic Sound Filters — no existen para 26.1**: se quedaron en 1.21.1. Y el eco y
+los sonidos amortiguados de las cuevas ya los da **Sound Physics Remastered**, que
+está en el pack desde el principio.
+
+Lo que se descartó a propósito: cualquier *dweller* (Schizo Cave Dweller y Verity
+Dweller sí están para 26.1). Un monstruo que te caza en un servidor donde perdés
+todo al morir hace que la gente deje de bajar a minar.
+
+Y **Enhanced Darkness** (cuevas negras de verdad, de cliente, MIT, 26.1) quedó
+afuera por un motivo puntual: `/nv` lo anula por completo, y está gratis e
+infinito en EXTRAS. Si alguna vez se quiere, primero hay que decidir qué pasa con
+`/nv`.
 
 ## Los permisos de LuckPerms
 

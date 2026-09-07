@@ -29,6 +29,8 @@ ARCHIVOS = [
     # (enable_top, enable_enderchest, enable_warp...). No se puede editar con el
     # servidor prendido: el mod reescribe el archivo al apagarse.
     ("/config/EssentialCommands.properties", "esenciales/EssentialCommands.properties"),
+    # Server-Side Horror: qué sustos están prendidos y cada cuánto.
+    ("/config/serversidehorror.json", "horror/serversidehorror.json"),
 ]
 
 # Estas carpetas se bajan enteras, así que agregar un archivo nuevo del lado del
