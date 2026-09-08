@@ -8,7 +8,7 @@
 | **1 · Backend** | ✅ Listo. Cuentas, aprobar, banear, whitelist automática, subir mods y publicar. | hecho |
 | **2 · Launcher** | La interfaz: login, JUGAR, progreso, errores, auto-update. **Primer release.** | 4-5 días |
 | **3 · Admin** | Pantallas MODS y USUARIOS dentro del launcher | 2 días |
-| **4 · Acceso** | ✅ Listo. Al servidor solo se entra con el launcher. | hecho |
+| **4 · Acceso** | ✅ Listo. El servidor puede exigir el launcher, con un interruptor en el `.env`. | hecho |
 
 Después: ✅ **fase 4**, el mod que hace que al servidor solo se entre con el launcher. Hecha el 2026-09-07, ver el final.
 
@@ -91,7 +91,8 @@ Cómo quedó:
 - `mod-acceso/`: un solo `.jar` que va en los dos lados. En el servidor le pide al cliente el permiso durante el login y desconecta con un cartel a quien no lo tenga; en el cliente lo contesta leyéndolo de la variable de entorno que le dejó el launcher.
 - `GET /api/ticket`: el backend firma un permiso con `ACCESS_SECRET`, a nombre de quien lo pide y por doce horas.
 - El launcher lo pide al apretar JUGAR, con el pack ya al día, y se lo pasa al juego.
-- `servidor/subir-acceso.py`: sube el jar y la config al servidor, echa a los que estén jugando con el motivo escrito y reinicia.
+- `servidor/subir-acceso.py`: sube el jar y la config al servidor y, si el candado queda puesto, echa a los que estén jugando con el motivo escrito.
+- **El interruptor:** `REQUIRE_LAUNCHER` en el `.env`. En `false` el servidor revisa igual y anota en el log quién entró sin el launcher, pero no echa a nadie; en `true` no entra nadie sin él. El mod lee su config en cada intento de entrar, así que cambiarlo no reinicia el servidor.
 
 Un cliente sin nuestros mods se delata solo: el protocolo de Minecraft obliga a contestar el pedido del servidor durante el login, y contesta "no entendí".
 

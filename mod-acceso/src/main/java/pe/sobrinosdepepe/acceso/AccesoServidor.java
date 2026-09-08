@@ -42,53 +42,76 @@ public final class AccesoServidor implements DedicatedServerModInitializer {
 
 	@Override
 	public void onInitializeServer() {
-		ConfigAcceso config = ConfigAcceso.leer(LOG);
+		ConfigAcceso alArrancar = ConfigAcceso.leer(LOG);
+		LOG.info("Solo con el launcher: {}", alArrancar.exigir() ? "SI, el candado esta puesto" : "no, el candado esta abierto");
 
-		// El pedido va SIEMPRE, incluso si al servidor le falta la config: es lo que
-		// hace que un cliente sin el mod se delate contestando "no entendi".
+		// El pedido va SIEMPRE: con el candado abierto tambien, porque es lo que nos
+		// deja saber quien esta jugando sin el launcher sin echar a nadie. Un cliente
+		// que no conoce el canal se delata contestando "no entendi".
 		ServerLoginConnectionEvents.QUERY_START.register((handler, server, sender, sync) ->
 				sender.sendPacket(Canal.ID, FriendlyByteBufs.create()));
 
 		ServerLoginNetworking.registerGlobalReceiver(Canal.ID,
 				(server, handler, entendido, respuesta, sync, sender) -> {
-					// Ojo: para echar a alguien se usa handler y NO el sender que llega
-					// aca. El disconnect() del sender de Fabric cierra el socket y nada
-					// mas, asi que el jugador ve "Desconectado" pelado y nunca se entera
-					// de que tiene que bajarse el launcher. El del handler manda primero
-					// el paquete con el cartel, que es todo el punto de esto.
+					// La config se lee de nuevo en cada intento y no una sola vez al
+					// arrancar: asi prender o apagar el candado es subir el archivo, sin
+					// reiniciar el servidor y sin echar a los que estan jugando. Es un
+					// archivo de cien bytes y los logins son unos pocos por dia.
+					ConfigAcceso config = ConfigAcceso.leer(null);
 					String nombre = nombreDelLogin(handler);
+					Veredicto veredicto = revisar(config, entendido, respuesta, nombre);
 
-					if (!config.configurado()) {
-						rechazar(handler, Carteles.sinConfigurar(), nombre, "al servidor le falta " + ConfigAcceso.ARCHIVO);
+					if (veredicto.pasa()) {
+						LOG.info("{} entra con el launcher", nombre);
 						return;
 					}
 
-					if (!entendido) {
-						rechazar(handler, Carteles.sinLauncher(config.link()), nombre, "cliente sin el mod");
+					if (!config.exigir()) {
+						LOG.warn("{} entra SIN el launcher ({}). El candado esta abierto: exigir=false en {}",
+								nombre, veredicto.motivo(), ConfigAcceso.ARCHIVO);
 						return;
 					}
 
-					Ticket.Resultado resultado =
-							Ticket.verificar(config.secreto(), leerTicket(respuesta), System.currentTimeMillis() / 1000);
-
-					switch (resultado.estado()) {
-						case VACIO -> rechazar(handler, Carteles.sinTicket(config.link()), nombre, "sin ticket");
-						case FORMATO, FIRMA ->
-								rechazar(handler, Carteles.invalido(config.link()), nombre, "ticket que no verifica");
-						case VENCIDO ->
-								rechazar(handler, Carteles.vencido(config.link()), nombre, "ticket vencido");
-						case OK -> {
-							if (!resultado.nombre().equals(nombre)) {
-								rechazar(handler, Carteles.invalido(config.link()), nombre,
-										"ticket emitido para " + resultado.nombre());
-							} else {
-								LOG.info("{} entra con el launcher", nombre);
-							}
-						}
-					}
+					// Ojo: se echa con el handler y NO con el sender que llega aca. El
+					// disconnect() del sender de Fabric cierra el socket y nada mas, asi
+					// que el jugador ve "Desconectado" pelado y nunca se entera de que
+					// tiene que bajarse el launcher. El del handler manda primero el
+					// paquete con el cartel, que es todo el punto de esto.
+					LOG.info("No dejo entrar a {}: {}", nombre, veredicto.motivo());
+					handler.disconnect(veredicto.cartel());
 				});
+	}
 
-		LOG.info("Acceso solo con el launcher: activo");
+	/**
+	 * Si entra o no, con que cartel y por que. Revisar y actuar estan separados
+	 * porque con el candado abierto se hace la misma revision y en lugar de echar a
+	 * nadie se escribe en el log quien entro sin el launcher.
+	 */
+	private record Veredicto(boolean pasa, Component cartel, String motivo) {}
+
+	private static Veredicto revisar(
+			ConfigAcceso config, boolean entendido, FriendlyByteBuf respuesta, String nombre) {
+		if (!config.configurado()) {
+			return new Veredicto(false, Carteles.sinConfigurar(), "al servidor le falta " + ConfigAcceso.ARCHIVO);
+		}
+
+		if (!entendido) {
+			return new Veredicto(false, Carteles.sinLauncher(config.link()), "cliente sin el mod");
+		}
+
+		Ticket.Resultado resultado =
+				Ticket.verificar(config.secreto(), leerTicket(respuesta), System.currentTimeMillis() / 1000);
+
+		return switch (resultado.estado()) {
+			case VACIO -> new Veredicto(false, Carteles.sinTicket(config.link()), "sin permiso de entrada");
+			case FORMATO, FIRMA ->
+					new Veredicto(false, Carteles.invalido(config.link()), "permiso que no verifica");
+			case VENCIDO -> new Veredicto(false, Carteles.vencido(config.link()), "permiso vencido");
+			case OK -> resultado.nombre().equals(nombre)
+					? new Veredicto(true, null, "con el launcher")
+					: new Veredicto(false, Carteles.invalido(config.link()),
+							"permiso emitido para " + resultado.nombre());
+		};
 	}
 
 	/**
@@ -117,20 +140,4 @@ public final class AccesoServidor implements DedicatedServerModInitializer {
 		return espacio < 0 ? conDireccion : conDireccion.substring(0, espacio);
 	}
 
-	/**
-	 * Echa a alguien con el cartel puesto.
-	 *
-	 * Tiene que ser el disconnect del handler de vanilla, que manda un
-	 * ClientboundLoginDisconnectPacket con el texto y despues cierra la conexion.
-	 * El disconnect() del PacketSender de Fabric va derecho a
-	 * Connection.disconnect(), que cierra el canal SIN mandar ningun paquete: el
-	 * servidor loguea el motivo igual, pero el jugador solo ve "Desconectado" y no
-	 * hay forma de que se entere de que necesita el launcher. Nos comimos
-	 * exactamente ese error la primera vez que se probo.
-	 */
-	private static void rechazar(
-			ServerLoginPacketListenerImpl handler, Component cartel, String nombre, String motivo) {
-		LOG.info("No dejo entrar a {}: {}", nombre, motivo);
-		handler.disconnect(cartel);
-	}
 }

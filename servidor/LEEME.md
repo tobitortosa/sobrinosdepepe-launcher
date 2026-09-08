@@ -8,7 +8,7 @@ subir tal cual y todo queda como estaba.
 |---|---|
 | `respaldar.py` | Baja del servidor todo lo que mantenemos nosotros. |
 | `subir-datapack.py` | Sube el datapack entero (funciones, advancements, menús) y recarga. |
-| `subir-acceso.py` | Sube el mod de acceso y su config, echa a los que estén jugando con el motivo escrito y reinicia. Es lo que hace que al servidor se entre solo con el launcher. |
+| `subir-acceso.py` | Sube el mod de acceso y su config: el candado (`REQUIRE_LAUNCHER`), el secreto y el link. Con el candado puesto, al servidor se entra solo con el launcher. |
 | `generar-precios.py` | Arma `prices.json` y `config.json` de EconomyCraft, rearma el mod cliente de precios y verifica que no haya plata infinita. |
 | `verificar-precios.py` | Solo la verificación, contra el servidor o contra un archivo. |
 | `generar-menus.py` | Arma los menús de cofre (los deja en el datapack). |

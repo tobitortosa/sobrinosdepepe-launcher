@@ -16,6 +16,7 @@
 | Skins | SkinRestorer instalado en el server. Cada uno pide la suya por chat. Cero código nuestro. |
 | Shaders | Fuera del pack. |
 | MapLink | Fuera del pack: su configuración ignora este server. |
+| Entrar solo con el launcher | Construido el 2026-09-07 (fase 4) y **queda apagado**: `REQUIRE_LAUNCHER=false`. El servidor anota en el log quién entra sin el launcher, pero no echa a nadie. Se prende cambiando esa variable y corriendo `servidor/subir-acceso.py`, sin reiniciar ni sacar a nadie del juego. La idea es cerrarlo cuando todos hayan abierto el launcher al menos una vez. |
 | Xaero's Minimap y World Map | Fuera del pack y del servidor desde el 2026-09-06. El minimapa trae radar de jugadores, y con PvP libre en todo el mundo eso es saber siempre dónde está cada uno. |
 
 ## Fuera de alcance, por pedido explícito
@@ -24,7 +25,7 @@ Backups del mundo, monitoreo de las URLs del pack, modo degradado para jugar sin
 
 ## Lo que falta
 
-**Una pregunta de fondo.** El ban, tal como está diseñado, saca de la whitelist y marca la cuenta, pero no impide entrar: alguien con TLauncher que sepa el nombre de un jugador aprobado entra igual. Con cinco amigos no importa. Con viewers de stream, ¿te alcanza así, o querés que el ban impida la entrada de verdad? Lo segundo obliga a construir el mod del servidor de la fase 4, que son dos o tres días más y un corte duro para todos.
+**Contestada la pregunta de fondo.** El ban saca de la whitelist y marca la cuenta, pero por sí solo no impedía entrar: en modo offline la whitelist filtra por nombre y no autentica. La fase 4 se construyó el 2026-09-07 y lo cierra, con la particularidad de que el corte es un interruptor y no una decisión de una sola vez: hoy está en `false` y el servidor solo anota quién entra sin el launcher.
 
 **Hay que encender la whitelist antes de que sirva aprobar y banear.** Hoy el servidor tiene `white-list=false`, así que la lista existe pero no filtra a nadie. El orden correcto es: meter a los cinco jugadores actuales, después poner `white-list=true` y `enforce-whitelist=true`. Si se enciende antes de agregarlos, quedan todos afuera. Hace falta que Tobías lo apruebe porque cambia quién puede entrar al servidor.
 

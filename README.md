@@ -98,7 +98,9 @@ Backend: ver [`web/README.md`](web/README.md) para la puesta en marcha real.
 8. El panel de admin vive dentro del launcher, pero las acciones las ejecuta el backend.
 9. Si algo falla, mensaje claro. No hay caminos alternativos.
 10. Sin monetizar el launcher ni el server.
-11. **Al servidor se entra con el launcher.** No es por seguridad: es lo único que garantiza
-    que todos tengan los mismos mods y la misma versión. Quien abre Minecraft por otro lado
-    no entra, y ve un cartel con la dirección de la página. Cómo funciona: `docs/02`, 4.6.
-    Para volver a subirlo al servidor: `python servidor/subir-acceso.py`.
+11. **Al servidor se entra con el launcher, cuando el candado está puesto.** No es por
+    seguridad: es lo único que garantiza que todos tengan los mismos mods y la misma
+    versión. El interruptor es `REQUIRE_LAUNCHER` en el `.env`: en `true` quien abre
+    Minecraft por otro lado no entra y ve un cartel con la dirección de la página; en
+    `false` entra igual, pero el servidor anota en su log quién lo hizo sin el launcher.
+    Se aplica con `python servidor/subir-acceso.py`. Cómo funciona: `docs/02`, 4.6.

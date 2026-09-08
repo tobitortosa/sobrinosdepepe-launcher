@@ -4,9 +4,15 @@ Prende el candado: al servidor se entra solo con el launcher.
 
     python servidor/subir-acceso.py
 
-Sube el jar de mod-acceso a la carpeta mods del servidor, le escribe su config
-con el secreto y el link, echa a los que estan jugando diciendoles por que, y
-reinicia para que el mod cargue.
+Sube el jar de mod-acceso a la carpeta mods del servidor y le escribe su config:
+el candado (REQUIRE_LAUNCHER), el secreto y el link. Si el candado queda puesto,
+echa a los que esten jugando diciendoles por que.
+
+**El candado se prende y se apaga con REQUIRE_LAUNCHER en web/.env.local.** En
+false el servidor revisa igual y anota en el log quien entro sin el launcher, pero
+no echa a nadie; en true no entra nadie sin el launcher. El mod lee su config en
+cada intento de entrar, asi que cambiarlo es correr este script de nuevo: no hace
+falta reiniciar el servidor ni sacar a nadie.
 
 EL ORDEN IMPORTA: esto es el ultimo de cuatro pasos. Corrido antes que los otros
 tres, no entra NADIE, ni con el launcher.
@@ -37,6 +43,10 @@ import mc
 JARS = os.path.join(os.path.dirname(AQUI), "mod-acceso", "build", "libs")
 PREFIJO = "acceso-sobrinosdepepe"
 CONFIG = "/config/acceso-de-pepe.json"
+
+# Que valor de REQUIRE_LAUNCHER cuenta como "poner el candado". Cualquier otra cosa
+# lo deja abierto: es el lado que no echa a nadie por un error de tipeo.
+SI = ("true", "1", "si", "yes")
 
 MOTIVO_DEL_KICK = (
     "Ahora al servidor se entra con el SOBRINOS DE PEPE Launcher. "
@@ -73,6 +83,9 @@ def subir_el_jar():
     """
     Deja en mods/ el jar compilado y borra las versiones anteriores: dos jars del
     mismo mod hacen que Fabric no arranque, y el servidor queda apagado.
+
+    Devuelve el nombre del jar y si hace falta reiniciar, o None si no hay nada
+    que subir.
     """
     if not os.path.isdir(JARS):
         print("No encontré %s. Compilá el mod: cd mod-acceso && ./gradlew build" % JARS)
@@ -84,7 +97,8 @@ def subir_el_jar():
         return None
 
     nombre = nuestros[-1]
-    viejos = [n for n in mc.ls("/mods") if n.startswith(PREFIJO) and n != nombre]
+    estaban = mc.ls("/mods")
+    viejos = [n for n in estaban if n.startswith(PREFIJO) and n != nombre]
     if viejos:
         mc.delete("/mods", viejos)
         for viejo in viejos:
@@ -92,7 +106,10 @@ def subir_el_jar():
 
     mc.upload("/mods", os.path.join(JARS, nombre))
     print("  subido a mods/: %s" % nombre)
-    return nombre
+
+    # Fabric carga los mods una sola vez, al arrancar: un jar nuevo pide reinicio.
+    # La config no, y por eso prender el candado no saca a nadie del juego.
+    return nombre, nombre not in estaban
 
 
 if __name__ == "__main__":
@@ -101,19 +118,34 @@ if __name__ == "__main__":
         sys.exit(1)
 
     link = mc.cfg.get("SITE_URL", "") or "sobrinosdepepe.vercel.app"
+    exigir = mc.cfg.get("REQUIRE_LAUNCHER", "false").strip().lower() in SI
 
-    if subir_el_jar() is None:
+    subido = subir_el_jar()
+    if subido is None:
         sys.exit(1)
+    _, hay_que_reiniciar = subido
 
-    mc.write(CONFIG, json.dumps({"secreto": secreto, "link": link}, indent=2) + "\n")
-    print("  escrito %s (el cartel manda a %s)" % (CONFIG, link))
+    mc.write(CONFIG, json.dumps(
+        {"exigir": exigir, "secreto": secreto, "link": link}, indent=2) + "\n")
+    print("  escrito %s (exigir=%s, el cartel manda a %s)" % (CONFIG, str(exigir).lower(), link))
 
     # Echar antes de reiniciar es lo unico que les deja un motivo escrito: el
     # reinicio los saca a todos igual, pero con un "Server closed" que no explica
-    # nada. Los que ya usan el launcher vuelven a entrar apretando JUGAR.
-    mc.cmd("kick @a " + MOTIVO_DEL_KICK % link)
-    print("  echados los que estaban jugando, con el motivo")
+    # nada. Los que ya usan el launcher vuelven a entrar apretando JUGAR. Con el
+    # candado abierto no se echa a nadie: no hay motivo que darles.
+    if exigir and hay_que_reiniciar:
+        mc.cmd("kick @a " + MOTIVO_DEL_KICK % link)
+        print("  echados los que estaban jugando, con el motivo")
 
-    mc.power("restart")
+    if hay_que_reiniciar:
+        mc.power("restart")
+        print("  reiniciando, porque el jar es nuevo")
+
     print()
-    print("Reiniciando. En un minuto el servidor solo deja entrar con el launcher.")
+    if exigir:
+        print("REQUIRE_LAUNCHER=true: al servidor se entra solo con el launcher.")
+    else:
+        print("REQUIRE_LAUNCHER=false: el servidor queda como antes, entra cualquiera.")
+        print("En el log del servidor igual queda anotado quien entro sin el launcher.")
+    print("Para cambiarlo: REQUIRE_LAUNCHER en web/.env.local y correr esto de nuevo.")
+    print("El mod lee su config en cada intento de entrar, asi que no hace falta reiniciar.")

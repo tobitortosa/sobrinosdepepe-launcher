@@ -162,7 +162,18 @@ Todo se verifica en cada arranque a propósito. Es rápido cuando no cambió nad
 
 ### 4.6 Al servidor se entra con el launcher
 
-Desde el 2026-09-07 el servidor no deja entrar a quien abrió Minecraft por otro lado. El motivo no es la seguridad: es que el launcher es lo único que garantiza que los mods y las versiones estén al día, y un servidor donde la mitad juega con otra versión de las cosas no se puede sostener.
+El servidor puede exigir que el juego se haya abierto con el launcher. El motivo no es la seguridad: es que el launcher es lo único que garantiza que los mods y las versiones estén al día, y un servidor donde la mitad juega con otra versión de las cosas no se puede sostener.
+
+**Es un candado con interruptor: `REQUIRE_LAUNCHER` en el `.env`.**
+
+| `REQUIRE_LAUNCHER` | Qué hace el servidor |
+|---|---|
+| `false` | Entra cualquiera, como siempre. Igual revisa y **anota en el log quién entró sin el launcher** (`PEPE entra SIN el launcher (cliente sin el mod). El candado esta abierto`). Sirve para ver quién falta antes de cerrar. |
+| `true` | No entra nadie sin el launcher: ve un cartel con la dirección de la página. |
+
+Se cambia en `web/.env.local` y se aplica con `python servidor/subir-acceso.py`. **El mod lee su config en cada intento de entrar, no una sola vez al arrancar**, así que prender o apagar el candado no reinicia el servidor ni saca a nadie del juego. Lo único que pide reinicio es un `.jar` nuevo, porque Fabric carga los mods una sola vez.
+
+Cuando el archivo de config falta o no se puede leer, el mod **exige** el launcher: es el lado que no deja entrar por error a quien no corresponde. Abrir el servidor entero tiene que estar escrito a mano en el archivo.
 
 Cómo funciona, de punta a punta:
 
@@ -170,7 +181,7 @@ Cómo funciona, de punta a punta:
 2. El backend firma un permiso con `ACCESS_SECRET`: `1:PEPE:1757260000:<hmac>` — versión, nombre, cuándo vence y la firma. Dura **doce horas** y no se guarda en ninguna tabla.
 3. El launcher arranca el juego con el permiso en la variable de entorno `SOBRINOSDEPEPE_TICKET`. No es un archivo ni un argumento: un archivo se copia junto con la carpeta de mods, y los argumentos se ven en el administrador de tareas y terminan pegados en los reportes de error.
 4. Mientras el jugador entra, el mod `accesodepepe` del servidor le manda un pedido por el canal `sobrinosdepepe:acceso`. El mismo mod del lado del cliente contesta con el permiso.
-5. El servidor revisa la firma con el secreto que tiene en `config/acceso-de-pepe.json`. No consulta al backend: valida solo.
+5. El servidor revisa la firma con el secreto que tiene en `config/acceso-de-pepe.json`. No consulta al backend: valida solo. Con el candado abierto hace la misma revisión y solo la escribe en el log.
 
 Los cuatro carteles que puede ver quien no entra, cada uno con la dirección de la página:
 
@@ -249,7 +260,7 @@ El UUID offline no se guarda: se calcula del nombre cuando hace falta, y la whit
 | POST | `/api/auth/login` | público | devuelve token de sesión, rol y estado |
 | GET | `/api/me` | sesión | estado de la cuenta |
 | GET | `/api/pack` | cuenta activa | el pack a instalar; una cuenta pendiente recibe 403 |
-| GET | `/api/ticket` | cuenta activa | el permiso para entrar al servidor, firmado y por doce horas |
+| GET | `/api/ticket` | cuenta activa | el permiso para entrar al servidor, firmado y por doce horas. Se emite siempre, con el candado abierto también: así prenderlo es un cambio de un solo lado |
 | GET | `/api/admin/users` | admin | lista con búsqueda |
 | POST | `/api/admin/users/:id/approve` | admin | activa + `whitelist add` |
 | POST | `/api/admin/users/:id/ban` | admin | marca baneado + `whitelist remove` + `kick` + borra sesiones |
@@ -270,6 +281,7 @@ El UUID offline no se guarda: se calcula del nombre cuando hace falta, y la whit
 |---|---|
 | API key de Pterodactyl | variable de entorno del backend, y en ningún otro lugar |
 | `ACCESS_SECRET`, con el que se firman los permisos de entrada | variable de entorno del backend y `config/acceso-de-pepe.json` en el servidor. En el launcher no está: el launcher recibe permisos, no los emite |
+| `REQUIRE_LAUNCHER` | no es un secreto, pero vive al lado: es el interruptor del candado, y se aplica al servidor con `servidor/subir-acceso.py` |
 | Hashes de contraseñas | Postgres |
 | Token de sesión del jugador | su PC, cifrado con DPAPI |
 | El launcher | no tiene ningún secreto |
