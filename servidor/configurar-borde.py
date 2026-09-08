@@ -4,6 +4,14 @@ Pone el borde del mundo, igual en las tres dimensiones.
 
     python servidor/configurar-borde.py
 
+**El tamano es WORLD_BORDER_RADIUS en web/.env.local**, en bloques a cada lado
+desde el spawn. El borde de Minecraft se define por su ancho total, asi que el
+script pone el doble de eso.
+
+Achicarlo deja afuera lo que ya construyeron, y eso no se deshace: si el numero
+del .env es mas chico que el borde que ya tiene el servidor, el script avisa y no
+toca nada. Para achicarlo de verdad hay que pedirlo con --achicar.
+
 En 26.1 el borde es POR DIMENSIÓN. `WorldBorderCommand` trabaja siempre sobre
 `source.getLevel().getWorldBorder()`, y cada nivel guarda el suyo aparte como
 SavedData `minecraft:world_border` dentro de su propia carpeta `data/`. O sea que
@@ -24,12 +32,17 @@ overworld llegan hasta los 4.000 exactos, o sea que ya tocaron la pared; el Neth
 igual, y el End —que en septiembre ni existía— también. El disco no es una traba:
 el plan de Minehost está en ilimitado y el mundo entero pesa 1,3 GB.
 
-Se eligió 6.000 de radio y no el doble a propósito. El borde no está para que el
-mundo sea chico porque sí: está para que la gente se cruce, que es de lo que vive
-un servidor de PvP. Con 6.000 hay 50% más de distancia en cada dirección y 2,25
-veces más tierra —cruzarlo corriendo pasa de 12 a 18 minutos— y encontrarse sigue
-siendo algo que pasa. Con 8.000 de radio serían cuatro veces más tierra y cruzarse
-pasaría a ser casualidad.
+En ese momento se eligió 6.000 de radio y no el doble a propósito. El borde no está
+para que el mundo sea chico porque sí: está para que la gente se cruce, que es de lo
+que vive un servidor de PvP. Con 6.000 había 50% más de distancia en cada dirección
+y 2,25 veces más tierra —cruzarlo corriendo pasaba de 12 a 18 minutos— y encontrarse
+seguía siendo algo que pasa.
+
+**2026-09-08, agrandado a 10.000 de radio**, por pedido de Tobías. Son 2,8 veces la
+tierra que había con 6.000 y cruzarlo corriendo pasa de 18 a unos 30 minutos. El
+argumento de arriba no deja de ser cierto por eso: cuanto más grande, menos se
+cruzan, y si el servidor se empieza a sentir vacío la palanca es justamente esta
+variable. Lo que cambia es que ahora se toca sin editar código.
 
 Y agrandar es una puerta de una sola dirección: achicarlo después dejaría afuera
 todo lo que hayan construido en la tierra nueva.
@@ -38,10 +51,12 @@ El Nether lleva el mismo número y no la octava parte. Achicarlo para que
 coincidiera geográficamente con el overworld cortaría chunks que ya están
 generados, que es justo lo que no queremos. Y no abre ningún agujero para
 escaparse: el juego recorta el portal de vuelta contra el borde del overworld, así
-que caminar 6.000 bloques de Nether no deja a nadie a 48.000 del spawn.
+que caminar hasta el borde del Nether no deja a nadie a ocho veces esa distancia
+del spawn.
 """
 import json
 import os
+import re
 import sys
 import time
 
@@ -54,8 +69,11 @@ import mc
 # El spawn está en (48, 97, 0), o sea a 48 bloques del centro: la diferencia no se
 # nota ni caminando, y los números redondos hacen que el borde se explique solo.
 CENTRO_X, CENTRO_Z = 0, 0
-TAMANO = 12000
-RADIO = TAMANO // 2
+
+# Los bloques a cada lado desde el spawn, que es como se piensa un borde. El comando
+# de Minecraft pide el ancho total, o sea el doble.
+RADIO = int(mc.cfg.get("WORLD_BORDER_RADIUS", "10000"))
+TAMANO = RADIO * 2
 
 # El aviso vanilla son 5 bloques, que es encima del borde. A 32 la pantalla se
 # tiñe de rojo con tiempo de frenar.
@@ -119,7 +137,42 @@ def verificar():
     return len(encontrados)
 
 
+def radio_de_ahora():
+    """
+    El radio que ya tiene el overworld, leido del servidor.
+
+    Es para no achicar el mundo por un numero mal tipeado en el .env: lo que quede
+    afuera del borde nuevo no se puede volver a habitar, y las construcciones que
+    haya ahi tampoco vuelven.
+    """
+    antes = len(mc.read("/logs/latest.log").splitlines())
+    mc.cmd("execute in minecraft:overworld run worldborder get")
+    time.sleep(2)
+    for linea in mc.read("/logs/latest.log").splitlines()[antes:]:
+        numeros = re.findall(r"[0-9]+", linea.split("]: ")[-1])
+        if "world border" in linea.lower() and numeros:
+            return int(numeros[0]) // 2
+    return None
+
+
 if __name__ == "__main__":
+    ahora = radio_de_ahora()
+
+    if ahora is None:
+        sys.exit("no pude leer el borde que tiene el servidor. Esta prendido?")
+
+    if RADIO == ahora:
+        print("El borde ya esta en %s de radio. No hay nada que cambiar." % miles(RADIO))
+        sys.exit(0)
+
+    if RADIO < ahora and "--achicar" not in sys.argv:
+        print("WORLD_BORDER_RADIUS dice %s y el servidor tiene %s." % (miles(RADIO), miles(ahora)))
+        print("Achicar el borde deja afuera todo lo que hayan construido entre los dos,")
+        print("y eso no se deshace. No toque nada.")
+        print("Si es a proposito: python servidor/configurar-borde.py --achicar")
+        sys.exit(1)
+
+    print("borde de %s a %s de radio" % (miles(ahora), miles(RADIO)))
     aplicar()
     # El anuncio va solo si se pide. La primera vez que se puso el borde valía la
     # pena avisar, porque era una pared nueva; agrandarlo no le saca nada a nadie.

@@ -15,7 +15,7 @@ subir tal cual y todo queda como estaba.
 | `generar-comandos.py` | Arma los comandos propios de Melius, sube también los modificadores y recarga. |
 | `generar-cartel.py` | Arma el cartel de la derecha. |
 | `configurar-scoreboard.py` | Rehace los objetivos y los lugares del scoreboard, que el juego guarda dentro del mundo. |
-| `configurar-borde.py` | Pone el borde del mundo, igual en las tres dimensiones. |
+| `configurar-borde.py` | Pone el borde del mundo (`WORLD_BORDER_RADIUS`, bloques a cada lado del spawn), igual en las tres dimensiones. Se niega a achicarlo salvo con `--achicar`. |
 | `configurar-permisos.py` | Le da al grupo `default` de LuckPerms los permisos de los comandos que la guía promete. |
 | `configurar-horror.py` | Deja Server-Side Horror en modo "una pizca": ruidos y nada que toque el mundo. |
 | `generar-recursos.py` | Arma el resource pack propio del servidor, lo publica en GitHub y apunta el servidor. |
