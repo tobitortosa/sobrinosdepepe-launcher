@@ -169,9 +169,14 @@ public partial class HomeViewModel : ObservableObject
             Detail = "La primera vez tarda un poco más.";
             HasProgress = false;
 
+            // El permiso de entrada. Se pide recién ahora, con el pack ya al día, porque
+            // dura unas horas y el reloj le arranca acá: al servidor solo entra quien
+            // abrió el juego desde el launcher.
+            var ticket = await _shell.Api.TicketAsync(_token);
+
             var launcher = new GameSetup(LauncherPaths.GameDir, _shell.Http).CreateLauncherWithoutJavaExtractor();
             var runner = new GameRunner(launcher, Path.Combine(LauncherPaths.Root, "game-output.log"));
-            var process = runner.BuildProcess(version, Username, pack.Server.Address);
+            var process = runner.BuildProcess(version, Username, pack.Server.Address, ticket);
 
             var started = new TaskCompletionSource();
 

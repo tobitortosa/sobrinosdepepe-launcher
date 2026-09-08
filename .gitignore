@@ -18,9 +18,11 @@ bin/
 obj/
 *.user
 
-# Gradle (el mod de precios)
+# Gradle (los mods nuestros)
 mod-precios/build/
 mod-precios/.gradle/
+mod-acceso/build/
+mod-acceso/.gradle/
 
 # Sistema
 Thumbs.db

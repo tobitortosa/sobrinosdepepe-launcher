@@ -41,6 +41,22 @@ export const env = {
   get downloadUrl() {
     return process.env.DOWNLOAD_URL ?? '';
   },
+  /**
+   * Con lo que se firman los permisos de entrada al servidor. El mismo valor está
+   * en la config del mod de acceso adentro del servidor, y en ningún otro lugar:
+   * quien lo tenga puede emitir permisos.
+   */
+  get accessSecret() {
+    return required('ACCESS_SECRET');
+  },
+  /**
+   * La dirección de la página, tal como se le muestra a quien intenta entrar sin el
+   * launcher. Sale de acá para que el día que compremos un dominio se cambie en un
+   * solo lugar: servidor/subir-acceso.py la copia a la config del servidor.
+   */
+  get siteUrl() {
+    return process.env.SITE_URL ?? 'sobrinosdepepe.vercel.app';
+  },
 };
 
 export const MODRINTH_USER_AGENT =

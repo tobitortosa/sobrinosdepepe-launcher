@@ -13,6 +13,12 @@ public sealed record GameRunResult(int ExitCode, string LogPath);
 /// </summary>
 public sealed class GameRunner
 {
+    /// <summary>
+    /// La variable de entorno con la que se le pasa el permiso de entrada al juego.
+    /// El mod del servidor la lee del lado del cliente: mod-acceso, Canal.VARIABLE.
+    /// </summary>
+    public const string TicketVariable = "SOBRINOSDEPEPE_TICKET";
+
     private readonly MinecraftLauncher _launcher;
     private readonly string _logPath;
 
@@ -35,7 +41,14 @@ public sealed class GameRunner
         return 6144;
     }
 
-    public Process BuildProcess(IVersion version, string username, string serverAddress, int? ramMb = null)
+    /// <param name="ticket">
+    /// El permiso de entrada que emitió el backend. Viaja en una variable de entorno del
+    /// proceso del juego: un archivo se copia junto con la carpeta de mods y un argumento
+    /// se ve en el administrador de tareas y termina pegado en los reportes de error.
+    /// Va en null solo cuando se corre sin backend, y ahí el servidor no deja entrar.
+    /// </param>
+    public Process BuildProcess(
+        IVersion version, string username, string serverAddress, string? ticket, int? ramMb = null)
     {
         var session = new MSession(username, "0", OfflineIdentity.Plain(username))
         {
@@ -59,6 +72,12 @@ public sealed class GameRunner
         };
 
         var process = _launcher.BuildProcess(version, options);
+
+        if (!string.IsNullOrEmpty(ticket))
+        {
+            process.StartInfo.Environment[TicketVariable] = ticket;
+        }
+
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.UseShellExecute = false;

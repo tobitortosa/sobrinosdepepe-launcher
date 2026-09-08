@@ -205,7 +205,20 @@ try
     // ---- Arrancar.
     var launcher = new GameSetup(LauncherPaths.GameDir, http).CreateLauncherWithoutJavaExtractor();
     var runner = new GameRunner(launcher, Path.Combine(LauncherPaths.Root, "game-output.log"));
-    using var process = runner.BuildProcess(version, username, pack.Server.Address, ramMb);
+    // El permiso de entrada al servidor. Sin backend no hay ninguno, y el servidor
+    // no deja entrar: la fase 0 se prueba con --api, --user y --pass.
+    string? ticket = null;
+    if (api is not null && token is not null)
+    {
+        ticket = await new LauncherApi(new Uri(api), http).TicketAsync(token);
+        Console.WriteLine("Permiso de entrada: listo");
+    }
+    else
+    {
+        Console.WriteLine("Sin backend no hay permiso de entrada: el servidor va a rechazar la conexión.");
+    }
+
+    using var process = runner.BuildProcess(version, username, pack.Server.Address, ticket, ramMb);
 
     Console.WriteLine($"Java: {process.StartInfo.FileName}");
     Console.WriteLine($"RAM máxima: {ramMb ?? GameRunner.RecommendedRamMb()} MB");

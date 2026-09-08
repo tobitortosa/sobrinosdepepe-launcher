@@ -33,6 +33,7 @@ for (const file of listDir('drizzle').filter((f) => f.endsWith('.sql')).sort()) 
 // --- Interceptar las llamadas al panel de Minehost a nivel de red, así se comprueban
 // los comandos exactos que se le mandan al servidor sin tocar el código de producción.
 process.env.PTERODACTYL_KEY ??= 'ptlc_de_prueba';
+process.env.ACCESS_SECRET ??= 'secreto-de-prueba';
 const PANEL = process.env.PTERODACTYL_URL ?? 'https://pterodactyl.minehost.com.ar';
 
 const commands: string[] = [];
@@ -79,6 +80,7 @@ const modsRoute = await import('../app/api/admin/mods/route');
 const publish = (await import('../app/api/admin/pack/publish/route')).POST;
 const upload = (await import('../app/api/admin/mods/upload/route')).POST;
 const fileRoute = (await import('../app/api/files/[sha1]/route')).GET;
+const ticketRoute = (await import('../app/api/ticket/route')).GET;
 
 // --- Utilidades mínimas de test.
 let passed = 0;
@@ -395,6 +397,44 @@ if (jars.length > 0) {
     response = await fileRoute(get(`/api/files/${own.sha1}`), { params: Promise.resolve({ sha1: own.sha1 }) });
     check('sin sesión no se puede descargar', response.status === 401);
   }
+}
+
+// ---------------------------------------------------------------- Permiso de entrada
+console.log('\nPermiso de entrada al servidor');
+
+{
+  const { createHmac } = await import('node:crypto');
+
+  const jugador = await body<{ token: string }>(
+    await register(post('/api/auth/register', { username: 'ConLauncher', password: 'secreto1' })),
+  );
+
+  response = await ticketRoute(get('/api/ticket', jugador.token));
+  const emitido = await body<{ ticket: string; vence: number }>(response);
+  check('una cuenta activa recibe su permiso', response.status === 200, `status ${response.status}`);
+
+  const partes = emitido.ticket.split(':');
+  check('el permiso tiene versión, nombre, vencimiento y firma', partes.length === 4, emitido.ticket);
+  check('va emitido a nombre de quien lo pidió', partes[1] === 'ConLauncher', partes[1]);
+
+  const firma = createHmac('sha256', 'secreto-de-prueba')
+    .update(`${partes[0]}:${partes[1]}:${partes[2]}`)
+    .digest('hex');
+  check('la firma es la que el servidor va a poder revisar', partes[3] === firma);
+
+  const horas = (Number(partes[2]) - Math.floor(Date.now() / 1000)) / 3600;
+  check('dura las doce horas que aguantan una sesión de juego', horas > 11.9 && horas < 12.1, `${horas} h`);
+
+  response = await ticketRoute(get('/api/ticket'));
+  check('sin sesión no hay permiso', response.status === 401);
+
+  panelOffline = true;
+  const pendiente = await body<{ token: string }>(
+    await register(post('/api/auth/register', { username: 'EnEspera', password: 'secreto1' })),
+  );
+  panelOffline = false;
+  response = await ticketRoute(get('/api/ticket', pendiente.token));
+  check('una cuenta pendiente tampoco entra al servidor', response.status === 403, `status ${response.status}`);
 }
 
 // ---------------------------------------------------------------- Resultado

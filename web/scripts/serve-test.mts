@@ -35,6 +35,9 @@ for (const file of readdirSync('drizzle').filter((f) => f.endsWith('.sql')).sort
 
 // --- Panel de Minehost simulado: registra los comandos en vez de ejecutarlos.
 process.env.PTERODACTYL_KEY ??= 'ptlc_de_prueba';
+// Con esto se firman los permisos de entrada. En la prueba no importa cuál sea, pero
+// tiene que existir: el launcher pide uno cada vez que abre el juego.
+process.env.ACCESS_SECRET ??= 'secreto-de-prueba';
 const PANEL = process.env.PTERODACTYL_URL ?? 'https://pterodactyl.minehost.com.ar';
 const commands: string[] = [];
 const realFetch = globalThis.fetch;
@@ -71,6 +74,7 @@ const routes = {
   publish: (await import('../app/api/admin/pack/publish/route')).POST,
   server: (await import('../app/api/admin/server/route')).GET,
   file: (await import('../app/api/files/[sha1]/route')).GET,
+  ticket: (await import('../app/api/ticket/route')).GET,
 };
 
 // --- Datos de arranque: admin, mods subidos y pack publicado.
@@ -163,6 +167,7 @@ createServer((incoming, outgoing) => {
       else if (path === '/api/auth/logout') response = await routes.logout(request);
       else if (path === '/api/me') response = await routes.me(request);
       else if (path === '/api/pack') response = await routes.pack(request);
+      else if (path === '/api/ticket') response = await routes.ticket(request);
       else if (path === '/api/admin/users') response = await routes.users(request);
       else if (path === '/api/admin/mods/search') response = await routes.search(request);
       else if (path === '/api/admin/mods/upload') response = await routes.upload(request);

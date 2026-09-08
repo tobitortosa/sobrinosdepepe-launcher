@@ -8,8 +8,9 @@
 | **1 · Backend** | ✅ Listo. Cuentas, aprobar, banear, whitelist automática, subir mods y publicar. | hecho |
 | **2 · Launcher** | La interfaz: login, JUGAR, progreso, errores, auto-update. **Primer release.** | 4-5 días |
 | **3 · Admin** | Pantallas MODS y USUARIOS dentro del launcher | 2 días |
+| **4 · Acceso** | ✅ Listo. Al servidor solo se entra con el launcher. | hecho |
 
-Después, si hace falta: mod de verificación en el servidor (fase 4, opcional, ver el final).
+Después: ✅ **fase 4**, el mod que hace que al servidor solo se entre con el launcher. Hecha el 2026-09-07, ver el final.
 
 ## Lo que necesito de vos
 
@@ -79,15 +80,22 @@ Después, si hace falta: mod de verificación en el servidor (fase 4, opcional, 
 
 ---
 
-## Fase 4 · Opcional: verificación real en el server
+## Fase 4 · Al servidor se entra con el launcher ✅
 
-No entra en el alcance de ahora. Queda escrito para cuando haga falta.
+Hecha el 2026-09-07. El detalle completo está en [`02-arquitectura.md`](02-arquitectura.md), punto 4.6.
 
-El problema que resuelve: en modo offline la whitelist filtra por nombre, no autentica. Alguien con TLauncher que sepa el nombre de un jugador aprobado entra igual, así que el ban no lo frena de verdad. Con cinco amigos da lo mismo. Con viewers de stream, el día que aparezca un troll, esto es lo que lo cierra.
+El problema que resuelve, y por qué se hizo antes de lo previsto: el que no usa el launcher juega con los mods que le pasamos hace unos días. No están al día, y con el tiempo eso es un servidor donde cada uno tiene una versión distinta de las reglas. El launcher es lo único que garantiza que todos tengan lo mismo, así que ahora es obligatorio. De paso cierra la whitelist, que en modo offline filtra por nombre y no autentica.
 
-Cómo se hace: un mod en el servidor que durante el login le pide al cliente un token que emitió el backend, lo valida y desconecta a quien no lo tenga; más un mod chico en el cliente que lo manda. Verifiqué que la API de red de Fabric para esto existe en 26.1. Son unas 400 líneas de Java, más el toolchain (JDK 25, Gradle, Loom) y subirlo por SFTP.
+Cómo quedó:
 
-Cuánto cuesta: dos o tres días, y el corte es duro. El día que se active, todos tienen que usar el launcher: con TLauncher ya nadie entra.
+- `mod-acceso/`: un solo `.jar` que va en los dos lados. En el servidor le pide al cliente el permiso durante el login y desconecta con un cartel a quien no lo tenga; en el cliente lo contesta leyéndolo de la variable de entorno que le dejó el launcher.
+- `GET /api/ticket`: el backend firma un permiso con `ACCESS_SECRET`, a nombre de quien lo pide y por doce horas.
+- El launcher lo pide al apretar JUGAR, con el pack ya al día, y se lo pasa al juego.
+- `servidor/subir-acceso.py`: sube el jar y la config al servidor, echa a los que estén jugando con el motivo escrito y reinicia.
+
+Un cliente sin nuestros mods se delata solo: el protocolo de Minecraft obliga a contestar el pedido del servidor durante el login, y contesta "no entendí".
+
+**Probado:** los ocho casos de firma entre el backend (Node) y el servidor (Java) — permiso vigente, vencido, con la firma cambiada, firmado con otro secreto, vacío, con basura adentro, de otra versión del formato y a nombre de otro jugador — más siete comprobaciones nuevas en `npm run test`, que ahora son 67.
 
 ## Cosas sueltas para cuando estén las fases
 

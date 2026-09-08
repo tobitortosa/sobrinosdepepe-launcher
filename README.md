@@ -2,7 +2,7 @@
 
 Launcher de Windows para el server de Minecraft "SOBRINOS DE PEPE" (`sobrinosdepepe.minehost.pro`, Fabric 26.1). El viewer lo baja, se crea la cuenta, aprieta **JUGAR** y entra al server con la versión, el Java y los mods correctos. Con la cuenta de admin, el mismo launcher gestiona los mods y las cuentas.
 
-**Estado:** fases 0 y 1 listas y probadas. El instalador entra al server con el inventario intacto, y el backend maneja cuentas, subida de mods y publicación del pack. Falta la interfaz (fase 2) y el panel de admin dentro del launcher (fase 3).
+**Estado:** fases 0 y 1 listas y probadas. El instalador entra al server con el inventario intacto, y el backend maneja cuentas, subida de mods y publicación del pack. Desde el 2026-09-07 el server no deja entrar a quien no usa el launcher (fase 4). Falta la interfaz (fase 2) y el panel de admin dentro del launcher (fase 3).
 
 ## Documentos
 
@@ -21,9 +21,18 @@ Launcher de Windows para el server de Minecraft "SOBRINOS DE PEPE" (`sobrinosdep
 ```
 web/                           backend y página de descarga (Next.js)
 ├── lib/                       env · db · auth · username · pterodactyl · modrinth · pack · api
-├── app/api/                   15 rutas: cuentas, pack y admin
+├── app/api/                   16 rutas: cuentas, pack, permiso de entrada y admin
 ├── scripts/                   seed · test-flow · serve-test · check-modrinth
 └── drizzle/                   migraciones
+
+mod-acceso/                    el mod que hace que al servidor se entre solo con el launcher
+├── AccesoServidor             pide el permiso durante el login y echa a quien no lo tenga
+├── AccesoCliente              lo contesta con el que le dejo el launcher
+├── Ticket                     el formato del permiso y su firma
+├── ConfigAcceso               el secreto y el link, de config/acceso-de-pepe.json
+└── Carteles                   lo que ve el que no entra, con el link para bajarse el launcher
+
+mod-precios/                   muestra en cada item cuanta plata paga el servidor por el
 
 launcher/
 ├── pack.json                  copia del pack publicado; solo la usa la CLI de la fase 0
@@ -82,9 +91,14 @@ Backend: ver [`web/README.md`](web/README.md) para la puesta en marcha real.
 2. Instalación aislada. Nunca se toca la instalación de TLauncher.
 3. Minecraft, Fabric, Java y los mods se descargan de sus servidores oficiales a la PC del jugador. Nunca rehosteamos nada.
 4. El launcher no contiene ningún secreto. Descompilarlo no da más poder que ser un usuario.
+   El permiso de entrada al servidor lo firma el backend y el launcher solo lo transporta.
 5. La identidad en el server es el nombre exacto: los usernames son inmutables y respetan mayúsculas.
 6. Todo archivo descargado se verifica por hash.
 7. Las versiones son fijas y las elige el admin. Nunca "la última".
 8. El panel de admin vive dentro del launcher, pero las acciones las ejecuta el backend.
 9. Si algo falla, mensaje claro. No hay caminos alternativos.
 10. Sin monetizar el launcher ni el server.
+11. **Al servidor se entra con el launcher.** No es por seguridad: es lo único que garantiza
+    que todos tengan los mismos mods y la misma versión. Quien abre Minecraft por otro lado
+    no entra, y ve un cartel con la dirección de la página. Cómo funciona: `docs/02`, 4.6.
+    Para volver a subirlo al servidor: `python servidor/subir-acceso.py`.

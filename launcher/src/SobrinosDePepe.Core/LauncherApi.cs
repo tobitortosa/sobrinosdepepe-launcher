@@ -83,6 +83,20 @@ public sealed class LauncherApi
         return await ReadAsync<Versions>(response, ct);
     }
 
+    /// <summary>
+    /// El permiso para entrar al servidor. Se pide justo antes de abrir el juego y se
+    /// le pasa al juego en una variable de entorno; el mod del servidor lo revisa
+    /// durante el login y sin él no deja entrar. Dura doce horas y va firmado con el
+    /// nombre de la cuenta, así que no sirve para prestárselo a otro.
+    /// </summary>
+    public async Task<string> TicketAsync(string token, CancellationToken ct = default)
+    {
+        using var request = Authorized(HttpMethod.Get, "api/ticket", token);
+        using var response = await _http.SendAsync(request, ct);
+        var body = await ReadAsync<TicketResponse>(response, ct);
+        return body.Ticket;
+    }
+
     /// <summary>El pack publicado. Una cuenta pendiente recibe un error explicado.</summary>
     public async Task<Pack> PackAsync(string token, CancellationToken ct = default)
     {
@@ -158,6 +172,10 @@ public sealed class LauncherApi
             return null;
         }
     }
+
+    private sealed record TicketResponse(
+        [property: JsonPropertyName("ticket")] string Ticket,
+        [property: JsonPropertyName("vence")] long Vence);
 
     private sealed record AuthResponse(
         [property: JsonPropertyName("token")] string Token,

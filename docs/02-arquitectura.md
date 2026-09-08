@@ -91,6 +91,7 @@ Más dos estados: **pendiente de aprobación** ("Tu cuenta espera aprobación" +
 | Backend | Next.js en Vercel · Postgres en Neon · Drizzle · Argon2id |
 | Pack | lista de archivos con hashes, URL y lado cliente/servidor; la forma es compatible con el índice de un `.mrpack` de Modrinth |
 | Server | Fabric 26.1 en Minehost, panel Pterodactyl |
+| Mods propios | Java 25 con Fabric Loom: `mod-acceso` (solo se entra con el launcher) y `mod-precios` (el precio en la descripción de cada item) |
 | Updates del launcher | GitHub Releases |
 
 **Por qué el backend existe** aunque el panel esté en el launcher: la clave del panel de Minehost da control total del server (archivos, consola, apagarlo). Si viviera dentro del `.exe`, cualquiera que lo descompile la saca. Entonces el launcher admin llama a `/api/admin/*` y el backend es el único que habla con Pterodactyl.
@@ -114,8 +115,9 @@ Dos cosas que no son fallbacks y se quedan: **reintentar** una descarga que se c
 
 1. Chequea el pack; si cambió, actualiza.
 2. Ping de estado: resuelve el SRV `_minecraft._tcp.sobrinosdepepe.minehost.pro` → `sv36.minehost.pro:25445` y muestra el punto verde o rojo.
-3. Lanza el juego con el Java privado, los argumentos que trae el JSON de Mojang, sesión offline (`--username PEPE`, UUID v3 de `OfflinePlayer:PEPE`) y `--quickPlayMultiplayer sobrinosdepepe.minehost.pro`, que lo mete directo al server sin pasar por el menú.
-4. Captura la salida del juego y `latest.log` para el botón "Copiar detalles".
+3. Pide el permiso de entrada a `GET /api/ticket`, con el pack ya al día (4.6).
+4. Lanza el juego con el Java privado, los argumentos que trae el JSON de Mojang, sesión offline (`--username PEPE`, UUID v3 de `OfflinePlayer:PEPE`), el permiso en `SOBRINOSDEPEPE_TICKET` y `--quickPlayMultiplayer sobrinosdepepe.minehost.pro`, que lo mete directo al server sin pasar por el menú.
+5. Captura la salida del juego y `latest.log` para el botón "Copiar detalles".
 
 ### 4.3 Cuentas
 
@@ -140,7 +142,7 @@ Si el server está apagado, la API responde con error y el panel te dice: **"El 
 
 Mientras una cuenta está pendiente, `GET /api/pack` le responde 403: ni siquiera puede descargar el juego. La pantalla de espera consulta su estado cada 20 segundos y pasa sola al Home cuando se destraba. Desde el 2026-09-07 el registro aprueba solo, así que a esa pantalla solo se llega si el panel de Minehost no contestó justo en ese momento.
 
-**Límite honesto, para que lo tengas presente:** en modo offline la whitelist filtra por nombre, no autentica. Alguien con TLauncher que sepa el nombre de un jugador aprobado entra igual. Con cinco amigos no importa; con viewers de stream, el día que a alguien le den ganas de romper, el ban no lo frena. Lo que lo cierra es un mod en el servidor que valide un token del launcher, y está diseñado en la fase 4 como opcional. No lo construimos ahora.
+**Cómo se cierra de verdad (2026-09-07):** en modo offline la whitelist filtra por nombre, no autentica: alguien con TLauncher que sepa el nombre de un jugador aprobado entraría igual. Lo que lo cierra es el permiso de entrada de 4.6, que se construyó: sin el launcher no se entra. Un permiso ya emitido vive doce horas y no se puede revocar, pero eso no salva a un baneado: banear también lo saca de la whitelist, y el permiso no es una llave para pasarla por arriba.
 
 #### 4.5 Gestionar mods desde el launcher
 
@@ -157,6 +159,37 @@ También se puede agregar un mod pegando su link de Modrinth, y en ese caso el l
 **Lo que ve el jugador cuando publicás.** Al apretar JUGAR, el launcher pide el pack, compara con lo que tiene y aplica la diferencia: baja lo que falta, borra lo que sacaste y arranca. Cuando no cambió nada tarda uno o dos segundos. Probado: publicar una versión que saca un mod hace que el launcher lo borre solo en el arranque siguiente.
 
 Todo se verifica en cada arranque a propósito. Es rápido cuando no cambió nada, y hace que una instalación a medias se arregle sola en vez de terminar en un crash que nadie puede diagnosticar.
+
+### 4.6 Al servidor se entra con el launcher
+
+Desde el 2026-09-07 el servidor no deja entrar a quien abrió Minecraft por otro lado. El motivo no es la seguridad: es que el launcher es lo único que garantiza que los mods y las versiones estén al día, y un servidor donde la mitad juega con otra versión de las cosas no se puede sostener.
+
+Cómo funciona, de punta a punta:
+
+1. El jugador aprieta **JUGAR**. El launcher deja el pack al día y recién entonces pide `GET /api/ticket`.
+2. El backend firma un permiso con `ACCESS_SECRET`: `1:PEPE:1757260000:<hmac>` — versión, nombre, cuándo vence y la firma. Dura **doce horas** y no se guarda en ninguna tabla.
+3. El launcher arranca el juego con el permiso en la variable de entorno `SOBRINOSDEPEPE_TICKET`. No es un archivo ni un argumento: un archivo se copia junto con la carpeta de mods, y los argumentos se ven en el administrador de tareas y terminan pegados en los reportes de error.
+4. Mientras el jugador entra, el mod `accesodepepe` del servidor le manda un pedido por el canal `sobrinosdepepe:acceso`. El mismo mod del lado del cliente contesta con el permiso.
+5. El servidor revisa la firma con el secreto que tiene en `config/acceso-de-pepe.json`. No consulta al backend: valida solo.
+
+Los cuatro carteles que puede ver quien no entra, cada uno con la dirección de la página:
+
+| Qué pasó | Qué ve |
+|---|---|
+| Entró con TLauncher o cualquier Minecraft sin nuestros mods | "Este servidor se juega con el launcher. Descargalo acá…" |
+| Tiene los mods (le pasamos la carpeta) pero abrió el juego por su cuenta | "Abriste el juego sin el launcher. Cerrá Minecraft y entrá con el botón JUGAR" |
+| Su permiso venció, o dejó el juego abierto medio día | "Tu permiso de entrada venció. Volvé a apretar JUGAR" |
+| El permiso no verifica, o es de otro jugador | "Tu permiso de entrada no es válido" |
+
+**Por qué el cliente sin el mod se delata solo.** El pedido del servidor viaja durante el login, y el protocolo de Minecraft obliga a contestarlo: un cliente que no conoce el canal responde "no entendí", y eso alcanza para saber que no tiene nuestros mods. No hace falta que el jugador coopere.
+
+**Por qué el nombre va adentro de la firma.** Si no estuviera, el permiso de uno serviría para cualquiera: te lo paso por Discord y entrás con TLauncher. Con el nombre firmado, el servidor lo compara con el del login y un permiso prestado no sirve.
+
+**El link no está escrito en ningún lado del código.** Sale de `SITE_URL` en el `.env` del backend, y de ahí lo copia `servidor/subir-acceso.py` a la config del servidor. El día que compremos un dominio se cambia en un solo lugar y se vuelve a subir.
+
+**Límite honesto:** el dueño de un permiso puede usar el suyo para entrar con su propio nombre desde otro launcher, si se toma el trabajo de copiar el mod y armar la variable de entorno. Cerrar eso pide que el servidor le pregunte al backend en cada login, y no vale la pena: el que hace eso ya sabe lo que está haciendo, y lo que estamos evitando es que la gente juegue con mods viejos sin darse cuenta.
+
+**Lo que hay que subir cuando cambia.** El mod es un solo `.jar` que va en los dos lados: al cliente por el pack (`npm run pack:jar`) y al servidor por `python servidor/subir-acceso.py`, que además le escribe la config, echa a los que estén jugando con el motivo escrito y reinicia. El orden importa y está en el encabezado de ese script: primero las variables en Vercel, después el pack, después el launcher nuevo, y el servidor al final. Al revés, no entra nadie.
 
 ## 5. Carpetas en la PC del jugador
 
@@ -216,6 +249,7 @@ El UUID offline no se guarda: se calcula del nombre cuando hace falta, y la whit
 | POST | `/api/auth/login` | público | devuelve token de sesión, rol y estado |
 | GET | `/api/me` | sesión | estado de la cuenta |
 | GET | `/api/pack` | cuenta activa | el pack a instalar; una cuenta pendiente recibe 403 |
+| GET | `/api/ticket` | cuenta activa | el permiso para entrar al servidor, firmado y por doce horas |
 | GET | `/api/admin/users` | admin | lista con búsqueda |
 | POST | `/api/admin/users/:id/approve` | admin | activa + `whitelist add` |
 | POST | `/api/admin/users/:id/ban` | admin | marca baneado + `whitelist remove` + `kick` + borra sesiones |
@@ -235,6 +269,7 @@ El UUID offline no se guarda: se calcula del nombre cuando hace falta, y la whit
 | Qué | Dónde |
 |---|---|
 | API key de Pterodactyl | variable de entorno del backend, y en ningún otro lugar |
+| `ACCESS_SECRET`, con el que se firman los permisos de entrada | variable de entorno del backend y `config/acceso-de-pepe.json` en el servidor. En el launcher no está: el launcher recibe permisos, no los emite |
 | Hashes de contraseñas | Postgres |
 | Token de sesión del jugador | su PC, cifrado con DPAPI |
 | El launcher | no tiene ningún secreto |

@@ -8,6 +8,7 @@ subir tal cual y todo queda como estaba.
 |---|---|
 | `respaldar.py` | Baja del servidor todo lo que mantenemos nosotros. |
 | `subir-datapack.py` | Sube el datapack entero (funciones, advancements, menús) y recarga. |
+| `subir-acceso.py` | Sube el mod de acceso y su config, echa a los que estén jugando con el motivo escrito y reinicia. Es lo que hace que al servidor se entre solo con el launcher. |
 | `generar-precios.py` | Arma `prices.json` y `config.json` de EconomyCraft, rearma el mod cliente de precios y verifica que no haya plata infinita. |
 | `verificar-precios.py` | Solo la verificación, contra el servidor o contra un archivo. |
 | `generar-menus.py` | Arma los menús de cofre (los deja en el datapack). |
@@ -25,8 +26,11 @@ subir tal cual y todo queda como estaba.
 Las credenciales salen de `web/.env.local`, que no está en el repositorio.
 
 Nada de esto se instala en las máquinas de los jugadores: son mods y datapacks
-de servidor, así que se aplican sin publicar una versión nueva del launcher. La
-única excepción es el mod de precios, que sí es de cliente — ver más abajo.
+de servidor, así que se aplican sin publicar una versión nueva del launcher. Las
+excepciones son los dos mods nuestros que también van del lado del cliente: el
+de precios (ver más abajo) y el de acceso, que es el que exige el launcher para
+entrar — ese va en los dos lados y su orden de publicación está en el encabezado
+de `subir-acceso.py`.
 
 ## Cómo funciona la economía
 
