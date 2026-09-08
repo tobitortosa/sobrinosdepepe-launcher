@@ -14,6 +14,27 @@ Para proteger una base: se eligen dos esquinas con una varita y toda la columna
 bloque adentro, ni con TNT, ni con fuego, ni tirando lava. Si la base está bajo
 tierra, no hay forma de cavar para entrar.
 
+La proteccion **no mira la altura**: `ClaimData.contains()` compara solo X y Z, asi
+que la zona es la columna entera de la roca madre al cielo. Los `y1`/`y2` que quedan
+en `claims.json` son el registro de las esquinas que se clickearon y nada mas. Por eso
+hacer una torre y tirar TNT desde arriba no rompe nada adentro: el mod saca de la
+explosion todos los bloques de la zona antes de que reviente (`ServerExplosionMixin`),
+y lo mismo con el fuego que deja. Vale para toda explosion — TNT, crystals, camas,
+respawn anchors, creepers, ghasts — y no hay ninguna opcion para apagarlo.
+
+**Ojo con esto en el PvP, que no lo configuramos nosotros:** el dueño y los trusted
+son **inmunes al daño de explosion** mientras esten parados ADENTRO de su zona
+(`ClaimEntityProtection.shouldBlockExplosionDamage`). O sea que en tu propia base los
+crystals y la TNT no te hacen nada. Un jugador ajeno adentro si recibe el daño normal.
+Tambien quedan a salvo de las explosiones los cuadros, los armor stands y los barcos
+y vagonetas de adentro.
+
+Lo que la zona NO cubre: todo lo que este afuera del rectangulo X/Z, aunque este
+pegado al borde. Y **no hay mixin de pistones** en el jar (estan los de fuego,
+fluidos, baldes, explosiones, cuadros, armor stands y vehiculos), asi que empujar
+bloques desde afuera hacia adentro, o tirar de los de adentro con un bloque de slime,
+en principio no lo frena nada. Sin probar en vivo.
+
 Un datapack no puede hacer esto: no hay ninguna forma de cancelar que un jugador
 rompa un bloque desde un datapack. Por eso es un mod, **Safe Zone 1.5.0**, que es
 `environment: server` — no va al pack del launcher y nadie tiene que actualizar
