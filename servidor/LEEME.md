@@ -20,6 +20,7 @@ subir tal cual y todo queda como estaba.
 | `configurar-horror.py` | Deja Server-Side Horror en modo "una pizca": ruidos y nada que toque el mundo. |
 | `generar-recursos.py` | Arma el resource pack propio del servidor, lo publica en GitHub y apunta el servidor. |
 | `configurar-zonas.py` | Deja Safe Zone como herramienta de administrador: nadie más puede proteger zonas. |
+| `configurar-netherite.py` | Prende y apaga la restricción de la netherita (`RESTRICT_NETHERITE`): crafteable con las doce recetas de smithing, o solo desde la tienda de shards. |
 | `ajustar-saldos.py` | Deja el saldo de cada uno en proporción a las horas jugadas. |
 | `estilo.py` | Los colores y los símbolos, en un solo lugar. |
 
@@ -167,23 +168,28 @@ reparar y el chequeo queda en cero.
    pero explotan los de esmeralda → equipo, y el peor pasa de 1.920 a 5.824 por
    uso. El precio de la esmeralda no tiene una banda que cierre las dos puntas.
 
-### La netherita no se craftea: se compra con shards
+### La netherita: crafteable o solo con shards, según el interruptor
 
-**Las doce recetas de smithing de netherita están apagadas** desde el
-2026-09-07. La armadura, las armas y las herramientas de netherita salen ahora
-de un solo lado: la tienda de shards, que las entrega con `give` y por lo tanto
-no pasa por ninguna receta. Es la asimetría que hace que el equipo de fin del
-juego se pague matando gente, que es de lo que vive el servidor.
+**El interruptor es `RESTRICT_NETHERITE` en `web/.env.local`**, y se aplica con
+`python servidor/configurar-netherite.py`.
 
-Se apaga con **un archivo**:
+| `RESTRICT_NETHERITE` | Qué pasa |
+|---|---|
+| `false` ← **hoy** | La netherita es normal: las doce recetas de smithing andan y se craftea minando. La tienda de shards la sigue vendiendo, así que comprarla es una forma más y no la única. |
+| `true` | Las doce recetas quedan apagadas. La armadura, las armas y las herramientas de netherita salen de un solo lado: la tienda de shards, que las entrega con `give` y por lo tanto no pasa por ninguna receta. Es la asimetría que hace que el equipo de fin del juego se pague matando gente. |
+
+Todo pasa por **un archivo**, el tag que las doce recetas usan como `addition`:
 
 ```
 datapack/data/minecraft/tags/item/netherite_tool_materials.json
-{"replace": true, "values": []}
+{"replace": true,  "values": []}   -> la etiqueta reemplaza a la de vanilla y queda vacía: las recetas se ignoran
+{"replace": false, "values": []}   -> el archivo está pero no cambia nada: los tags se mezclan y vuelven las recetas
 ```
 
-Las doce recetas usan esa etiqueta como `addition` — verificado abriendo el jar
-de 26.1, doce de trece: la que sobra es
+Apagar la restricción no es borrar el archivo — `subir-datapack.py` lo volvería a
+dejar como estaba — sino dejarlo inerte con `replace: false`.
+
+Son doce de trece — verificado abriendo el jar de 26.1: la que sobra es
 `netherite_upgrade_smithing_template`, la de duplicar la plantilla, que sin
 smithing no sirve para nada. Se recarga con `/reload`, no pide reinicio y no
 toca el launcher. En el log quedan **doce WARN** que son la confirmación de que
@@ -193,7 +199,11 @@ funcionó, no un problema:
 Recipe minecraft:netherite_axe_smithing can't be placed due to empty ingredients and will be ignored
 ```
 
-Por qué se eligió esta palanca y no las otras, con los números que había:
+Medido al apagar la restricción el 2026-09-08: `Loaded 1515 recipes` y **cero**
+WARN de netherita, que es la confirmación de que las doce volvieron.
+
+Por qué se eligió esta palanca y no las otras, con los números que había cuando se
+construyó:
 
 - **El netherite no había inundado nada.** En toda la historia del servidor se
   minaron 67 bloques de ancient debris y se craftearon 14 lingotes, con **un

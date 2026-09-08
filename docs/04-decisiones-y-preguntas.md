@@ -16,6 +16,7 @@
 | Skins | SkinRestorer instalado en el server. Cada uno pide la suya por chat. Cero código nuestro. |
 | Shaders | Fuera del pack. |
 | MapLink | Fuera del pack: su configuración ignora este server. |
+| Netherita solo con shards | Construido el 2026-09-07 y **queda apagado**: `RESTRICT_NETHERITE=false`, la netherita se craftea normal. Se prende cambiando esa variable y corriendo `servidor/configurar-netherite.py`; es un `/reload` y no saca a nadie del juego. Los números que justificaron la restricción están en `servidor/LEEME.md`. |
 | Entrar solo con el launcher | Construido el 2026-09-07 (fase 4) y **queda apagado**: `REQUIRE_LAUNCHER=false`. El servidor anota en el log quién entra sin el launcher, pero no echa a nadie. Se prende cambiando esa variable y corriendo `servidor/subir-acceso.py`, sin reiniciar ni sacar a nadie del juego. La idea es cerrarlo cuando todos hayan abierto el launcher al menos una vez. |
 | Xaero's Minimap y World Map | Fuera del pack y del servidor desde el 2026-09-06. El minimapa trae radar de jugadores, y con PvP libre en todo el mundo eso es saber siempre dónde está cada uno. |
 
