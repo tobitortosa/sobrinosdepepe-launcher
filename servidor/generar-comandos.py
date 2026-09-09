@@ -186,7 +186,14 @@ GRUPOS = [
         ("/rtp", False), ("/tpa ", True),
     ]),
     ("PELEA", e.KILLS, [
-        ("/shards", False), ("/tienda", False), ("/equipo", False),
+        ("/shards", False), ("/tienda", False),
+    ]),
+    # Grupo propio y con los seis, y no una linea sola con /equipo, porque esta
+    # lista es de donde la gente saca que existe cada cosa: un /equipo pelado no
+    # cuenta que se invita, que se echa ni que hay un jefe.
+    ("EQUIPO", e.BIEN, [
+        ("/equipo", False), ("/equipo crear ", True), ("/equipo invitar ", True),
+        ("/equipo aceptar ", True), ("/equipo echar ", True), ("/equipo salir", False),
     ]),
     ("EXTRAS", e.MARCA, [
         ("/nv", False),

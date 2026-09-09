@@ -1,8 +1,8 @@
 {
   "name": {
-    "text": "SOBRINOS DE PEPE",
+    "text": "EQUIPO",
     "italic": false,
-    "color": "#ffb02e",
+    "color": "#55ff7f",
     "bold": true
   },
   "rows": 5,
@@ -361,33 +361,6 @@
     {
       "slot": [
         5,
-        5
-      ],
-      "type": "item",
-      "item": {
-        "id": "minecraft:gray_stained_glass_pane",
-        "count": 1,
-        "components": {
-          "minecraft:custom_name": {
-            "text": " ",
-            "italic": false,
-            "color": "dark_gray",
-            "bold": true
-          },
-          "minecraft:lore": [],
-          "minecraft:tooltip_display": {
-            "hide_tooltip": true
-          },
-          "minecraft:custom_data": {
-            "sdp": "menu"
-          }
-        }
-      },
-      "sound": "click"
-    },
-    {
-      "slot": [
-        5,
         6
       ],
       "type": "item",
@@ -500,28 +473,114 @@
       ],
       "type": "item",
       "item": {
-        "id": "minecraft:writable_book",
+        "id": "minecraft:white_banner",
         "count": 1,
         "components": {
           "minecraft:custom_name": {
-            "text": "TODOS LOS COMANDOS",
+            "text": "QUE ES UN EQUIPO",
             "italic": false,
-            "color": "#ffd98a",
+            "color": "#55ff7f",
             "bold": true
           },
           "minecraft:lore": [
             {
-              "text": "  La lista entera en el chat",
+              "text": "  Un equipo son hasta 6 que andan juntos",
               "italic": false,
               "color": "gray"
             },
             {
-              "text": "  No hace falta el menu: todos",
+              "text": "",
+              "italic": false
+            },
+            {
+              "text": "  ▪ Entre companeros NO se pegan",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "  ▪ Se ven en la barra de arriba",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "  ▪ El nombre va del color del equipo",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "",
+              "italic": false
+            },
+            {
+              "text": "  Al que no es de tu equipo no lo ves en esa",
               "italic": false,
               "color": "gray"
             },
             {
-              "text": "  se pueden escribir directo",
+              "text": "  barra, y el tampoco te ve a vos.",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "",
+              "italic": false
+            },
+            {
+              "text": "  Al que invitas le llega un boton para entrar",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  y le dura 2 minutos. Invitar y echar los",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  hace el jefe, que es el que armo el equipo.",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "click"
+    },
+    {
+      "slot": [
+        3,
+        2
+      ],
+      "type": "item",
+      "item": {
+        "id": "minecraft:white_banner",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "/equipo",
+            "italic": false,
+            "color": "#00a6ff",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  Quienes son los tuyos",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  y quien esta conectado",
               "italic": false,
               "color": "gray"
             }
@@ -543,58 +602,9 @@
       "sound": "click",
       "action": {
         "type": "command",
-        "command": "comandos",
+        "command": "equipo",
         "as_player": true,
         "silent": false
-      }
-    },
-    {
-      "slot": [
-        3,
-        2
-      ],
-      "type": "item",
-      "item": {
-        "id": "minecraft:gold_ingot",
-        "count": 1,
-        "components": {
-          "minecraft:custom_name": {
-            "text": "ECONOMIA",
-            "italic": false,
-            "color": "#00ff00",
-            "bold": true
-          },
-          "minecraft:lore": [
-            {
-              "text": "  Plata, tienda, subastas",
-              "italic": false,
-              "color": "gray"
-            },
-            {
-              "text": "  y ordenes de compra",
-              "italic": false,
-              "color": "gray"
-            }
-          ],
-          "minecraft:tooltip_display": {
-            "hidden_components": [
-              "minecraft:attribute_modifiers",
-              "minecraft:potion_contents",
-              "minecraft:unbreakable",
-              "minecraft:stored_enchantments",
-              "minecraft:enchantments"
-            ]
-          },
-          "minecraft:custom_data": {
-            "sdp": "menu"
-          }
-        }
-      },
-      "sound": "select",
-      "action": {
-        "type": "navigate",
-        "action": "open",
-        "menu": "sdp:economia"
       }
     },
     {
@@ -604,23 +614,23 @@
       ],
       "type": "item",
       "item": {
-        "id": "minecraft:oak_door",
+        "id": "minecraft:writable_book",
         "count": 1,
         "components": {
           "minecraft:custom_name": {
-            "text": "CASA Y VIAJES",
+            "text": "/equipo crear",
             "italic": false,
-            "color": "#ffb02e",
+            "color": "#00a6ff",
             "bold": true
           },
           "minecraft:lore": [
             {
-              "text": "  Homes, spawn, rtp",
+              "text": "  Armar el tuyo, y sos el jefe",
               "italic": false,
               "color": "gray"
             },
             {
-              "text": "  y teletransportes",
+              "text": "  De 3 a 16 letras o numeros",
               "italic": false,
               "color": "gray"
             }
@@ -639,12 +649,54 @@
           }
         }
       },
-      "sound": "select",
-      "action": {
-        "type": "navigate",
-        "action": "open",
-        "menu": "sdp:casa"
-      }
+      "sound": "click",
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
+              },
+              {
+                "text": "Para armar tu equipo:   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/equipo crear ",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/equipo crear "
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
+                }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
+              }
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
+        }
+      ]
     },
     {
       "slot": [
@@ -653,67 +705,23 @@
       ],
       "type": "item",
       "item": {
-        "id": "minecraft:netherite_sword",
+        "id": "minecraft:paper",
         "count": 1,
         "components": {
           "minecraft:custom_name": {
-            "text": "PVP",
+            "text": "/equipo invitar",
             "italic": false,
-            "color": "#ff0000",
+            "color": "#00a6ff",
             "bold": true
           },
           "minecraft:lore": [
             {
-              "text": "  Como se pelea aca",
-              "italic": false,
-              "color": "gray"
-            }
-          ],
-          "minecraft:tooltip_display": {
-            "hidden_components": [
-              "minecraft:attribute_modifiers",
-              "minecraft:potion_contents",
-              "minecraft:unbreakable",
-              "minecraft:stored_enchantments",
-              "minecraft:enchantments"
-            ]
-          },
-          "minecraft:custom_data": {
-            "sdp": "menu"
-          }
-        }
-      },
-      "sound": "select",
-      "action": {
-        "type": "navigate",
-        "action": "open",
-        "menu": "sdp:pvp"
-      }
-    },
-    {
-      "slot": [
-        3,
-        5
-      ],
-      "type": "item",
-      "item": {
-        "id": "minecraft:white_banner",
-        "count": 1,
-        "components": {
-          "minecraft:custom_name": {
-            "text": "EQUIPO",
-            "italic": false,
-            "color": "#55ff7f",
-            "bold": true
-          },
-          "minecraft:lore": [
-            {
-              "text": "  Con quien andas:",
+              "text": "  Sumar a alguien conectado",
               "italic": false,
               "color": "gray"
             },
             {
-              "text": "  invitar, echar y salir",
+              "text": "  Solo el jefe",
               "italic": false,
               "color": "gray"
             }
@@ -732,12 +740,54 @@
           }
         }
       },
-      "sound": "select",
-      "action": {
-        "type": "navigate",
-        "action": "open",
-        "menu": "sdp:equipo"
-      }
+      "sound": "click",
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
+              },
+              {
+                "text": "Para invitar a alguien:   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/equipo invitar ",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/equipo invitar "
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
+                }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
+              }
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
+        }
+      ]
     },
     {
       "slot": [
@@ -746,23 +796,23 @@
       ],
       "type": "item",
       "item": {
-        "id": "minecraft:amethyst_shard",
+        "id": "minecraft:emerald",
         "count": 1,
         "components": {
           "minecraft:custom_name": {
-            "text": "TIENDA DE SHARDS",
+            "text": "/equipo aceptar",
             "italic": false,
-            "color": "#a503fc",
+            "color": "#00a6ff",
             "bold": true
           },
           "minecraft:lore": [
             {
-              "text": "  Lo que se compra matando:",
+              "text": "  Entrar al que te invito",
               "italic": false,
               "color": "gray"
             },
             {
-              "text": "  spawners, armas y armaduras",
+              "text": "  Mas facil: el boton del chat",
               "italic": false,
               "color": "gray"
             }
@@ -781,12 +831,54 @@
           }
         }
       },
-      "sound": "select",
-      "action": {
-        "type": "navigate",
-        "action": "open",
-        "menu": "sdp:tienda"
-      }
+      "sound": "click",
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
+              },
+              {
+                "text": "Para entrar a un equipo:   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/equipo aceptar ",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/equipo aceptar "
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
+                }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
+              }
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
+        }
+      ]
     },
     {
       "slot": [
@@ -795,23 +887,23 @@
       ],
       "type": "item",
       "item": {
-        "id": "minecraft:name_tag",
+        "id": "minecraft:barrier",
         "count": 1,
         "components": {
           "minecraft:custom_name": {
-            "text": "EXTRAS",
+            "text": "/equipo echar",
             "italic": false,
             "color": "#00a6ff",
             "bold": true
           },
           "minecraft:lore": [
             {
-              "text": "  Vision nocturna, skin,",
+              "text": "  Sacar a alguien del equipo",
               "italic": false,
               "color": "gray"
             },
             {
-              "text": "  apodo y privados",
+              "text": "  Solo el jefe",
               "italic": false,
               "color": "gray"
             }
@@ -830,12 +922,54 @@
           }
         }
       },
-      "sound": "select",
-      "action": {
-        "type": "navigate",
-        "action": "open",
-        "menu": "sdp:extras"
-      }
+      "sound": "click",
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
+              },
+              {
+                "text": "Para echar a alguien:   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/equipo echar ",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/equipo echar "
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
+                }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
+              }
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
+        }
+      ]
     },
     {
       "slot": [
@@ -844,16 +978,27 @@
       ],
       "type": "item",
       "item": {
-        "id": "minecraft:barrier",
+        "id": "minecraft:spruce_door",
         "count": 1,
         "components": {
           "minecraft:custom_name": {
-            "text": "CERRAR",
+            "text": "/equipo salir",
             "italic": false,
-            "color": "#ff5555",
+            "color": "#00a6ff",
             "bold": true
           },
-          "minecraft:lore": [],
+          "minecraft:lore": [
+            {
+              "text": "  Irte del equipo",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  Si quedas solo, se borra",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
           "minecraft:tooltip_display": {
             "hidden_components": [
               "minecraft:attribute_modifiers",
@@ -868,10 +1013,56 @@
           }
         }
       },
-      "sound": "close",
+      "sound": "click",
+      "action": {
+        "type": "command",
+        "command": "equipo salir",
+        "as_player": true,
+        "silent": false
+      }
+    },
+    {
+      "slot": [
+        5,
+        5
+      ],
+      "type": "item",
+      "item": {
+        "id": "minecraft:arrow",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "« VOLVER",
+            "italic": false,
+            "color": "#ffb02e",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  Al menu anterior",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "page_turn",
       "action": {
         "type": "navigate",
-        "action": "close"
+        "action": "open",
+        "menu": "sdp:comandos"
       }
     }
   ]

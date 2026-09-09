@@ -737,7 +737,15 @@ si el que transmite y el que recibe no están en el mismo equipo, no se manda.
 
 No piden ser operador: los registra nuestro mod sin `requires`, así que no hay
 nada que darle al grupo `default` de LuckPerms ni ningún modificador de Melius
-que escribir. La invitación llega con un `[ ENTRAR ]` clickeable y **dura dos
+que escribir.
+
+Dónde se anuncian, que es la mitad del trabajo: **EQUIPO** es una categoría del
+menú principal (`/ayuda`), en el medio de la fila, y abre `sdp:equipo`, que tiene
+el cartel de qué es un equipo y un botón por comando. La misma puerta está
+repetida adentro de **PVP**, porque el que entra ahí a ver cómo se pelea tiene
+que enterarse de que se puede armar equipo. Y en la lista del chat (`/comandos`)
+los seis van en un grupo propio: un `/equipo` pelado no cuenta que se invita, que
+se echa ni que hay un jefe. La invitación llega con un `[ ENTRAR ]` clickeable y **dura dos
 minutos**; vive en memoria y no en disco, porque una invitación que sobrevive a
 un reinicio es una invitación que nadie se acuerda de haber mandado.
 

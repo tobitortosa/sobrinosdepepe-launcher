@@ -579,57 +579,7 @@
     {
       "slot": [
         3,
-        2
-      ],
-      "type": "item",
-      "item": {
-        "id": "minecraft:white_banner",
-        "count": 1,
-        "components": {
-          "minecraft:custom_name": {
-            "text": "/equipo",
-            "italic": false,
-            "color": "#55ff7f",
-            "bold": true
-          },
-          "minecraft:lore": [
-            {
-              "text": "  Tu equipo: quienes son,",
-              "italic": false,
-              "color": "gray"
-            },
-            {
-              "text": "  invitar, echar y salir",
-              "italic": false,
-              "color": "gray"
-            }
-          ],
-          "minecraft:tooltip_display": {
-            "hidden_components": [
-              "minecraft:attribute_modifiers",
-              "minecraft:potion_contents",
-              "minecraft:unbreakable",
-              "minecraft:stored_enchantments",
-              "minecraft:enchantments"
-            ]
-          },
-          "minecraft:custom_data": {
-            "sdp": "menu"
-          }
-        }
-      },
-      "sound": "click",
-      "action": {
-        "type": "command",
-        "command": "equipo",
-        "as_player": true,
-        "silent": false
-      }
-    },
-    {
-      "slot": [
-        3,
-        4
+        3
       ],
       "type": "item",
       "item": {
@@ -679,7 +629,7 @@
     {
       "slot": [
         3,
-        6
+        5
       ],
       "type": "item",
       "item": {
@@ -718,6 +668,55 @@
         "type": "navigate",
         "action": "open",
         "menu": "sdp:tienda"
+      }
+    },
+    {
+      "slot": [
+        3,
+        7
+      ],
+      "type": "item",
+      "item": {
+        "id": "minecraft:white_banner",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "EQUIPO",
+            "italic": false,
+            "color": "#55ff7f",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  Con quien andas:",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  invitar, echar y salir",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "select",
+      "action": {
+        "type": "navigate",
+        "action": "open",
+        "menu": "sdp:equipo"
       }
     },
     {

@@ -297,6 +297,12 @@ guardar("comandos", {
         celda(3, 4, item("minecraft:netherite_sword", "PVP", e.KILLS,
                          ["Como se pelea aca"]),
               abrir("sdp:pvp"), "select"),
+        # El del medio, que hasta el 2026-09-09 era el hueco de la fila. Va entre
+        # PVP y la tienda de shards porque un equipo aca es una cosa de pelea:
+        # con quien no te pegas y a quien ves en la barra de arriba.
+        celda(3, 5, item("minecraft:white_banner", "EQUIPO", e.BIEN,
+                         ["Con quien andas:", "invitar, echar y salir"]),
+              abrir("sdp:equipo"), "select"),
         celda(3, 6, item("minecraft:amethyst_shard", "TIENDA DE SHARDS", e.SHARDS,
                          ["Lo que se compra matando:", "spawners, armas y armaduras"]),
               abrir("sdp:tienda"), "select"),
@@ -387,20 +393,69 @@ guardar("pvp", {
     # dos puertas abajo repartidas alrededor de la columna del medio. Quedo
     # corrido a la izquierda (columnas 2, 4 y 6) al sacar las dos entradas del
     # bounty y no volver a centrar lo que quedaba.
+    # Los tres botones en 3, 5 y 7, o sea centrados en la columna del medio.
+    # Estuvieron en 2, 4 y 6 desde que se sacaron las dos entradas del bounty y
+    # nadie volvio a centrar lo que quedaba.
     "items": marco(5, saltar=[(5, 5)]) + [
         celda(2, 5, reglas),
-        # El unico boton del menu que no habla de matar: es la puerta a los
-        # equipos, y esta aca porque un equipo en este servidor es una cosa de
-        # pelea (con quien no te pegas y a quien ves en la barra de arriba).
-        celda(3, 2, item("minecraft:white_banner", "/equipo", e.BIEN,
-                         ["Tu equipo: quienes son,", "invitar, echar y salir"]),
-              correr("equipo")),
-        celda(3, 4, item("minecraft:amethyst_shard", "/shards", e.SHARDS,
+        celda(3, 3, item("minecraft:amethyst_shard", "/shards", e.SHARDS,
                          ["Cuantos shards tenes", "y como se ganan"]),
               correr("shards")),
-        celda(3, 6, item("minecraft:diamond_sword", "TIENDA DE SHARDS", e.SHARDS,
+        celda(3, 5, item("minecraft:diamond_sword", "TIENDA DE SHARDS", e.SHARDS,
                          ["Lo que se compra matando"]),
               abrir("sdp:tienda"), "select"),
+        # La misma puerta que hay en el menu principal. Esta repetida a proposito:
+        # el que entra a PVP a ver como se pelea tiene que enterarse de que se
+        # puede armar equipo, que es la otra mitad de como se pelea aca.
+        celda(3, 7, item("minecraft:white_banner", "EQUIPO", e.BIEN,
+                         ["Con quien andas:", "invitar, echar y salir"]),
+              abrir("sdp:equipo"), "select"),
+        volver(fila=5),
+    ],
+})
+
+# ------------------------------------------------------------------------ equipo
+que_es = item("minecraft:white_banner", "QUE ES UN EQUIPO", e.BIEN, [
+    texto("  Un equipo son hasta 6 que andan juntos", e.ETIQUETA),
+    texto("", None),
+    texto("  " + e.VINETA + " Entre companeros NO se pegan", e.BIEN),
+    texto("  " + e.VINETA + " Se ven en la barra de arriba", e.BIEN),
+    texto("  " + e.VINETA + " El nombre va del color del equipo", e.BIEN),
+    texto("", None),
+    texto("  Al que no es de tu equipo no lo ves en esa", e.ETIQUETA),
+    texto("  barra, y el tampoco te ve a vos.", e.ETIQUETA),
+    texto("", None),
+    texto("  Al que invitas le llega un boton para entrar", e.ETIQUETA),
+    texto("  y le dura 2 minutos. Invitar y echar los", e.ETIQUETA),
+    texto("  hace el jefe, que es el que armo el equipo.", e.ETIQUETA),
+])
+
+# Seis botones en 2, 3, 4 y 6, 7, 8: el hueco del medio deja el cartel de arriba
+# solo, que es la misma forma del menu principal. A la izquierda lo de armar el
+# equipo y a la derecha lo de manejarlo.
+guardar("equipo", {
+    "name": texto("EQUIPO", e.BIEN, negrita=True),
+    "rows": 5,
+    "items": marco(5, saltar=[(5, 5)]) + [
+        celda(2, 5, que_es),
+        celda(3, 2, item("minecraft:white_banner", "/equipo", e.ACENTO,
+                         ["Quienes son los tuyos", "y quien esta conectado"]),
+              correr("equipo")),
+        celda(3, 3, item("minecraft:writable_book", "/equipo crear", e.ACENTO,
+                         ["Armar el tuyo, y sos el jefe", "De 3 a 16 letras o numeros"]),
+              escribir("/equipo crear ", "Para armar tu equipo:")),
+        celda(3, 4, item("minecraft:paper", "/equipo invitar", e.ACENTO,
+                         ["Sumar a alguien conectado", "Solo el jefe"]),
+              escribir("/equipo invitar ", "Para invitar a alguien:")),
+        celda(3, 6, item("minecraft:emerald", "/equipo aceptar", e.ACENTO,
+                         ["Entrar al que te invito", "Mas facil: el boton del chat"]),
+              escribir("/equipo aceptar ", "Para entrar a un equipo:")),
+        celda(3, 7, item("minecraft:barrier", "/equipo echar", e.ACENTO,
+                         ["Sacar a alguien del equipo", "Solo el jefe"]),
+              escribir("/equipo echar ", "Para echar a alguien:")),
+        celda(3, 8, item("minecraft:spruce_door", "/equipo salir", e.ACENTO,
+                         ["Irte del equipo", "Si quedas solo, se borra"]),
+              correr("equipo salir")),
         volver(fila=5),
     ],
 })
