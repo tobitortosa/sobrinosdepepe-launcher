@@ -34,6 +34,15 @@ mod-acceso/                    el mod que hace que al servidor se entre solo con
 
 mod-precios/                   muestra en cada item cuanta plata paga el servidor por el
 
+mod-equipos/                   los equipos: /equipo crear, invitar, aceptar, echar y salir
+├── EquiposServidor            registra el comando y carga los equipos al arrancar
+├── Registro                   quien esta con quien, en config/equipos-de-pepe.json,
+│                              espejado en equipos del scoreboard (sin fuego amigo,
+│                              y la barra de arriba muestra solo a los companeros)
+├── Invitaciones               las que estan esperando respuesta, dos minutos
+├── ComandoEquipo              /equipo y sus cinco subcomandos
+└── Carteles                   lo que el jugador lee, con los colores del servidor
+
 launcher/
 ├── pack.json                  copia del pack publicado; solo la usa la CLI de la fase 0
 └── src/

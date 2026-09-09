@@ -23,6 +23,8 @@ mod-precios/build/
 mod-precios/.gradle/
 mod-acceso/build/
 mod-acceso/.gradle/
+mod-equipos/build/
+mod-equipos/.gradle/
 
 # Sistema
 Thumbs.db

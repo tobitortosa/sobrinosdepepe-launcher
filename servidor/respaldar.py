@@ -29,6 +29,9 @@ ARCHIVOS = [
     # (enable_top, enable_enderchest, enable_warp...). No se puede editar con el
     # servidor prendido: el mod reescribe el archivo al apagarse.
     ("/config/EssentialCommands.properties", "esenciales/EssentialCommands.properties"),
+    # Los equipos: quién está con quién y quién manda en cada uno. Lo escribe
+    # solo el mod de equipos, y hasta que alguien arme el primero no existe.
+    ("/config/equipos-de-pepe.json", "equipos/equipos-de-pepe.json"),
     # Server-Side Horror: qué sustos están prendidos y cada cuánto.
     ("/config/serversidehorror.json", "horror/serversidehorror.json"),
     # Safe Zone: quién puede proteger zonas y con qué ítem. Ojo que vive adentro

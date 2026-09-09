@@ -544,6 +544,20 @@
               "text": "  pierde al morir y nadie te lo puede robar.",
               "italic": false,
               "color": "gray"
+            },
+            {
+              "text": "",
+              "italic": false
+            },
+            {
+              "text": "  Con /equipo armas equipo: entre companeros",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "  no se pegan, y se ven en la barra de arriba.",
+              "italic": false,
+              "color": "#55ff7f"
             }
           ],
           "minecraft:tooltip_display": {
@@ -561,6 +575,56 @@
         }
       },
       "sound": "click"
+    },
+    {
+      "slot": [
+        3,
+        2
+      ],
+      "type": "item",
+      "item": {
+        "id": "minecraft:white_banner",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "/equipo",
+            "italic": false,
+            "color": "#55ff7f",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  Tu equipo: quienes son,",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  invitar, echar y salir",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "click",
+      "action": {
+        "type": "command",
+        "command": "equipo",
+        "as_player": true,
+        "silent": false
+      }
     },
     {
       "slot": [

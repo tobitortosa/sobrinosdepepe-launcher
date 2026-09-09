@@ -9,6 +9,8 @@ subir tal cual y todo queda como estaba.
 | `respaldar.py` | Baja del servidor todo lo que mantenemos nosotros. |
 | `subir-datapack.py` | Sube el datapack entero (funciones, advancements, menús) y recarga. |
 | `subir-acceso.py` | Sube el mod de acceso y su config: el candado (`REQUIRE_LAUNCHER`), el secreto y el link. Con el candado puesto, al servidor se entra solo con el launcher. |
+| `subir-cuadros.py` | Deja en `/mods` el jar de My Photo Paintings, el mod de colgar imágenes propias como cuadros. |
+| `subir-equipos.py` | Deja en `/mods` los dos jars de los equipos: el nuestro, que es el comando `/equipo`, y team-only-locator-bar, que deja la barra de arriba mostrando solo a los compañeros. |
 | `generar-precios.py` | Arma `prices.json` y `config.json` de EconomyCraft, rearma el mod cliente de precios y verifica que no haya plata infinita. |
 | `verificar-precios.py` | Solo la verificación, contra el servidor o contra un archivo. |
 | `generar-menus.py` | Arma los menús de cofre (los deja en el datapack). |
@@ -259,22 +261,22 @@ eso `dynamic_prices_enabled` queda en `false`.
 
 ## Qué mods van en el servidor y cuáles en el launcher
 
-Son dos listas distintas y no tienen por qué coincidir. Al 2026-09-06 el
-servidor tiene **16 jars** en `/mods` y el pack que baja el launcher tiene **14
-entradas** (13 mods y el shader). **Los 6 que están en los dos lados son el mismo
-archivo**, verificado por hash: fabric-api, cloth-config, lithium, modernfix,
-sound-physics y voicechat. Los otros diez del servidor no los tiene nadie en su
-PC, y está bien: son `environment: server` o `*` sin nada de cliente.
+Son dos listas distintas y no tienen por qué coincidir. Al 2026-09-09 el
+servidor tiene **21 jars** en `/mods` y el pack que baja el launcher tiene **17
+entradas** (16 mods y el shader). **Los 8 que están en los dos lados son el mismo
+archivo**: fabric-api, cloth-config, lithium, modernfix, sound-physics, voicechat,
+el mod de acceso y el de los cuadros. Los otros trece del servidor no los tiene
+nadie en su PC, y está bien: son `environment: server` o `*` sin nada de cliente.
 
 Cómo se decide dónde va cada uno: se lee el `fabric.mod.json` del jar.
 
 - `"environment": "client"` → **no lo carga el servidor**, ni aunque esté en
-  `/mods`. Va solo en el pack.
+  `/mods`. Va solo en el pack (sodium, iris, zoomx…).
 - `"environment": "*"` con entrypoint `main` y nada de `client` → va solo en el
   servidor (essential_commands, melius-commands, inventory-menu,
-  styled-sidebars, skinrestorer).
-- `"environment": "server"` → solo servidor (luckperms).
-
+  styled-sidebars, skinrestorer, team-only-locator-bar).
+- `"environment": "server"` → solo servidor, y ni siquiera se carga en un
+  cliente (luckperms, el mod de equipos).
 Ojo con los que declaran entrypoint de cliente pero no lo usan:
 **EconomyCraft tiene `onInitializeClient()` vacío**, así que los jugadores no
 necesitan tenerlo. Está bien que no esté en el pack.
@@ -289,6 +291,45 @@ volver atrás es moverlos de nuevo a `/mods`:
 | tl_skin_cape | Igual, pero además **no está en el pack**, o sea que no lo tenía nadie. Del lado del servidor las skins las resuelve `skinrestorer`. |
 | maplink | Este sí cargaba. Sincroniza Xaero con un Bluemap/Dynmap/Squaremap, y acá no hay ninguno. Su `maplink.fabric.mixins.json` tiene la lista común **vacía**: todos sus mixins son de cliente, así que en un servidor dedicado no parchea nada. |
 | player-revive (Simple Revive) | Peleaba con el diseño. Es un datapack puro, sin una sola clase, y el downed lo dispara `simplerevive.deathCount`, o sea que **la muerte pasa de verdad primero**: el asesino cobra kill, shards, recompensa y el 10% de la plata igual. Lo que rompía era el resto. Con `keepinv: 1b`, `as_item.mcfunction` le pone `PickupDelay: 0` a lo que soltaste y **te lo teletransporta encima**, así que revivir te devuelve el equipo y matar deja de dar botín. Y sobre todo: matarse con un amigo y revivirlo era una máquina de shards gratis. Al sacarlo quedaron 16 objetivos `simplerevive.*` huérfanos, que se borraron a mano. |
+
+### Los cuadros
+
+**My Photo Paintings** (`my_photo_paintings` 1.0.1, 99 KB), desde el 2026-09-09.
+Se craftea el item "Photo Painting" con ocho palos y un papel, se lo usa contra una
+pared y se abre el explorador de archivos de Windows para elegir un PNG, JPG o
+JPEG; después se elige la medida, de 1x1 hasta 16x16 bloques, con una sugerencia
+según la forma de la imagen.
+
+Va en los dos lados y es el mismo archivo (`environment: *`): el jar está en
+`/mods` y en el pack del launcher. Lo sube `subir-cuadros.py` del lado del
+servidor y `npm run pack:jar` del lado del pack. **Es el único mod del pack que no
+sale de Modrinth**, así que el archivo lo sirve nuestro backend desde
+`/api/files/<sha1>`; el autor permite incluirlo en modpacks. Pide
+`minecraft: "26.1"` **exacto**, o sea que el día que el servidor pase a 26.1.2 este
+mod deja de cargar.
+
+**Está puesto sabiendo que el mod es para un solo jugador**, y hay que decirlo acá
+porque si no el próximo que lea esto va a pensar que está roto. Verificado en el
+bytecode de 1.0.1, y el autor lo aclara en su propia página:
+
+- `client/PhotoImageStorage` guarda el PNG llamando a `getSingleplayerServer()`, y
+  tiene preparado el mensaje `"No singleplayer server found."`. En un servidor
+  dedicado ese mundo no existe.
+- Lo único que viaja por la red (`PlacePhotoPaintingPayload`) es
+  `position; direction; width; height; imageId; cropMode; imageWidth; imageHeight`.
+  **La imagen no viaja**: viaja un número que apunta a un archivo del disco del que
+  la colgó.
+
+O sea que acá adentro no se espera que los demás vean nada. Se eligió igual, a
+sabiendas (Tobías, 2026-09-09).
+
+**El que sí funciona en servidor es Custom Paintings**, que estuvo puesto unas
+horas: las imágenes las elige el admin, viven en `/world/custompaintings/` y el
+servidor se las manda a cada jugador cuando entra. Volver a él es
+`npm run pack:mod -- custom-paintings-mod` del lado del launcher, subir su jar a
+`/mods` y dejar el zip de imágenes en `/world/custompaintings/`. El tercero que
+miramos, Immersive Paintings, es el único donde cada jugador cuelga lo suyo **y**
+los demás lo ven, pero pide Minecraft 26.1.2 y nosotros estamos en 26.1.
 
 ## El borde del mundo
 
@@ -644,6 +685,118 @@ descubra jugando:
 
 Si algún día se habilita `/tpahere` o `/warp`, hay que agregarlos a
 `combate.json`: son las otras dos formas de salir de un lugar.
+
+## Los equipos, y la barra de arriba que era un radar
+
+Desde el 2026-09-09 se puede armar equipo con `/equipo`, y **la barra de
+waypoints de arriba del inventario pasó a mostrar solamente a los del propio
+equipo**. Las dos cosas son la misma decisión y por eso están juntas acá.
+
+### Qué pasaba con la barra
+
+26.1 trae de fábrica la barra de waypoints (la gamerule `locator_bar`, que
+arranca en `true`) y de fábrica **muestra a todos los jugadores del servidor**,
+con un puntito que indica para dónde está cada uno. En un survival de PvP libre
+donde matar paga 10 shards, el 10% de la plata del muerto y todo el equipo que
+llevaba puesto, eso es un radar: nadie se esconde, nadie se escapa y salir a
+buscar pelea deja de tener mérito. Es exactamente lo que hizo sacar los
+minimapas de Xaero el 2026-09-06, y por el mismo motivo.
+
+Se podía apagar entera con `gamerule locator_bar false`, y **no se hizo así**:
+apagada no molesta a nadie pero tampoco le sirve a nadie. Con
+**team-only-locator-bar** la misma barra queda mostrando únicamente a los del
+mismo equipo del scoreboard, o sea que pasa a ser lo que hace que valga la pena
+armar equipo. El que no tiene equipo no ve a nadie, que es lo que se pedía.
+
+Si algún día igual se la quiere sin barra: `gamerule locator_bar false`. El mod
+no molesta con la gamerule apagada, simplemente no hay barra que filtrar.
+
+### Los dos mods, y por qué ninguno toca el launcher
+
+| Jar | De dónde | Qué hace |
+|---|---|---|
+| `equipos-sobrinosdepepe-1.0.0.jar` | nuestro, `mod-equipos/` | el comando `/equipo` |
+| `team-only-locator-bar-1.0.0+MC26.1.jar` | Modrinth, MIT, 5 KB | la barra muestra solo al equipo |
+
+Los sube `python servidor/subir-equipos.py`, que reinicia si alguno era nuevo.
+**A nadie hay que pasarle ningún jar**, ni siquiera a los que juegan sin el
+launcher: el nuestro declara `environment: server`, y team-only-locator-bar
+declara `environment: *` pero su único entrypoint es `main` y su único mixin es
+sobre `WaypointTransmitter.doesSourceIgnoreReceiver`, que corre del lado del
+servidor. Es el servidor el que decide a quién le manda cada punto de la barra:
+si el que transmite y el que recibe no están en el mismo equipo, no se manda.
+
+### Los comandos
+
+    /equipo                      quiénes son y qué podés hacer
+    /equipo crear <nombre>       armar uno, y sos el jefe
+    /equipo invitar <jugador>    solo el jefe, y el otro tiene que estar conectado
+    /equipo aceptar <equipo>     entrar, mientras la invitación no venza
+    /equipo echar <jugador>      solo el jefe
+    /equipo salir                irte
+
+No piden ser operador: los registra nuestro mod sin `requires`, así que no hay
+nada que darle al grupo `default` de LuckPerms ni ningún modificador de Melius
+que escribir. La invitación llega con un `[ ENTRAR ]` clickeable y **dura dos
+minutos**; vive en memoria y no en disco, porque una invitación que sobrevive a
+un reinicio es una invitación que nadie se acuerda de haber mandado.
+
+Entran **seis por equipo**. El tope no es decoración: la barra muestra a los
+compañeros, así que un equipo con medio servidor adentro es el radar de todos
+contra todos que justamente se sacó.
+
+### Lo que da un equipo, y lo que no
+
+Da tres cosas, y las tres las hace el juego y no nosotros, porque cada equipo es
+un **equipo del scoreboard** de vanilla llamado `sdp_<nombre en minúscula>`:
+
+- **entre compañeros no se pega** (`friendlyFire` en `false`);
+- **el nombre va del color del equipo**, que es cómo en una pelea se ve de un
+  vistazo quién es de quién. Se reparten ocho colores, el primero libre;
+- **se ven en la barra de arriba**, que es lo de más arriba.
+
+No da nada más, a propósito: no hay teletransporte al compañero, no hay chat de
+equipo, no hay casas compartidas, y matar a un compañero (saliéndose del equipo
+primero) sigue pagando exactamente lo mismo. El enfriamiento de diez minutos por
+víctima de `sdp:pagar_kill` es el que ya impedía que dos amigos se maten en loop,
+y los equipos no lo tocan.
+
+### Dónde vive quién está con quién
+
+La fuente de verdad es **`config/equipos-de-pepe.json`**, y no el scoreboard:
+
+```json
+{ "equipos": [ { "nombre": "LOSMONOS", "color": "aqua",
+                 "jefe": "PEPE", "miembros": ["PEPE", "JUAN"] } ] }
+```
+
+Es al revés de lo que uno esperaría, y es por dos motivos. Un equipo del
+scoreboard **no tiene dónde guardar quién es el jefe**, y sin jefe no hay a quién
+pedirle permiso para invitar ni a quién echar a nadie. Y un archivo se abre desde
+el panel y se entiende de una: si algo queda raro, se corrige ahí y se reinicia.
+
+El scoreboard es un espejo que se rearma en cada cambio y al arrancar el
+servidor. Al arrancar, además, **borra los equipos `sdp_*` que ya no están en el
+archivo**, que es lo que pasa si se lo editó con el servidor apagado. Lo baja
+`respaldar.py` a `servidor/equipos/`, y hasta que alguien arme el primer equipo
+el archivo no existe.
+
+### Las tres trampas de esto
+
+- **`team option` no existe.** El comando es `team modify <equipo> friendlyFire
+  <bool>`, y sirve para verificar sin adivinar: si contesta *"Nothing changed.
+  Friendly fire is already disabled for that team"*, el mod lo dejó bien. Y ojo
+  que las opciones de equipo siguen en camelCase (`friendlyFire`,
+  `seeFriendlyInvisibles`, `nametagVisibility`) aunque las gamerules de 26.1 sean
+  snake_case.
+- **`team list` muestra el nombre de pantalla, no el id.** Un equipo que se llama
+  `sdp_losmonos` aparece como `[LOSMONOS]`. Para verlo por su id hay que
+  nombrarlo: `team list sdp_losmonos`.
+- **Ya había un equipo en el servidor y no es nuestro.** `noTags` lo crea
+  Server-Side Horror (está en su `CommonClass`) y adentro tiene un solo
+  miembro, `MarsThePlanet_`, que es el jugador fantasma del mod. Por eso los
+  nuestros van con el prefijo `sdp_`: sin él, alguien podía crear un equipo
+  llamado igual y meterse ahí.
 
 ## El terror de las cuevas
 
@@ -1321,6 +1474,10 @@ editar con el servidor prendido**: el mod lo reescribe al apagarse.
   `players/data/`.
 - **`balances.json` se escribe asincrónico** desde un mapa en memoria: editarlo a
   mano con el servidor prendido no sirve, el próximo guardado lo pisa.
+- **`GameProfile` es un record y `getName()` no existe**: en la authlib de 26.1
+  el accesor es `name()`. Para el nombre de un jugador desde un mod conviene
+  igual `getScoreboardName()`, que es el mismo nombre con el que trabajan los
+  equipos y el scoreboard.
 - **Vender está bloqueado en silencio por daño y por contenido**: cualquier
   herramienta usada y cualquier shulker o bundle con cosas adentro no se pueden
   vender. Al jugador le va a parecer un bug del servidor y no una regla.

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "equiposdepepe",
+  "version": "${version}",
+  "name": "Equipos de Pepe",
+  "description": "Los equipos del servidor de SOBRINOS DE PEPE: /equipo crear, invitar, aceptar, echar y salir. Por debajo son equipos del scoreboard, asi que no hay fuego amigo y la barra de arriba muestra solo a los companeros.",
+  "authors": ["SOBRINOS DE PEPE"],
+  "environment": "server",
+  "entrypoints": {
+    "server": ["pe.sobrinosdepepe.equipos.EquiposServidor"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": ">=26.1",
+    "fabric-api": "*"
+  }
+}

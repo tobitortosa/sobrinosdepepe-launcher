@@ -186,7 +186,7 @@ GRUPOS = [
         ("/rtp", False), ("/tpa ", True),
     ]),
     ("PELEA", e.KILLS, [
-        ("/shards", False), ("/tienda", False),
+        ("/shards", False), ("/tienda", False), ("/equipo", False),
     ]),
     ("EXTRAS", e.MARCA, [
         ("/nv", False),

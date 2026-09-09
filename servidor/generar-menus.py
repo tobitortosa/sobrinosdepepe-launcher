@@ -375,6 +375,9 @@ reglas = item("minecraft:netherite_chestplate", e.CALAVERA + " COMO SE PELEA ACA
     texto("", None),
     texto("  Lo que guardas en el ender chest no se", e.ETIQUETA),
     texto("  pierde al morir y nadie te lo puede robar.", e.ETIQUETA),
+    texto("", None),
+    texto("  Con /equipo armas equipo: entre companeros", e.BIEN),
+    texto("  no se pegan, y se ven en la barra de arriba.", e.BIEN),
 ])
 
 guardar("pvp", {
@@ -386,6 +389,12 @@ guardar("pvp", {
     # bounty y no volver a centrar lo que quedaba.
     "items": marco(5, saltar=[(5, 5)]) + [
         celda(2, 5, reglas),
+        # El unico boton del menu que no habla de matar: es la puerta a los
+        # equipos, y esta aca porque un equipo en este servidor es una cosa de
+        # pelea (con quien no te pegas y a quien ves en la barra de arriba).
+        celda(3, 2, item("minecraft:white_banner", "/equipo", e.BIEN,
+                         ["Tu equipo: quienes son,", "invitar, echar y salir"]),
+              correr("equipo")),
         celda(3, 4, item("minecraft:amethyst_shard", "/shards", e.SHARDS,
                          ["Cuantos shards tenes", "y como se ganan"]),
               correr("shards")),
