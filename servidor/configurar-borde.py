@@ -44,6 +44,12 @@ argumento de arriba no deja de ser cierto por eso: cuanto más grande, menos se
 cruzan, y si el servidor se empieza a sentir vacío la palanca es justamente esta
 variable. Lo que cambia es que ahora se toca sin editar código.
 
+**2026-09-11, agrandado a 15.000 de radio**, otra vez por pedido de Tobías. Son
+30.000 bloques de lado y 2,25 veces la tierra que había con 10.000. Vale lo mismo
+que arriba, ahora con más fuerza: cruzarlo corriendo pasa de media hora a unos 45
+minutos, y esta variable es la palanca para el otro lado si el servidor se empieza
+a sentir vacío.
+
 Y agrandar es una puerta de una sola dirección: achicarlo después dejaría afuera
 todo lo que hayan construido en la tierra nueva.
 
