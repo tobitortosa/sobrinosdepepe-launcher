@@ -123,7 +123,7 @@ if __name__ == "__main__":
     if secreto is None:
         sys.exit(1)
 
-    link = mc.cfg.get("SITE_URL", "") or "sobrinosdepepe.vercel.app"
+    link = mc.cfg.get("SITE_URL", "") or "sobrinosdepepe.com"
     exigir = mc.cfg.get("REQUIRE_LAUNCHER", "false").strip().lower() in SI
     sin_launcher = [n.strip() for n in mc.cfg.get("LAUNCHER_EXEMPT", "").split(",") if n.strip()]
 

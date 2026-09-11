@@ -88,7 +88,7 @@ Más dos estados: **pendiente de aprobación** ("Tu cuenta espera aprobación" +
 | Pieza | Tecnología |
 |---|---|
 | Launcher | C# / .NET 10 · Avalonia 12 · CmlLib.Core 4.0.6 · Velopack 1.2 |
-| Backend | Next.js en Vercel · Postgres en Neon · Drizzle · Argon2id |
+| Backend | Next.js en **`https://sobrinosdepepe.com`** (Vercel) · Postgres en Neon · Drizzle · Argon2id |
 | Pack | lista de archivos con hashes, URL y lado cliente/servidor; la forma es compatible con el índice de un `.mrpack` de Modrinth |
 | Server | Fabric 26.1 en Minehost, panel Pterodactyl |
 | Mods propios | Java 25 con Fabric Loom: `mod-acceso` (solo se entra con el launcher) y `mod-precios` (el precio en la descripción de cada item) |
@@ -345,6 +345,8 @@ En el server: `white-list=true`, `enforce-whitelist=true` y **ningún jugador co
 El pack fija Minecraft **26.1** (la del server, protocolo 775) y Fabric Loader **0.19.5**. Nunca "la última". Los mods se fijan por versión exacta y los elegís vos cuando los agregás. Si algún día actualizás el server, se actualiza el pack a mano y listo.
 
 ## 10. Distribución
+
+**El backend no se despliega solo al pushear.** El proyecto de Vercel no está conectado al repositorio: se publica a mano, desde `web/`, con `npx vercel --prod`. Dos cosas que importan de eso: despliega **lo que está en el disco**, no el último commit, así que conviene tener todo commiteado antes; y la dirección de producción es `https://sobrinosdepepe.com`, que es a la que le pega el launcher desde la versión 1.16.0. `sobrinosdepepe.vercel.app` sigue funcionando y es lo que usan los launchers viejos hasta que se actualizan solos. `www.sobrinosdepepe.com` **no** está dado de alta: no tiene certificado y no responde.
 
 `Setup.exe` de Velopack en GitHub Releases, sin firma de código. La primera vez Windows muestra "Windows protegió tu PC": la página de descarga lo explica con las capturas de pantalla paso por paso. Después el launcher se actualiza solo y el aviso no vuelve a aparecer.
 

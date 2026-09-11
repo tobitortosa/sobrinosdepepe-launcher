@@ -9,7 +9,7 @@ namespace SobrinosDePepe.App;
 /// </summary>
 public static class AppConfig
 {
-    public const string DefaultApiUrl = "https://sobrinosdepepe.vercel.app";
+    public const string DefaultApiUrl = "https://sobrinosdepepe.com";
     public const string DefaultServerAddress = "sobrinosdepepe.minehost.pro";
 
     public static Uri ApiUrl { get; } = Resolve();

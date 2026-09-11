@@ -1,5 +1,5 @@
 {
   "_": "Para probar contra tu PC: cambiá apiUrl por http://127.0.0.1:3000 y corré 'npm run dev' en la carpeta web.",
-  "apiUrl": "https://sobrinosdepepe.vercel.app",
+  "apiUrl": "https://sobrinosdepepe.com",
   "serverAddress": "sobrinosdepepe.minehost.pro"
 }

@@ -92,9 +92,9 @@
         <TextBlock Classes="muted" TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,0"
                    Text="Cuando quieras volver, el launcher está siempre en el mismo lugar." />
 
-        <Button Classes="link" Content="sobrinosdepepe.vercel.app"
+        <Button Classes="link" Content="sobrinosdepepe.com"
                 Command="{Binding OpenLinkCommand}"
-                CommandParameter="https://sobrinosdepepe.vercel.app"
+                CommandParameter="https://sobrinosdepepe.com"
                 HorizontalAlignment="Center" Margin="0,4,0,0" />
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="2" Margin="0,20,0,0">

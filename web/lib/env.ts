@@ -55,7 +55,7 @@ export const env = {
    * solo lugar: servidor/subir-acceso.py la copia a la config del servidor.
    */
   get siteUrl() {
-    return process.env.SITE_URL ?? 'sobrinosdepepe.vercel.app';
+    return process.env.SITE_URL ?? 'sobrinosdepepe.com';
   },
 };
 
