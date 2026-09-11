@@ -109,5 +109,58 @@ export const packReleases = pgTable('pack_releases', {
   published: boolean('published').notNull().default(true),
 });
 
+/**
+ * La configuración del juego de cada cuenta: `options.txt` (las teclas, la
+ * sensibilidad del mouse, el FOV, el volumen) y la carpeta `config/` entera (los
+ * ajustes de Sodium, los shaders de Iris, el sonido).
+ *
+ * Va como un zip y no como cien filas porque no lo leemos nunca: el launcher lo
+ * sube cuando se cierra el juego y lo baja cuando alguien entra en otra máquina.
+ * Son unos 200 KB por cuenta.
+ *
+ * Es por cuenta y no por máquina, que es todo el punto: si la novia de Tobías
+ * entra con su cuenta en la computadora de él, tiene sus propias teclas, y las de
+ * él la esperan enteras cuando vuelve a entrar.
+ */
+export const userSettings = pgTable('user_settings', {
+  userId: integer('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  data: bytea('data').notNull(),
+  size: bigint('size', { mode: 'number' }).notNull(),
+  /** El sha1 del zip, para no volver a subir lo mismo cuando nada cambió. */
+  sha1: text('sha1').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Los mods que una cuenta tiene además del pack. Los bytes viven en `mod_files`,
+ * que es de donde ya se sirven los .jar que sube el admin.
+ *
+ * **Solo las cuentas admin pueden tener.** No es una comodidad: es lo único que
+ * evita que esto sea la vieja `mods-propios.txt` con otro nombre. La lista de los
+ * jars que sobreviven al borrado ya no la escribe el jugador en su PC —la decide
+ * el backend mirando la cuenta—, así que un jugador no puede agregarse un xray ni
+ * tocando el launcher.
+ */
+export const userMods = pgTable(
+  'user_mods',
+  {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    filename: text('filename').notNull(),
+    sha1: text('sha1').notNull(),
+    size: bigint('size', { mode: 'number' }).notNull(),
+    /** Lo que dice el .jar de sí mismo, para mostrarlo en el panel. */
+    title: text('title').notNull().default(''),
+    versionNumber: text('version_number').notNull().default(''),
+    addedAt: timestamp('added_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('user_mods_user_sha1_idx').on(t.userId, t.sha1)],
+);
+
 export type User = typeof users.$inferSelect;
 export type PackMod = typeof packMods.$inferSelect;
+export type UserMod = typeof userMods.$inferSelect;

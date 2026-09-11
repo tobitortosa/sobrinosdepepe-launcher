@@ -171,6 +171,31 @@ public static class LauncherAdminApi
         return await api.SendAsync<UploadResult>(HttpMethod.Post, "api/admin/mods/upload", token, form, ct);
     }
 
+    /// <summary>
+    /// Sube mods a la cuenta propia, no al pack. El backend le dice que no a toda
+    /// cuenta que no sea admin: es lo único que separa esto de que cada jugador se
+    /// pueda meter lo que quiera en la carpeta.
+    /// </summary>
+    public static async Task<UploadResult> UploadMyModsAsync(
+        this LauncherApi api, string token, IEnumerable<string> paths, CancellationToken ct = default)
+    {
+        var form = new MultipartFormDataContent();
+        foreach (var path in paths)
+        {
+            var content = new StreamContent(File.OpenRead(path));
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/java-archive");
+            form.Add(content, "files", Path.GetFileName(path));
+        }
+
+        return await api.SendAsync<UploadResult>(HttpMethod.Post, "api/my-mods", token, form, ct);
+    }
+
+    /// <summary>Saca un mod de la cuenta. El .jar queda, por si el pack lo usa.</summary>
+    public static Task RemoveMyModAsync(
+        this LauncherApi api, string token, string sha1, CancellationToken ct = default) =>
+        api.SendAsync<JsonElement>(HttpMethod.Delete,
+            $"api/my-mods?sha1={Uri.EscapeDataString(sha1)}", token, null, ct);
+
     /// <summary>Si el servidor está encendido, apagado o arrancando.</summary>
     public static Task<ServerState> ServerStateAsync(this LauncherApi api, string token, CancellationToken ct = default) =>
         api.SendAsync<ServerState>(HttpMethod.Get, "api/admin/server", token, null, ct);

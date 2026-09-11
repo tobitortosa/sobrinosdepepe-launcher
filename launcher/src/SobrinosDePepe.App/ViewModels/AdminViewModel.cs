@@ -19,7 +19,7 @@ public partial class AdminViewModel : ObservableObject
     private readonly string _token;
 
     [ObservableProperty] private string _username;
-    [ObservableProperty] private int _tab;          // 0 = usuarios, 1 = mods
+    [ObservableProperty] private int _tab;          // 0 = usuarios, 1 = mods, 2 = servidor, 3 = mis mods
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string? _error;
     [ObservableProperty] private string? _notice;
@@ -41,6 +41,10 @@ public partial class AdminViewModel : ObservableObject
     [ObservableProperty] private bool _hasUnpublishedChanges;
     [ObservableProperty] private string? _serverSideNote;
 
+    // Mis mods: los que tiene esta cuenta ademas del pack
+    public ObservableCollection<MyMod> MyMods { get; } = [];
+    [ObservableProperty] private string _myModsSummary = "";
+
     // El servidor
     public ObservableCollection<ServerMod> ServerMissing { get; } = [];
     public ObservableCollection<string> ServerExtra { get; } = [];
@@ -58,17 +62,20 @@ public partial class AdminViewModel : ObservableObject
         _ = LoadUsersAsync();
         _ = LoadModsAsync();
         _ = LoadServerModsAsync();
+        _ = LoadMyModsAsync();
     }
 
     public bool ShowingUsers => Tab == 0;
     public bool ShowingMods => Tab == 1;
     public bool ShowingServer => Tab == 2;
+    public bool ShowingMyMods => Tab == 3;
 
     partial void OnTabChanged(int value)
     {
         OnPropertyChanged(nameof(ShowingUsers));
         OnPropertyChanged(nameof(ShowingMods));
         OnPropertyChanged(nameof(ShowingServer));
+        OnPropertyChanged(nameof(ShowingMyMods));
     }
 
     [RelayCommand]
@@ -79,6 +86,9 @@ public partial class AdminViewModel : ObservableObject
 
     [RelayCommand]
     private void ShowServer() => Tab = 2;
+
+    [RelayCommand]
+    private void ShowMyMods() => Tab = 3;
 
     [RelayCommand]
     private void Back() => _shell.ShowHome(_token, new Account(Username, "active", "admin"));
@@ -178,22 +188,7 @@ public partial class AdminViewModel : ObservableObject
     [RelayCommand]
     private async Task AddModsAsync()
     {
-        var window = (Avalonia.Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
-        if (window is null) return;
-
-        var files = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Elegí los mods (.jar)",
-            AllowMultiple = true,
-            FileTypeFilter = [new FilePickerFileType("Mods de Minecraft") { Patterns = ["*.jar"] }],
-        });
-
-        var paths = files
-            .Select(f => f.TryGetLocalPath())
-            .Where(p => !string.IsNullOrEmpty(p))
-            .Select(p => p!)
-            .ToList();
-
+        var paths = await ElegirJarsAsync("Elegí los mods del pack (.jar)");
         if (paths.Count == 0) return;
 
         await RunAsync(async () =>
@@ -223,6 +218,85 @@ public partial class AdminViewModel : ObservableObject
                 Notice = $"{mod.Title} quitado del pack. Publicá para que les llegue a todos.";
                 await LoadModsAsync();
             });
+
+    // ----------------------------------------------------------------- Mis mods
+
+    /// <summary>
+    /// Los mods que esta cuenta tiene ademas del pack. No se publican: son solo
+    /// para las maquinas donde entre esta cuenta, y viajan con ella.
+    ///
+    /// El backend solo deja subir a las cuentas admin. Esa es toda la seguridad de
+    /// esto y por eso vive alla: si la lista la escribiera el launcher en la PC,
+    /// cualquiera podria agregarle un xray y sobreviviria a la sincronizacion, que
+    /// es exactamente lo que pasaba con el viejo mods-propios.txt.
+    /// </summary>
+    [RelayCommand]
+    private async Task LoadMyModsAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var mios = await _shell.Api.MyModsAsync(_token);
+            MyMods.Clear();
+            foreach (var mod in mios) MyMods.Add(mod);
+
+            MyModsSummary = mios.Count == 0
+                ? "No tenés ninguno. Los que agregues acá se instalan solos en cualquier computadora donde entres con tu cuenta."
+                : $"{mios.Count} mod(s), solo tuyos. Se instalan en cualquier computadora donde entres con tu cuenta.";
+        });
+    }
+
+    [RelayCommand]
+    private async Task AddMyModsAsync()
+    {
+        var paths = await ElegirJarsAsync("Elegí tus mods (.jar)");
+        if (paths.Count == 0) return;
+
+        await RunAsync(async () =>
+        {
+            var result = await _shell.Api.UploadMyModsAsync(_token, paths);
+
+            var lines = new List<string>();
+            if (result.Added.Count > 0)
+                lines.Add($"{result.Added.Count} agregados: " +
+                          string.Join(", ", result.Added.Select(a => $"{a.Title} {a.Version}")));
+            foreach (var bad in result.Rejected)
+                lines.Add($"{bad.Filename}: {bad.Reason}");
+            lines.Add("Apretá JUGAR para que se instalen.");
+
+            Notice = string.Join("\n", lines);
+            await LoadMyModsAsync();
+        });
+    }
+
+    [RelayCommand]
+    private void RemoveMyMod(MyMod mod) =>
+        Ask($"¿Sacar {mod.Title} de tus mods? La próxima vez que juegues se borra de la carpeta.",
+            async () =>
+            {
+                await _shell.Api.RemoveMyModAsync(_token, mod.Sha1);
+                Notice = $"{mod.Title} sacado de tus mods.";
+                await LoadMyModsAsync();
+            });
+
+    /// <summary>El explorador de archivos, que las dos pantallas de mods abren igual.</summary>
+    private static async Task<List<string>> ElegirJarsAsync(string titulo)
+    {
+        var window = (Avalonia.Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+        if (window is null) return [];
+
+        var files = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = titulo,
+            AllowMultiple = true,
+            FileTypeFilter = [new FilePickerFileType("Mods de Minecraft") { Patterns = ["*.jar"] }],
+        });
+
+        return files
+            .Select(f => f.TryGetLocalPath())
+            .Where(p => !string.IsNullOrEmpty(p))
+            .Select(p => p!)
+            .ToList();
+    }
 
     // ----------------------------------------------------------------- Servidor
 

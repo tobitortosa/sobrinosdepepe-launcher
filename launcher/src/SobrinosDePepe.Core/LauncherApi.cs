@@ -19,6 +19,42 @@ public sealed record Account(
 public sealed record Session(string Token, Account Account);
 
 /// <summary>
+/// Un mod que la cuenta tiene además del pack. Solo las cuentas admin pueden tener:
+/// eso lo decide el backend, que a cualquier otra le contesta la lista vacía.
+/// </summary>
+public sealed record MyMod(
+    [property: JsonPropertyName("filename")] string Filename,
+    [property: JsonPropertyName("sha1")] string Sha1,
+    [property: JsonPropertyName("size")] long Size,
+    [property: JsonPropertyName("title")] string Title,
+    [property: JsonPropertyName("versionNumber")] string VersionNumber,
+    [property: JsonPropertyName("url")] string Url)
+{
+    public string SizeLabel => Size >= 1024 * 1024
+        ? $"{Size / 1024.0 / 1024:0.0} MB"
+        : $"{Math.Max(1, Size / 1024)} KB";
+
+    /// <summary>
+    /// Entra en la sincronización como un mod más del pack: se baja verificando el
+    /// hash y, por estar en la lista, la limpieza de la carpeta no lo borra.
+    /// </summary>
+    public PackMod ToPackMod() => new()
+    {
+        ProjectId = $"mio:{Sha1}",
+        Slug = Filename,
+        Title = string.IsNullOrEmpty(Title) ? Filename : Title,
+        VersionNumber = VersionNumber,
+        Filename = Filename,
+        Url = Url,
+        Sha1 = Sha1,
+        Size = Size,
+        Side = "client",
+        Kind = "mod",
+        Folder = "mods",
+    };
+}
+
+/// <summary>
 /// Lo que tiene que estar al día en la máquina del jugador. Cualquiera de los dos
 /// puede venir en null si el backend todavía no lo sabe; ahí no se hace nada.
 /// </summary>
@@ -118,6 +154,57 @@ public sealed class LauncherApi
         await ReadAsync<JsonElement>(response, ct);
     }
 
+    /// <summary>
+    /// La configuración guardada en la cuenta, o null si todavía no guardó ninguna.
+    /// Lo segundo no es un error: es una cuenta que nunca jugó desde el launcher, y lo
+    /// que corresponde es subir la que tiene en la máquina.
+    /// </summary>
+    public async Task<(byte[] Zip, string Sha1)?> SettingsAsync(string token, CancellationToken ct = default)
+    {
+        using var request = Authorized(HttpMethod.Get, "api/settings", token);
+        using var response = await _http.SendAsync(request, ct);
+
+        if (response.StatusCode == HttpStatusCode.NoContent) return null;
+        if (!response.IsSuccessStatusCode)
+        {
+            var text = await response.Content.ReadAsStringAsync(ct);
+            throw new ApiException(
+                TryReadError(text) ?? $"El servidor respondió {(int)response.StatusCode}.", response.StatusCode);
+        }
+
+        var zip = await response.Content.ReadAsByteArrayAsync(ct);
+        var sha1 = response.Headers.TryGetValues("X-Sha1", out var values) ? values.FirstOrDefault() ?? "" : "";
+        return (zip, sha1);
+    }
+
+    /// <summary>Guarda la configuración en la cuenta. Se llama al cerrarse el juego.</summary>
+    public async Task SaveSettingsAsync(string token, byte[] zip, CancellationToken ct = default)
+    {
+        using var request = Authorized(HttpMethod.Put, "api/settings", token);
+        request.Content = new ByteArrayContent(zip);
+        request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/zip");
+        using var response = await _http.SendAsync(request, ct);
+        await ReadAsync<JsonElement>(response, ct);
+    }
+
+    /// <summary>
+    /// Los mods que esta cuenta tiene además del pack. A quien no es admin le llega
+    /// la lista vacía, y eso lo decide el backend: el launcher no tiene voto.
+    /// </summary>
+    public async Task<List<MyMod>> MyModsAsync(string token, CancellationToken ct = default)
+    {
+        using var request = Authorized(HttpMethod.Get, "api/my-mods", token);
+        using var response = await _http.SendAsync(request, ct);
+
+        // Un backend anterior a esto no conoce la ruta. No tener mods propios es una
+        // respuesta perfectamente buena, y es mejor que no dejar jugar a nadie si
+        // alguna vez el launcher llega antes que el backend.
+        if (response.StatusCode == HttpStatusCode.NotFound) return [];
+
+        var body = await ReadAsync<MyModsResponse>(response, ct);
+        return body.Mods;
+    }
+
     public async Task LogoutAsync(string token, CancellationToken ct = default)
     {
         using var request = Authorized(HttpMethod.Post, "api/auth/logout", token);
@@ -172,6 +259,9 @@ public sealed class LauncherApi
             return null;
         }
     }
+
+    private sealed record MyModsResponse(
+        [property: JsonPropertyName("mods")] List<MyMod> Mods);
 
     private sealed record TicketResponse(
         [property: JsonPropertyName("ticket")] string Ticket,

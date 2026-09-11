@@ -15,6 +15,13 @@
       "when": 1788751918139,
       "tag": "0001_vengeful_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789149213116,
+      "tag": "0002_lying_naoko",
+      "breakpoints": true
     }
   ]
 }

@@ -31,6 +31,7 @@
                    IsVisible="{Binding ServerNeedsUpload}" />
         </StackPanel>
       </Button>
+      <Button Classes="ghost" Content="Mis mods" Command="{Binding ShowMyModsCommand}" />
     </StackPanel>
 
     <!-- USUARIOS -->
@@ -225,6 +226,54 @@
       </StackPanel>
 
     </Grid>
+
+    <!-- MIS MODS -->
+    <Grid Grid.Row="2" RowDefinitions="Auto,*,Auto" IsVisible="{Binding ShowingMyMods}">
+
+      <StackPanel Grid.Row="0" Margin="0,0,0,12" Spacing="4">
+        <TextBlock Foreground="{StaticResource TextBrush}" FontSize="14" FontWeight="SemiBold"
+                   Text="Mis mods" />
+        <TextBlock Classes="faint" TextWrapping="Wrap" Text="{Binding MyModsSummary}" />
+        <TextBlock Classes="faint" TextWrapping="Wrap"
+                   Text="No se publican: nadie más los recibe. Y son solo para tu cuenta de admin, que es lo que evita que cualquiera se meta un mod en la carpeta." />
+      </StackPanel>
+
+      <ScrollViewer Grid.Row="1">
+        <ItemsControl ItemsSource="{Binding MyMods}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="core:MyMod">
+              <Border Classes="card" Padding="12,10" Margin="0,0,0,6">
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel Grid.Column="0" Spacing="2">
+                    <TextBlock Text="{Binding Title}" Foreground="{StaticResource TextBrush}" FontSize="13" />
+                    <TextBlock Classes="faint">
+                      <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0} · {1}">
+                          <Binding Path="VersionNumber" />
+                          <Binding Path="SizeLabel" />
+                        </MultiBinding>
+                      </TextBlock.Text>
+                    </TextBlock>
+                  </StackPanel>
+                  <Button Grid.Column="1" Classes="link" Content="✕" FontSize="14"
+                          Command="{Binding $parent[ItemsControl].((vm:AdminViewModel)DataContext).RemoveMyModCommand}"
+                          CommandParameter="{Binding}" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+
+      <StackPanel Grid.Row="2" Spacing="10" Margin="0,14,0,0">
+        <Button Classes="ghost" Content="+ Agregar un mod para mí (.jar)" HorizontalAlignment="Stretch"
+                Command="{Binding AddMyModsCommand}" />
+        <TextBlock Classes="faint" TextAlignment="Center" TextWrapping="Wrap"
+                   Text="Se instalan al apretar JUGAR, en cualquier computadora donde entres con tu cuenta." />
+      </StackPanel>
+
+    </Grid>
+
 
     <!-- Pie: confirmación y mensajes -->
     <StackPanel Grid.Row="3" Margin="0,14,0,0" Spacing="8">

@@ -5,7 +5,7 @@
 
 ## 1. Qué hace
 
-Un launcher de Windows para el server "SOBRINOS DE PEPE". El viewer lo baja, se crea la cuenta, Tobías la aprueba, aprieta **JUGAR** y entra al server con Minecraft 26.1, Fabric, Java 25 y los mods correctos. Con la cuenta de admin, el mismo launcher muestra dos pantallas más: **MODS** y **USUARIOS**.
+Un launcher de Windows para el server "SOBRINOS DE PEPE". El viewer lo baja, se crea la cuenta, Tobías la aprueba, aprieta **JUGAR** y entra al server con Minecraft 26.1, Fabric, Java 25 y los mods correctos. Con la cuenta de admin, el mismo launcher muestra cuatro pantallas más: **USUARIOS**, **MODS**, **SERVIDOR** y **MIS MODS**.
 
 Todo lo que es de Mojang, Fabric o de los autores de mods se descarga desde sus servidores oficiales a la PC del jugador. Nosotros solo publicamos la lista con los hashes.
 
@@ -104,7 +104,7 @@ Más dos estados: **pendiente de aprobación** ("Tu cuenta espera aprobación" +
 2. Con CmlLib: Minecraft 26.1 (client.jar, 75 librerías de Windows, 4.750 assets) y el runtime **Java 25** de Mojang; después el perfil **Fabric 0.19.5**.
 3. Mods: compara el sha1 de cada archivo local con el de la lista; baja lo que falta, verifica sha1 y sha512, escribe a un archivo temporal y recién entonces lo renombra. **Borra de `mods/` todo jar que no esté en la lista** (si no, quitar un mod del pack no lo quita de las PCs y el juego crashea).
    Los archivos que subió el admin salen de nuestro backend y van con la credencial de la sesión. Esa credencial se manda solo a nuestro dominio: a Mojang, a Fabric y a Modrinth no se les manda nada.
-4. Configs: `config/` y `options.txt` se escriben **solo si no existen**. No se pisan nunca: ahí están los keybinds, los waypoints y la sensibilidad del mouse de cada uno.
+4. Configs: `config/` y `options.txt` se escriben **solo si no existen**, y después los pisa la configuración de la cuenta (4.7). El pack pone los valores por defecto; los keybinds y la sensibilidad del mouse de cada uno vienen de su cuenta.
 5. Escribe `servers.dat` con "SOBRINOS DE PEPE" si no existe.
 
 Primera instalación: ~665 MB en ~5.200 archivos, 3-5 minutos con buena conexión. Después, solo el delta.
@@ -115,9 +115,11 @@ Dos cosas que no son fallbacks y se quedan: **reintentar** una descarga que se c
 
 1. Chequea el pack; si cambió, actualiza.
 2. Ping de estado: resuelve el SRV `_minecraft._tcp.sobrinosdepepe.minehost.pro` → `sv36.minehost.pro:25445` y muestra el punto verde o rojo.
-3. Pide el permiso de entrada a `GET /api/ticket`, con el pack ya al día (4.6).
-4. Lanza el juego con el Java privado, los argumentos que trae el JSON de Mojang, sesión offline (`--username PEPE`, UUID v3 de `OfflinePlayer:PEPE`), el permiso en `SOBRINOSDEPEPE_TICKET` y `--quickPlayMultiplayer sobrinosdepepe.minehost.pro`, que lo mete directo al server sin pasar por el menú.
-5. Captura la salida del juego y `latest.log` para el botón "Copiar detalles".
+3. Trae la configuración de la cuenta y la deja en la carpeta del juego (4.7).
+4. Pide el permiso de entrada a `GET /api/ticket`, con el pack ya al día (4.6).
+5. Lanza el juego con el Java privado, los argumentos que trae el JSON de Mojang, sesión offline (`--username PEPE`, UUID v3 de `OfflinePlayer:PEPE`), el permiso en `SOBRINOSDEPEPE_TICKET` y `--quickPlayMultiplayer sobrinosdepepe.minehost.pro`, que lo mete directo al server sin pasar por el menú.
+6. Captura la salida del juego y `latest.log` para el botón "Copiar detalles".
+7. Cuando el juego se cierra, guarda la configuración en la cuenta (4.7).
 
 ### 4.3 Cuentas
 
@@ -210,11 +212,37 @@ Es una lista de prohibidos y no de permitidos a propósito. La de permitidos ser
 
 **El link no está escrito en ningún lado del código.** Sale de `SITE_URL` en el `.env` del backend, y de ahí lo copia `servidor/subir-acceso.py` a la config del servidor. El día que compremos un dominio se cambia en un solo lugar y se vuelve a subir.
 
-**Límite honesto:** el dueño de un permiso puede usar el suyo para entrar con su propio nombre desde otro launcher, si se toma el trabajo de copiar el mod y armar la variable de entorno. Y la lista de mods la manda el cliente, así que el que se tome el trabajo de tocar nuestro mod para que mienta, pasa. Las dos cosas tienen el mismo techo y no hay forma de subirlo: **no existe manera de que el servidor sepa qué hay del otro lado sin preguntarle al otro lado.** Por eso lo que de verdad frena las trampas no vive acá, sino adentro del servidor, donde el cliente no llega: el anti-xray y el anticheat de movimiento (4.7).
+**Límite honesto:** el dueño de un permiso puede usar el suyo para entrar con su propio nombre desde otro launcher, si se toma el trabajo de copiar el mod y armar la variable de entorno. Y la lista de mods la manda el cliente, así que el que se tome el trabajo de tocar nuestro mod para que mienta, pasa. Las dos cosas tienen el mismo techo y no hay forma de subirlo: **no existe manera de que el servidor sepa qué hay del otro lado sin preguntarle al otro lado.** Por eso lo que de verdad frena las trampas no vive acá, sino adentro del servidor, donde el cliente no llega: el anti-xray y el anticheat de movimiento (4.9).
 
 **Lo que hay que subir cuando cambia.** El mod es un solo `.jar` que va en los dos lados: al cliente por el pack (`npm run pack:jar`) y al servidor por `python servidor/subir-acceso.py`, que además le escribe la config, echa a los que estén jugando con el motivo escrito y reinicia. El orden importa y está en el encabezado de ese script: primero las variables en Vercel, después el pack, después el launcher nuevo, y el servidor al final. Al revés, no entra nadie.
 
-### 4.7 Las trampas
+### 4.7 La configuración viaja con la cuenta
+
+Las teclas, la sensibilidad del mouse, el FOV, el volumen y los ajustes de los mods se guardan en la cuenta, no en la computadora. El launcher los baja antes de abrir el juego y los sube cuando el juego se cierra, que es cuando Minecraft termina de escribir sus archivos.
+
+Es `options.txt` más la carpeta `config/` entera, en un zip de unos 200 KB. Quedan afuera tres archivos que son de la máquina y no de la persona: `sodium-fingerprint.json` (es de la placa de video), `usercache.json` y `servers.dat` (lo escribe el propio launcher en cada instalación).
+
+Para qué sirve, en concreto: el que se sienta en otra computadora se encuentra sus propias teclas, y el que presta la suya las recupera enteras cuando vuelve a entrar. Si la novia de Tobías entra con su cuenta en la máquina de él, juega con lo suyo; cuando él vuelve a entrar, lo suyo está esperándolo.
+
+Tres detalles que hacen que funcione:
+
+- **El zip sale siempre igual.** Las entradas van ordenadas por nombre y con la misma fecha, así que el mismo contenido da el mismo sha1. De eso depende no escribir en la base ni pisar archivos cuando en realidad no cambió nada.
+- **Hay un marcador local** (`settings.json`, en la raíz del launcher) que dice de quién son los ajustes que están en la carpeta y con qué hash se sincronizaron. Sin eso no habría forma de saber si lo que está en disco es de esta cuenta o de la anterior.
+- **Al aplicar se borra de `config/` lo que el zip no trae.** Si no, el que entra en una máquina prestada se queda con los ajustes del dueño mezclados con los suyos. Lo que se borra son configs de mods: si falta alguna, el mod la vuelve a escribir con sus valores por defecto.
+
+Que esto falle no puede impedir jugar: se avisa en la línea de estado y se sigue con la configuración que haya en la máquina. Jugar con las teclas de otro es molesto; no poder entrar porque no se pudo sincronizar un archivo de ajustes es peor. Al revés sí se avisa fuerte: si no se pudo **guardar**, en otra máquina no va a encontrar lo que acaba de cambiar.
+
+### 4.8 Los mods propios del admin
+
+Una cuenta puede tener mods además del pack. Se administran en la pestaña **MIS MODS** del panel, se instalan solos en cualquier computadora donde entre esa cuenta, y no se publican: nadie más los recibe.
+
+**Solo las cuentas admin pueden tener, y eso lo decide el backend.** No es una comodidad: es lo único que separa esto de la vieja `mods-propios.txt` —un archivo de texto en la PC del jugador donde se podía nombrar cualquier jar para que la sincronización no lo borrara, un xray incluido—. Ahora la lista de lo que sobrevive al borrado no la escribe el jugador en su máquina: la decide el backend mirando la cuenta. Un jugador puede tocar el launcher todo lo que quiera y no se va a poder agregar nada, porque `POST /api/my-mods` le contesta 403 y `GET` le contesta la lista vacía.
+
+El launcher los suma a la lista del pack antes de sincronizar, así que se bajan con el hash verificado como todo lo demás y la limpieza de la carpeta no los borra. Del lado del servidor no cambia nada: el mod de acceso sigue mirando la lista de mods de todos los que entran (4.6), y un cliente de trampas no entra por ser del admin.
+
+Hoy ahí vive uno solo: **NoWheel**, que desactiva el cambio de slot con la rueda del mouse.
+
+### 4.9 Las trampas
 
 Todo lo de 4.6 depende de que el cliente diga la verdad. Lo de acá no: vive entero adentro del servidor y no hay cliente que lo esquive. Se instala y se actualiza con `python servidor/subir-antitrampas.py`, que baja las versiones fijas verificando el hash.
 
@@ -266,6 +294,8 @@ el pack, que es donde el admin lo mira antes (`npm run pack:mod`).
 | `pack_mods` | el pack que estás editando: project_id, version_id, title, version_number, filename, url, sha1, sha512, size, side (client/server/both), license, page_url, source (upload/modrinth) |
 | `pack_releases` | cada publicación con su contenido congelado: version, content, created_at |
 | `mod_files` | los `.jar` que subiste: sha1, filename, size, data |
+| `user_settings` | la configuración del juego de cada cuenta, como un zip: user_id, data, size, sha1, updated_at |
+| `user_mods` | los mods que una cuenta tiene además del pack: user_id, filename, sha1, size, title, version_number. Solo las cuentas admin pueden tener |
 
 El UUID offline no se guarda: se calcula del nombre cuando hace falta, y la whitelist del server se maneja por nombre. Un campo menos que se puede desincronizar.
 
@@ -289,6 +319,11 @@ El UUID offline no se guarda: se calcula del nombre cuando hace falta, y la whit
 | GET | `/api/admin/mods/search` | admin | busca en Modrinth |
 | DELETE | `/api/admin/mods` | admin | lo saca del pack |
 | GET | `/api/files/:sha1` | cuenta activa | descarga un `.jar` subido |
+| GET | `/api/settings` | cuenta activa | la configuración guardada, como zip; 204 si todavía no guardó ninguna |
+| PUT | `/api/settings` | cuenta activa | la guarda. El backend no mira adentro del zip |
+| GET | `/api/my-mods` | cuenta activa | sus mods propios; a quien no es admin le llega la lista vacía |
+| POST | `/api/my-mods` | **admin** | sube uno o varios `.jar` a su cuenta |
+| DELETE | `/api/my-mods?sha1=` | **admin** | lo saca de su cuenta |
 | POST | `/api/admin/pack/publish` | admin | arma y publica el `.mrpack` |
 | GET | `/api/admin/server` | admin | estado del server |
 

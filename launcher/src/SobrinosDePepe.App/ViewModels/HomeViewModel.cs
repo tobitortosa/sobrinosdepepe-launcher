@@ -144,6 +144,12 @@ public partial class HomeViewModel : ObservableObject
         {
             var pack = await _shell.Api.PackAsync(_token);
 
+            // Los mods propios de la cuenta se tratan como parte del pack: se bajan con
+            // el hash verificado y la sincronización no los borra. Quién puede tener lo
+            // decide el backend, no el launcher: a una cuenta común le llega vacío.
+            var mios = await _shell.Api.MyModsAsync(_token);
+            pack.Mods.AddRange(mios.Select(m => m.ToPackMod()));
+
             var progress = new Progress<SetupProgress>(p =>
             {
                 Stage = p.Stage;
@@ -163,6 +169,11 @@ public partial class HomeViewModel : ObservableObject
                 OverridesDirectory());
 
             var (version, report) = await installer.ApplyAsync(pack, progress, detail);
+
+            // Los ajustes de la cuenta, después del pack y antes de abrir: el pack
+            // escribe las configs que faltan con los valores por defecto, y esto las
+            // pisa con las de quien está jugando.
+            await TraerMisAjustesAsync(detail);
 
             Stage = "Abriendo el juego…";
             Detail = "La primera vez tarda un poco más.";
@@ -184,6 +195,10 @@ public partial class HomeViewModel : ObservableObject
                 try
                 {
                     var run = await runner.RunAsync(process, started: started);
+
+                    // Recién ahora Minecraft terminó de escribir options.txt y las
+                    // configs de los mods, así que recién ahora se pueden guardar.
+                    await GuardarMisAjustesAsync();
 
                     // El juego corre en su propio hilo; la pantalla se toca en el de la interfaz.
                     Dispatcher.UIThread.Post(() =>
@@ -295,6 +310,78 @@ public partial class HomeViewModel : ObservableObject
         try { await _shell.Api.LogoutAsync(_token); } catch (Exception) { /* la sesión local se borra igual */ }
         SessionStore.Clear();
         _shell.ShowLogin("Cerraste sesión.");
+    }
+
+    /// <summary>
+    /// Deja en la carpeta del juego la configuración de esta cuenta: las teclas, la
+    /// sensibilidad del mouse, el volumen y los ajustes de los mods.
+    ///
+    /// Si la cuenta todavía no guardó ninguna, la que está en la máquina pasa a ser la
+    /// suya. Puede ser la que dejó otro —una computadora prestada, la primera vez—, y
+    /// está bien que así sea: es exactamente lo que pasaría sin nada de esto, y lo del
+    /// otro ya está guardado en su propia cuenta.
+    ///
+    /// Que falle no puede impedir jugar. Jugar con las teclas de otro es molesto; no
+    /// poder entrar porque no se pudo sincronizar un archivo de ajustes es peor.
+    /// </summary>
+    private async Task TraerMisAjustesAsync(IProgress<string>? detail)
+    {
+        try
+        {
+            var guardado = await _shell.Api.SettingsAsync(_token);
+
+            if (guardado is null)
+            {
+                var local = SettingsSync.Pack(LauncherPaths.GameDir);
+                await _shell.Api.SaveSettingsAsync(_token, local.Zip);
+                SettingsSync.WriteMarker(Username, local.Sha1);
+                detail?.Report($"tu configuración quedó guardada en tu cuenta ({local.Files} archivos)");
+                return;
+            }
+
+            var (zip, sha1) = guardado.Value;
+            var marcador = SettingsSync.ReadMarker();
+
+            // Lo que está en disco ya es esto mismo, y es de esta cuenta: no hay nada
+            // que pisar. Es el caso normal, el de siempre jugar en la misma máquina.
+            if (marcador is not null && marcador.Username == Username && marcador.Sha1 == sha1) return;
+
+            var escritos = SettingsSync.Apply(zip, LauncherPaths.GameDir);
+            SettingsSync.WriteMarker(Username, sha1);
+            detail?.Report($"tu configuración, {escritos} archivos");
+        }
+        catch (Exception ex)
+        {
+            detail?.Report($"no pude traer tu configuración ({ex.Message}); se juega con la de esta máquina");
+        }
+    }
+
+    /// <summary>
+    /// Guarda en la cuenta lo que el jugador haya cambiado. Corre cuando el juego se
+    /// cerró, que es cuando Minecraft termina de escribir sus archivos: hacerlo antes
+    /// guardaría lo de la sesión anterior.
+    ///
+    /// Si el contenido es el mismo de la última vez no se sube nada: el zip se arma
+    /// siempre igual, así que el hash alcanza para saberlo.
+    /// </summary>
+    private async Task GuardarMisAjustesAsync()
+    {
+        try
+        {
+            var local = SettingsSync.Pack(LauncherPaths.GameDir);
+            var marcador = SettingsSync.ReadMarker();
+            if (marcador is not null && marcador.Username == Username && marcador.Sha1 == local.Sha1) return;
+
+            await _shell.Api.SaveSettingsAsync(_token, local.Zip);
+            SettingsSync.WriteMarker(Username, local.Sha1);
+        }
+        catch (Exception ex)
+        {
+            // Acá sí conviene que se entere: si no se guardó, en otra máquina no va a
+            // encontrar lo que acaba de cambiar.
+            Dispatcher.UIThread.Post(() =>
+                Message = $"No pude guardar tu configuración en tu cuenta: {ex.Message}");
+        }
     }
 
     private static string? OverridesDirectory()

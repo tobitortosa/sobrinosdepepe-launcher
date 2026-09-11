@@ -106,6 +106,7 @@ Backend: ver [`web/README.md`](web/README.md) para la puesta en marcha real.
 6. Todo archivo descargado se verifica por hash.
 7. Las versiones son fijas y las elige el admin. Nunca "la última".
 8. El panel de admin vive dentro del launcher, pero las acciones las ejecuta el backend.
+   Cuatro pestañas: usuarios, mods del pack, servidor y mis mods.
 9. Si algo falla, mensaje claro. No hay caminos alternativos.
 10. Sin monetizar el launcher ni el server.
 11. **Al servidor se entra con el launcher, cuando el candado está puesto.** Es lo que
@@ -115,7 +116,15 @@ Backend: ver [`web/README.md`](web/README.md) para la puesta en marcha real.
     con la dirección de la página; en `false` entra igual, pero el servidor lo anota.
     `LAUNCHER_EXEMPT` es la lista corta de nombres que entran igual con el candado
     puesto. Se aplica con `python servidor/subir-acceso.py`. Cómo funciona: `docs/02`, 4.6.
-12. **Las trampas se frenan del lado del servidor, no del cliente.** Todo lo que le
+12. **La configuración es de la cuenta, no de la computadora.** Las teclas, la
+    sensibilidad del mouse y los ajustes de los mods se guardan al cerrar el juego y
+    se bajan al apretar JUGAR, así el que entra en una máquina prestada juega con lo
+    suyo y el dueño recupera lo suyo después. Cómo funciona: `docs/02`, 4.7.
+13. **Los mods que no están en el pack son solo del admin.** Se agregan en la pestaña
+    MIS MODS y se instalan en cualquier computadora donde entre esa cuenta. Que solo
+    el admin pueda es lo que evita que esto sea la vieja `mods-propios.txt`: la lista
+    ya no la escribe el jugador en su PC, la decide el backend. `docs/02`, 4.8.
+14. **Las trampas se frenan del lado del servidor, no del cliente.** Todo lo que le
     preguntamos al cliente lo puede contestar con mentiras; el anti-xray y el anticheat
     viven adentro del servidor, donde el cliente no llega. Se instalan con
-    `python servidor/subir-antitrampas.py`. Qué frena cada uno: `docs/02`, 4.7.
+    `python servidor/subir-antitrampas.py`. Qué frena cada uno: `docs/02`, 4.9.
