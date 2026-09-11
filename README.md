@@ -2,7 +2,7 @@
 
 Launcher de Windows para el server de Minecraft "SOBRINOS DE PEPE" (`sobrinosdepepe.minehost.pro`, Fabric 26.1). El viewer lo baja, se crea la cuenta, aprieta **JUGAR** y entra al server con la versión, el Java y los mods correctos. Con la cuenta de admin, el mismo launcher gestiona los mods y las cuentas.
 
-**Estado:** fases 0 y 1 listas y probadas. El instalador entra al server con el inventario intacto, y el backend maneja cuentas, subida de mods y publicación del pack. Desde el 2026-09-07 el server no deja entrar a quien no usa el launcher (fase 4). Falta la interfaz (fase 2) y el panel de admin dentro del launcher (fase 3).
+**Estado:** fases 0 y 1 listas y probadas. El instalador entra al server con el inventario intacto, y el backend maneja cuentas, subida de mods y publicación del pack. Desde el 2026-09-07 el server no deja entrar a quien no usa el launcher (fase 4), salvo los nombres de `LAUNCHER_EXEMPT`. Desde el 2026-09-11 tiene además anti-xray y anticheat de movimiento, y el server corre 26.1.2 (los jugadores siguen en 26.1: es el mismo protocolo). Falta la interfaz (fase 2) y el panel de admin dentro del launcher (fase 3).
 
 ## Documentos
 
@@ -27,7 +27,8 @@ web/                           backend y página de descarga (Next.js)
 
 mod-acceso/                    el mod que hace que al servidor se entre solo con el launcher
 ├── AccesoServidor             pide el permiso durante el login y echa a quien no lo tenga
-├── AccesoCliente              lo contesta con el que le dejo el launcher
+├── AccesoCliente              lo contesta, y le dice al server que mods tiene cargados
+├── Tramposos                  los clientes de trampas que no entran (Meteor, xray, Wurst)
 ├── Ticket                     el formato del permiso y su firma
 ├── ConfigAcceso               el secreto y el link, de config/acceso-de-pepe.json
 └── Carteles                   lo que ve el que no entra, con el link para bajarse el launcher
@@ -52,7 +53,7 @@ launcher/
     │   ├── OfflineIdentity    UUID derivado del nombre, igual al que calcula el server
     │   ├── HashedDownloader   descarga con reintentos y verificación de hash
     │   ├── ModSynchronizer    deja mods/ igual al pack, borra lo que sobra
-    │   │                      salvo lo nombrado en mods-propios.txt
+    │   │                      sin excepciones: mods/ queda igual al pack
     │   ├── GameSetup          Minecraft + Java 25 + perfil de Fabric
     │   ├── GameRunner         arranca el juego y captura su salida
     │   ├── ServerStatus       resuelve el SRV y pregunta si el server está online
@@ -107,9 +108,14 @@ Backend: ver [`web/README.md`](web/README.md) para la puesta en marcha real.
 8. El panel de admin vive dentro del launcher, pero las acciones las ejecuta el backend.
 9. Si algo falla, mensaje claro. No hay caminos alternativos.
 10. Sin monetizar el launcher ni el server.
-11. **Al servidor se entra con el launcher, cuando el candado está puesto.** No es por
-    seguridad: es lo único que garantiza que todos tengan los mismos mods y la misma
-    versión. El interruptor es `REQUIRE_LAUNCHER` en el `.env`: en `true` quien abre
-    Minecraft por otro lado no entra y ve un cartel con la dirección de la página; en
-    `false` entra igual, pero el servidor anota en su log quién lo hizo sin el launcher.
-    Se aplica con `python servidor/subir-acceso.py`. Cómo funciona: `docs/02`, 4.6.
+11. **Al servidor se entra con el launcher, cuando el candado está puesto.** Es lo que
+    garantiza que todos tengan los mismos mods y la misma versión, y es por donde el
+    server se entera de qué mods trae cada uno. El interruptor es `REQUIRE_LAUNCHER`
+    en el `.env`: en `true` quien abre Minecraft por otro lado no entra y ve un cartel
+    con la dirección de la página; en `false` entra igual, pero el servidor lo anota.
+    `LAUNCHER_EXEMPT` es la lista corta de nombres que entran igual con el candado
+    puesto. Se aplica con `python servidor/subir-acceso.py`. Cómo funciona: `docs/02`, 4.6.
+12. **Las trampas se frenan del lado del servidor, no del cliente.** Todo lo que le
+    preguntamos al cliente lo puede contestar con mentiras; el anti-xray y el anticheat
+    viven adentro del servidor, donde el cliente no llega. Se instalan con
+    `python servidor/subir-antitrampas.py`. Qué frena cada uno: `docs/02`, 4.7.

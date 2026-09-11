@@ -162,16 +162,20 @@ Todo se verifica en cada arranque a propósito. Es rápido cuando no cambió nad
 
 ### 4.6 Al servidor se entra con el launcher
 
-El servidor puede exigir que el juego se haya abierto con el launcher. El motivo no es la seguridad: es que el launcher es lo único que garantiza que los mods y las versiones estén al día, y un servidor donde la mitad juega con otra versión de las cosas no se puede sostener.
+El servidor puede exigir que el juego se haya abierto con el launcher. El motivo original no era la seguridad: era que el launcher es lo único que garantiza que los mods y las versiones estén al día, y un servidor donde la mitad juega con otra versión de las cosas no se puede sostener. Desde el 2026-09-11 es además la puerta por donde el servidor se entera de qué mods trae cada uno.
 
-**Es un candado con interruptor: `REQUIRE_LAUNCHER` en el `.env`.**
+**Es un candado con interruptor: `REQUIRE_LAUNCHER` en el `.env`.** Hoy está **puesto**.
 
 | `REQUIRE_LAUNCHER` | Qué hace el servidor |
 |---|---|
-| `false` | Entra cualquiera, como siempre. Igual revisa y **anota en el log quién entró sin el launcher** (`PEPE entra SIN el launcher (cliente sin el mod). El candado esta abierto`). Sirve para ver quién falta antes de cerrar. |
-| `true` | No entra nadie sin el launcher: ve un cartel con la dirección de la página. |
+| `false` | Entra cualquiera, como siempre. Igual revisa y **anota en el log quién entró sin el launcher** (`PEPE entra SIN el launcher (cliente sin el mod). El candado esta abierto`), y se lo avisa por chat a los ops que estén jugando. Sirve para ver quién falta antes de cerrar. |
+| `true` | No entra nadie sin el launcher: ve un cartel con la dirección de la página. Salvo los nombres de `LAUNCHER_EXEMPT`. |
 
-Se cambia en `web/.env.local` y se aplica con `python servidor/subir-acceso.py`. **El mod lee su config en cada intento de entrar, no una sola vez al arrancar**, así que prender o apagar el candado no reinicia el servidor ni saca a nadie del juego. Lo único que pide reinicio es un `.jar` nuevo, porque Fabric carga los mods una sola vez.
+**`LAUNCHER_EXEMPT` es la lista de los que entran igual con el candado puesto**, separados por coma: los amigos que prefieren su propio launcher. Entran derecho, sin cartel y sin permiso, y en el log queda `Fulano entra sin el launcher: esta en la lista`. Los nombres van **exactos**, con sus mayúsculas, porque el UUID de un jugador offline se calcula a partir del nombre: `TititON` y `Titit0N` son dos personas distintas para el servidor.
+
+Y ahí está el límite de esa lista, que conviene tener escrito: **en offline, exceptuar un nombre es exceptuar a cualquiera que lo sepa escribir.** Tener la cuenta creada en nuestra base evita que otro se registre con ese nombre en el launcher, pero no evita que alguien entre con TLauncher usándolo. Por eso la lista se escribe a mano, es corta, y el que esté ahí igual tiene que estar en la whitelist del servidor.
+
+Se cambia en `web/.env.local` y se aplica con `python servidor/subir-acceso.py`. **El mod lee su config en cada intento de entrar, no una sola vez al arrancar**, así que prender o apagar el candado, o tocar la lista, no reinicia el servidor ni saca a nadie del juego. Lo único que pide reinicio es un `.jar` nuevo, porque Fabric carga los mods una sola vez.
 
 Cuando el archivo de config falta o no se puede leer, el mod **exige** el launcher: es el lado que no deja entrar por error a quien no corresponde. Abrir el servidor entero tiene que estar escrito a mano en el archivo.
 
@@ -180,10 +184,10 @@ Cómo funciona, de punta a punta:
 1. El jugador aprieta **JUGAR**. El launcher deja el pack al día y recién entonces pide `GET /api/ticket`.
 2. El backend firma un permiso con `ACCESS_SECRET`: `1:PEPE:1757260000:<hmac>` — versión, nombre, cuándo vence y la firma. Dura **doce horas** y no se guarda en ninguna tabla.
 3. El launcher arranca el juego con el permiso en la variable de entorno `SOBRINOSDEPEPE_TICKET`. No es un archivo ni un argumento: un archivo se copia junto con la carpeta de mods, y los argumentos se ven en el administrador de tareas y terminan pegados en los reportes de error.
-4. Mientras el jugador entra, el mod `accesodepepe` del servidor le manda un pedido por el canal `sobrinosdepepe:acceso`. El mismo mod del lado del cliente contesta con el permiso.
+4. Mientras el jugador entra, el mod `accesodepepe` del servidor le manda un pedido por el canal `sobrinosdepepe:acceso`. El mismo mod del lado del cliente contesta dos cosas: el permiso y **la lista de los mods que tiene cargados**.
 5. El servidor revisa la firma con el secreto que tiene en `config/acceso-de-pepe.json`. No consulta al backend: valida solo. Con el candado abierto hace la misma revisión y solo la escribe en el log.
 
-Los cuatro carteles que puede ver quien no entra, cada uno con la dirección de la página:
+Los cinco carteles que puede ver quien no entra, cada uno con la dirección de la página:
 
 | Qué pasó | Qué ve |
 |---|---|
@@ -191,6 +195,14 @@ Los cuatro carteles que puede ver quien no entra, cada uno con la dirección de 
 | Tiene los mods (le pasamos la carpeta) pero abrió el juego por su cuenta | "Abriste el juego sin el launcher. Cerrá Minecraft y entrá con el botón JUGAR" |
 | Su permiso venció, o dejó el juego abierto medio día | "Tu permiso de entrada venció. Volvé a apretar JUGAR" |
 | El permiso no verifica, o es de otro jugador | "Tu permiso de entrada no es válido" |
+| Tiene cargado un cliente de trampas | "Tenés cargado un mod que acá no se puede usar: meteor-client. Sacalo de la carpeta mods…" |
+
+**La lista de mods.** El cliente manda los nombres de los mods que Fabric cargó de verdad (solo los de arriba de todo: los cuarenta módulos que Fabric API trae adentro no cuentan). El servidor hace dos cosas con eso:
+
+- **Los escribe en el log**, en una línea por login: `Los mods de PEPE: accesodepepe,fabric-api,iris,lithium,sodium,…`. Es la forma de saber con qué juega cada uno sin preguntarle.
+- **Busca los que no van** (`Tramposos.java`): Meteor, Wurst, los xray, Baritone, freecam y compañía. Al que tenga uno no lo deja entrar, le dice cuál es, y le avisa por chat a los ops que estén jugando. Se revisa **antes que el permiso y antes que la lista de exentos**: un cliente de trampas no entra ni con el permiso en la mano ni por ser amigo.
+
+Es una lista de prohibidos y no de permitidos a propósito. La de permitidos sería más fuerte, pero tendría que salir del pack publicado, y el día que se publica un pack nuevo el servidor se quedaría con la lista vieja y echaría a todos los que ya se actualizaron. Una lista de prohibidos nunca hace eso: lo peor que puede pasar es que no reconozca un mod nuevo, y para eso está el log.
 
 **Por qué el cliente sin el mod se delata solo.** El pedido del servidor viaja durante el login, y el protocolo de Minecraft obliga a contestarlo: un cliente que no conoce el canal responde "no entendí", y eso alcanza para saber que no tiene nuestros mods. No hace falta que el jugador coopere.
 
@@ -198,9 +210,25 @@ Los cuatro carteles que puede ver quien no entra, cada uno con la dirección de 
 
 **El link no está escrito en ningún lado del código.** Sale de `SITE_URL` en el `.env` del backend, y de ahí lo copia `servidor/subir-acceso.py` a la config del servidor. El día que compremos un dominio se cambia en un solo lugar y se vuelve a subir.
 
-**Límite honesto:** el dueño de un permiso puede usar el suyo para entrar con su propio nombre desde otro launcher, si se toma el trabajo de copiar el mod y armar la variable de entorno. Cerrar eso pide que el servidor le pregunte al backend en cada login, y no vale la pena: el que hace eso ya sabe lo que está haciendo, y lo que estamos evitando es que la gente juegue con mods viejos sin darse cuenta.
+**Límite honesto:** el dueño de un permiso puede usar el suyo para entrar con su propio nombre desde otro launcher, si se toma el trabajo de copiar el mod y armar la variable de entorno. Y la lista de mods la manda el cliente, así que el que se tome el trabajo de tocar nuestro mod para que mienta, pasa. Las dos cosas tienen el mismo techo y no hay forma de subirlo: **no existe manera de que el servidor sepa qué hay del otro lado sin preguntarle al otro lado.** Por eso lo que de verdad frena las trampas no vive acá, sino adentro del servidor, donde el cliente no llega: el anti-xray y el anticheat de movimiento (4.7).
 
 **Lo que hay que subir cuando cambia.** El mod es un solo `.jar` que va en los dos lados: al cliente por el pack (`npm run pack:jar`) y al servidor por `python servidor/subir-acceso.py`, que además le escribe la config, echa a los que estén jugando con el motivo escrito y reinicia. El orden importa y está en el encabezado de ese script: primero las variables en Vercel, después el pack, después el launcher nuevo, y el servidor al final. Al revés, no entra nadie.
+
+### 4.7 Las trampas
+
+Todo lo de 4.6 depende de que el cliente diga la verdad. Lo de acá no: vive entero adentro del servidor y no hay cliente que lo esquive. Se instala y se actualiza con `python servidor/subir-antitrampas.py`, que baja las versiones fijas verificando el hash.
+
+| Trampa | Qué la frena | Cómo |
+|---|---|---|
+| **Xray** (ver dónde hay diamantes o netherita a través de la piedra) | **Anti Xray** de DrexHD, el anti-xray de Paper portado a Fabric | El servidor no le manda al cliente los minerales que están tapados: le manda piedra. Un xray no puede mostrar lo que nunca le llegó. Overworld en modo 3, nether en modo 1 (con la netherita), en `config/antixray.toml` |
+| **Vuelo, speed, reach, killaura, nofall, timer** | **GrimAC** | Simula el movimiento de cada jugador y compara con lo que dice el cliente. No los "detecta": los deshace, devolviendo al jugador a donde tenía que estar y anulando el golpe imposible |
+| **Meteor, Wurst, xray, Baritone y demás, en la carpeta `mods`** | El mod de acceso (4.6) | Lo mira al entrar. Es el más débil de los tres, porque la lista la manda el cliente |
+
+**Los castigos de Grim** están en `config/GrimAC/punishments.yml`. De fábrica solo avisa; le agregamos el kick a los cuatro grupos que importan, con números altos a propósito (Simulation 250, Knockback 40, Reach 30, Misc 60): Grim ya frena el truco en el momento, así que el kick es para el que insiste, y de paso deja margen para que una mala conexión no eche a nadie. Las alertas le llegan por chat al que tenga el permiso `grim.alerts`, que con LuckPerms ya tiene PEPE.
+
+**Por qué el servidor está en 26.1.2 y los jugadores en 26.1.** Grim no carga en 26.1 pelado: su soporte de la familia 26 arranca en 26.1.2. Se subió solo el servidor, y nadie tuvo que tocar nada, porque **26.1, 26.1.1 y 26.1.2 hablan el mismo protocolo (775)**: el cliente de 26.1 entra a un servidor 26.1.2 sin enterarse. Lo único que se cayó en el camino fue *My Photo Paintings*, que estaba clavado en `"minecraft": "26.1"` exacto, así que salió del servidor y del pack.
+
+**Lo que Grim no tiene acá son sus comandos** (`/grim ...`). Avisa al arrancar con un `Grim will run without commands enabled!`. Es un problema de empaquetado de ellos, explicado en el encabezado de `subir-antitrampas.py`; las detecciones, los setbacks, las alertas y los castigos funcionan igual.
 
 ## 5. Carpetas en la PC del jugador
 
@@ -209,36 +237,25 @@ Los cuatro carteles que puede ver quien no entra, cada uno con la dirección de 
 %LOCALAPPDATA%\SobrinosDePepe\
 ├── game\      versions· libraries· assets· runtime(Java 25)· mods· config· logs
 ├── pack\      el .mrpack actual
-├── mods-propios.txt   opcional: los mods que la sincronización no borra
 ├── session.dat
 └── launcher.log
 ```
 
 Sin permisos de administrador. No toca `%APPDATA%\.minecraft`, así que TLauncher les sigue funcionando. Requiere Windows 64 bits (Mojang no publica Java 25 para 32) y ~1,5 GB libres, que el launcher chequea antes de empezar.
 
-### Mods propios
+### Nada de mods propios
 
 `mods\` y `shaderpacks\` son carpetas **del pack**, no del jugador: `ModSynchronizer`
 borra todo `.jar` que no esté en la lista publicada. Eso es a propósito y no es
 paranoia — un jar que sobrevive a un cambio de pack crashea el juego al arrancar, y
 el jugador no tiene forma de diagnosticarlo.
 
-La excepción es `mods-propios.txt`, en la raíz: un nombre de archivo por línea (se
-ignoran las vacías y las que empiezan con `#`), y esos jars se dejan como están.
-
-```
-# Los mods que puse a mano y quiero conservar, uno por linea.
-nowheel-fabric-1.4.0+mc26.1.jar
-```
-
-Es para el mod de cliente que uno quiere para sí mismo y no para todo el servidor.
-Hay que escribir el nombre a mano a propósito: así nadie termina con un jar viejo
-adentro sin darse cuenta. Si el archivo no existe o no se puede leer, la lista queda
-vacía y se sincroniza como siempre, que es el lado que no deja el juego sin arrancar.
-
-Vive en la raíz y no adentro de `mods\` justamente porque `mods\` se sincroniza.
-Un mod que además necesite config puede dejarla en `game\config\`: `ConfigSeeder`
-nunca borra, solo escribe lo que falta.
+Hasta el 2026-09-11 hubo una excepción: un `mods-propios.txt` en la raíz donde se
+podían nombrar los jars que la sincronización no tocaba, para el que quería un mod
+de cliente propio. **Se quitó**, porque era también la única forma de dejar un xray
+o un Meteor adentro de la carpeta y que el launcher no lo borrara: apretar JUGAR
+limpiaba todo menos justo eso. El mod que quiera estar en las PC de todos entra por
+el pack, que es donde el admin lo mira antes (`npm run pack:mod`).
 
 ## 6. Base de datos
 
