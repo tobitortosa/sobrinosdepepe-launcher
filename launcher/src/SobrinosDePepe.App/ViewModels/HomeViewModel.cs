@@ -159,8 +159,7 @@ public partial class HomeViewModel : ObservableObject
             var installer = new PackInstaller(
                 new GameSetup(LauncherPaths.GameDir, _shell.Http),
                 new ModSynchronizer(
-                    new HashedDownloader(_shell.Http, backend: (AppConfig.ApiUrl, _token)),
-                    LauncherPaths.OwnModsFile),
+                    new HashedDownloader(_shell.Http, backend: (AppConfig.ApiUrl, _token))),
                 OverridesDirectory());
 
             var (version, report) = await installer.ApplyAsync(pack, progress, detail);

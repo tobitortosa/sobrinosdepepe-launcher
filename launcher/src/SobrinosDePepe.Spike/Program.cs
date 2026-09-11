@@ -179,7 +179,7 @@ try
 
     var installer = new PackInstaller(
         new GameSetup(LauncherPaths.GameDir, http),
-        new ModSynchronizer(new HashedDownloader(http, backend: backend), LauncherPaths.OwnModsFile),
+        new ModSynchronizer(new HashedDownloader(http, backend: backend)),
         FindDirectory("overrides"));
 
     var (version, report) = await installer.ApplyAsync(pack, progress, detail);
