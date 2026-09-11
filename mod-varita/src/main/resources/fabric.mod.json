@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "varitadepepe",
+  "version": "${version}",
+  "name": "Varita de Pepe",
+  "description": "La varita de zonas también protege bichos: click derecho sobre un animal y no lo puede matar nadie. Solo para operadores, y nunca sobre un jugador.",
+  "authors": ["SOBRINOS DE PEPE"],
+  "environment": "server",
+  "entrypoints": {
+    "server": ["pe.sobrinosdepepe.varita.VaritaServidor"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": ">=26.1",
+    "fabric-api": "*"
+  }
+}

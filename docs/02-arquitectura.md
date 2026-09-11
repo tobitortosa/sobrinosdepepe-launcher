@@ -91,7 +91,7 @@ Más dos estados: **pendiente de aprobación** ("Tu cuenta espera aprobación" +
 | Backend | Next.js en **`https://sobrinosdepepe.com`** (Vercel) · Postgres en Neon · Drizzle · Argon2id |
 | Pack | lista de archivos con hashes, URL y lado cliente/servidor; la forma es compatible con el índice de un `.mrpack` de Modrinth |
 | Server | Fabric 26.1 en Minehost, panel Pterodactyl |
-| Mods propios | Java 25 con Fabric Loom: `mod-acceso` (solo se entra con el launcher) y `mod-precios` (el precio en la descripción de cada item) |
+| Mods propios | Java 25 con Fabric Loom: `mod-acceso` (solo se entra con el launcher), `mod-precios` (el precio en la descripción de cada item), `mod-equipos` (`/equipo`) y `mod-varita` (la varita de zonas también protege bichos) |
 | Updates del launcher | GitHub Releases |
 
 **Por qué el backend existe** aunque el panel esté en el launcher: la clave del panel de Minehost da control total del server (archivos, consola, apagarlo). Si viviera dentro del `.exe`, cualquiera que lo descompile la saca. Entonces el launcher admin llama a `/api/admin/*` y el backend es el único que habla con Pterodactyl.

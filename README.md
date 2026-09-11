@@ -35,6 +35,9 @@ mod-acceso/                    el mod que hace que al servidor se entre solo con
 
 mod-precios/                   muestra en cada item cuanta plata paga el servidor por el
 
+mod-varita/                    la varita de zonas tambien protege bichos
+└── VaritaServidor             click derecho a un animal y no lo mata nadie
+
 mod-equipos/                   los equipos: /equipo crear, invitar, aceptar, echar y salir
 ├── EquiposServidor            registra el comando y carga los equipos al arrancar
 ├── Registro                   quien esta con quien, en config/equipos-de-pepe.json,
