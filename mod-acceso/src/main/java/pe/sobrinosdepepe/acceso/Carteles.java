@@ -50,6 +50,18 @@ public final class Carteles {
 	}
 
 	/**
+	 * Tiene cargado un cliente de trampas. El cartel dice cual es, porque "no
+	 * entras" a secas no se arregla solo: el que lo bajo sin saber que era tiene
+	 * que poder ir a la carpeta y borrar ese archivo.
+	 */
+	public static Component modProhibido(String mod, String link) {
+		return armar(
+				"Tenés cargado un mod que acá no se puede usar: " + mod + ".",
+				"Sacalo de la carpeta mods y volvé a apretar JUGAR.",
+				link);
+	}
+
+	/**
 	 * Al servidor le falta la config. No es culpa del jugador y no tiene nada que
 	 * hacer: el aviso es para que nos lo pueda contar.
 	 */
@@ -59,6 +71,24 @@ public final class Carteles {
 						.withStyle(ChatFormatting.WHITE))
 				.append(Component.literal("No es tu culpa. Avisale a Pepe.")
 						.withStyle(ChatFormatting.GRAY));
+	}
+
+	/**
+	 * Los dos de abajo no son carteles de desconexion: son la linea que les llega
+	 * por el chat a los ops que estan jugando. Existen porque el log del panel no
+	 * lo mira nadie, y enterarse en el momento es la mitad del asunto.
+	 */
+	public static Component avisoDeTrampa(String jugador, String mod) {
+		return aviso(jugador + " quiso entrar con " + mod + ". No lo dejé.", ChatFormatting.RED);
+	}
+
+	public static Component avisoSinLauncher(String jugador, String motivo) {
+		return aviso(jugador + " entró sin el launcher (" + motivo + ")", ChatFormatting.YELLOW);
+	}
+
+	private static Component aviso(String texto, ChatFormatting color) {
+		return Component.literal("[SDP] ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+				.append(Component.literal(texto).withStyle(color));
 	}
 
 	private static Component armar(String motivo, String instruccion, String link) {

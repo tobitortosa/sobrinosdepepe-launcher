@@ -3,7 +3,7 @@
   "id": "accesodepepe",
   "version": "${version}",
   "name": "Acceso de Pepe",
-  "description": "Al servidor de SOBRINOS DE PEPE se entra con el launcher: el mod le pide al cliente el permiso que emite el launcher y no deja entrar a quien no lo tenga.",
+  "description": "Al servidor de SOBRINOS DE PEPE se entra con el launcher: el mod le pide al cliente el permiso que emite el launcher y no deja entrar a quien no lo tenga, ni a quien tenga cargado un cliente de trampas.",
   "authors": ["SOBRINOS DE PEPE"],
   "environment": "*",
   "entrypoints": {

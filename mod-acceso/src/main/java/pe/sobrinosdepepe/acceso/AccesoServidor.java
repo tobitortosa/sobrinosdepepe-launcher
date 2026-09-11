@@ -6,19 +6,23 @@ import net.fabricmc.fabric.api.networking.v1.ServerLoginConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerLoginNetworking;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Solo entra al servidor quien abrio el juego con el SOBRINOS DE PEPE Launcher.
+ * Solo entra al servidor quien abrio el juego con el SOBRINOS DE PEPE Launcher, y
+ * nunca entra el que tiene cargado un cliente de trampas.
  *
  * Como funciona: mientras el jugador esta entrando, y antes de que aparezca en
  * el mundo, el servidor le manda un pedido por un canal nuestro. El launcher le
  * dejo al juego un ticket firmado por el backend, y este mod del lado del
- * cliente lo contesta. Si la firma cierra y no vencio, pasa.
+ * cliente lo contesta junto con la lista de los mods que tiene cargados. Si la
+ * firma cierra, no vencio y no hay ningun mod prohibido, pasa.
  *
- * Los tres motivos por los que alguien no entra, y lo que ve cada uno:
+ * Los tres motivos por los que alguien no entra por el ticket, y lo que ve cada uno:
  *
  *  - Entro con TLauncher o con cualquier Minecraft sin nuestros mods. El
  *    protocolo de Minecraft obliga a contestar el pedido, y un cliente que no
@@ -30,6 +34,15 @@ import org.slf4j.LoggerFactory;
  *  - Tiene un ticket viejo, o el de otro jugador. La firma lleva el nombre
  *    adentro y se compara con el del login.
  *
+ * Y el cuarto motivo, que no tiene nada que ver con el launcher: tiene cargado un
+ * mod de la lista de {@link Tramposos}. Ese se revisa con el candado abierto
+ * tambien, porque no es una cuestion de como abriste el juego.
+ *
+ * La excepcion a todo lo anterior es la lista "sin_launcher" de la config: los
+ * nombres que estan ahi entran con su propio launcher, sin cartel y sin permiso.
+ * Se revisa despues de los mods prohibidos y antes del ticket, porque la
+ * confianza es sobre como abren el juego, no sobre con que lo abren.
+ *
  * Por que en el login y no cuando ya esta jugando: aca todavia no se genero su
  * jugador ni se cargo su inventario, y el cartel se muestra en la pantalla de
  * desconexion completo, con varias lineas y el link.
@@ -39,6 +52,9 @@ public final class AccesoServidor implements DedicatedServerModInitializer {
 
 	/** Un ticket mide unos 90 caracteres; el tope es para no leer lo que manden. */
 	private static final int LARGO_MAXIMO = 256;
+
+	/** La lista de mods son dieciseis nombres cortos; el tope es por lo mismo. */
+	private static final int LARGO_MAXIMO_MODS = 1500;
 
 	@Override
 	public void onInitializeServer() {
@@ -59,7 +75,31 @@ public final class AccesoServidor implements DedicatedServerModInitializer {
 					// archivo de cien bytes y los logins son unos pocos por dia.
 					ConfigAcceso config = ConfigAcceso.leer(null);
 					String nombre = nombreDelLogin(handler);
-					Veredicto veredicto = revisar(config, entendido, respuesta, nombre);
+					Contestacion contestacion = leer(entendido, respuesta);
+
+					// Primero los mods, y antes que el ticket: un cliente de trampas no
+					// entra ni con el permiso en la mano y ni con el candado abierto.
+					String prohibido = Tramposos.buscar(contestacion.mods());
+					if (prohibido != null) {
+						LOG.warn("No dejo entrar a {}: tiene cargado {}. Todos sus mods: {}",
+								nombre, prohibido, contestacion.mods());
+						avisarALosOps(server, Carteles.avisoDeTrampa(nombre, prohibido));
+						handler.disconnect(Carteles.modProhibido(prohibido, config.link()));
+						return;
+					}
+
+					if (!contestacion.mods().isBlank()) {
+						LOG.info("Los mods de {}: {}", nombre, contestacion.mods());
+					}
+
+					// Los de la lista entran y no se enteran de nada: ni cartel, ni
+					// permiso, ni launcher. Son los amigos que juegan con el suyo.
+					if (config.sinLauncher().contains(nombre)) {
+						LOG.info("{} entra sin el launcher: esta en la lista de {}", nombre, ConfigAcceso.ARCHIVO);
+						return;
+					}
+
+					Veredicto veredicto = revisar(config, entendido, contestacion.ticket(), nombre);
 
 					if (veredicto.pasa()) {
 						LOG.info("{} entra con el launcher", nombre);
@@ -69,6 +109,7 @@ public final class AccesoServidor implements DedicatedServerModInitializer {
 					if (!config.exigir()) {
 						LOG.warn("{} entra SIN el launcher ({}). El candado esta abierto: exigir=false en {}",
 								nombre, veredicto.motivo(), ConfigAcceso.ARCHIVO);
+						avisarALosOps(server, Carteles.avisoSinLauncher(nombre, veredicto.motivo()));
 						return;
 					}
 
@@ -89,8 +130,11 @@ public final class AccesoServidor implements DedicatedServerModInitializer {
 	 */
 	private record Veredicto(boolean pasa, Component cartel, String motivo) {}
 
+	/** Lo que contesto el cliente: el permiso de entrada y con que mods juega. */
+	private record Contestacion(String ticket, String mods) {}
+
 	private static Veredicto revisar(
-			ConfigAcceso config, boolean entendido, FriendlyByteBuf respuesta, String nombre) {
+			ConfigAcceso config, boolean entendido, String ticket, String nombre) {
 		if (!config.configurado()) {
 			return new Veredicto(false, Carteles.sinConfigurar(), "al servidor le falta " + ConfigAcceso.ARCHIVO);
 		}
@@ -100,7 +144,7 @@ public final class AccesoServidor implements DedicatedServerModInitializer {
 		}
 
 		Ticket.Resultado resultado =
-				Ticket.verificar(config.secreto(), leerTicket(respuesta), System.currentTimeMillis() / 1000);
+				Ticket.verificar(config.secreto(), ticket, System.currentTimeMillis() / 1000);
 
 		return switch (resultado.estado()) {
 			case VACIO -> new Veredicto(false, Carteles.sinTicket(config.link()), "sin permiso de entrada");
@@ -116,16 +160,41 @@ public final class AccesoServidor implements DedicatedServerModInitializer {
 
 	/**
 	 * Un cliente al que no le importa el protocolo puede contestar cualquier cosa,
-	 * asi que leer el ticket no puede tirar la conexion abajo: si el contenido no
-	 * es el que esperamos, cuenta como que no lo mando.
+	 * asi que leer esto no puede tirar la conexion abajo: si el contenido no es el
+	 * que esperamos, cuenta como que no mando nada.
+	 *
+	 * Los mods vienen en un segundo campo que los clientes con el mod viejo no
+	 * mandan. Que falte no es motivo de nada: queda la lista vacia y se sigue como
+	 * antes. Es lo que deja actualizar el mod sin dejar a nadie afuera por un rato.
 	 */
-	private static String leerTicket(FriendlyByteBuf respuesta) {
+	private static Contestacion leer(boolean entendido, FriendlyByteBuf respuesta) {
+		if (!entendido || respuesta == null) return new Contestacion("", "");
+
+		String ticket = "";
+		String mods = "";
 		try {
-			if (respuesta == null || !respuesta.isReadable()) return "";
-			return respuesta.readUtf(LARGO_MAXIMO);
+			if (respuesta.isReadable()) ticket = respuesta.readUtf(LARGO_MAXIMO);
+			if (respuesta.isReadable()) mods = respuesta.readUtf(LARGO_MAXIMO_MODS);
 		} catch (Exception e) {
-			return "";
+			// Lo que se haya podido leer vale; lo que no, queda vacio.
 		}
+
+		return new Contestacion(ticket, mods);
+	}
+
+	/**
+	 * Le cuenta a los ops que estan jugando. Es el unico aviso que Pepe va a ver
+	 * sin abrir el log del panel, y por eso existe.
+	 *
+	 * Va con server.execute() porque esto corre en el hilo de la red, mientras el
+	 * otro esta entrando, y la lista de jugadores es del hilo del servidor.
+	 */
+	private static void avisarALosOps(MinecraftServer server, Component aviso) {
+		server.execute(() -> {
+			for (ServerPlayer jugador : server.getPlayerList().getPlayers()) {
+				if (server.getPlayerList().isOp(jugador.nameAndId())) jugador.sendSystemMessage(aviso);
+			}
+		});
 	}
 
 	/**

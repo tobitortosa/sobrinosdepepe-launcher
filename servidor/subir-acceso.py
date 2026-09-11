@@ -14,6 +14,12 @@ no echa a nadie; en true no entra nadie sin el launcher. El mod lee su config en
 cada intento de entrar, asi que cambiarlo es correr este script de nuevo: no hace
 falta reiniciar el servidor ni sacar a nadie.
 
+**LAUNCHER_EXEMPT son los que entran igual con el candado puesto**, separados por
+coma y con el nombre exacto de Minecraft, mayusculas incluidas. Son los amigos que
+juegan con su propio launcher: entran derecho, sin cartel y sin permiso. Ojo con
+que significa: el servidor es offline, asi que exceptuar un nombre es exceptuar a
+cualquiera que sepa escribirlo. Por eso la lista se escribe a mano y corta.
+
 EL ORDEN IMPORTA: esto es el ultimo de cuatro pasos. Corrido antes que los otros
 tres, no entra NADIE, ni con el launcher.
 
@@ -119,6 +125,7 @@ if __name__ == "__main__":
 
     link = mc.cfg.get("SITE_URL", "") or "sobrinosdepepe.vercel.app"
     exigir = mc.cfg.get("REQUIRE_LAUNCHER", "false").strip().lower() in SI
+    sin_launcher = [n.strip() for n in mc.cfg.get("LAUNCHER_EXEMPT", "").split(",") if n.strip()]
 
     subido = subir_el_jar()
     if subido is None:
@@ -126,8 +133,10 @@ if __name__ == "__main__":
     _, hay_que_reiniciar = subido
 
     mc.write(CONFIG, json.dumps(
-        {"exigir": exigir, "secreto": secreto, "link": link}, indent=2) + "\n")
+        {"exigir": exigir, "secreto": secreto, "link": link, "sin_launcher": sin_launcher},
+        indent=2, ensure_ascii=False) + "\n")
     print("  escrito %s (exigir=%s, el cartel manda a %s)" % (CONFIG, str(exigir).lower(), link))
+    print("  entran sin el launcher: %s" % (", ".join(sin_launcher) or "nadie"))
 
     # Echar antes de reiniciar es lo unico que les deja un motivo escrito: el
     # reinicio los saca a todos igual, pero con un "Server closed" que no explica
@@ -143,7 +152,8 @@ if __name__ == "__main__":
 
     print()
     if exigir:
-        print("REQUIRE_LAUNCHER=true: al servidor se entra solo con el launcher.")
+        print("REQUIRE_LAUNCHER=true: al servidor se entra solo con el launcher,")
+        print("salvo los nombres de LAUNCHER_EXEMPT.")
     else:
         print("REQUIRE_LAUNCHER=false: el servidor queda como antes, entra cualquiera.")
         print("En el log del servidor igual queda anotado quien entro sin el launcher.")
