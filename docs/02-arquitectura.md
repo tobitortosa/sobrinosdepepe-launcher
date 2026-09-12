@@ -258,6 +258,10 @@ Todo lo de 4.6 depende de que el cliente diga la verdad. Lo de acá no: vive ent
 
 **Lo que Grim no tiene acá son sus comandos** (`/grim ...`). Avisa al arrancar con un `Grim will run without commands enabled!`. Es un problema de empaquetado de ellos, explicado en el encabezado de `subir-antitrampas.py`; las detecciones, los setbacks, las alertas y los castigos funcionan igual.
 
+**A Grim se le sacó el poder de cancelar el picado**, con el permiso `grim.nomodifypacket.fastbreak` para el grupo default. Su check FastBreak no avisa y ya: cancela el paquete, y entonces el cliente nunca recibe la confirmación, no le carga la animación de picar y el bloque le queda irrompible hasta que se sale y vuelve a entrar —reconectar es lo único que resetea ese balance—. Y se equivoca: calcula la dureza con el bloque del servidor y con el ítem que él cree que el jugador tiene en la mano, así que cuando pierde esa cuenta después de un `/home` o un `/tpa` le sale que un `deepslate_iron_ore` tendría que haber tardado 20 segundos más, que es lo que tarda picándolo a mano limpia. Los mineros son los que peor la pasan, porque el que más bloques rompe es el que antes lo acumula. Con el permiso puesto Grim sigue simulando, detectando y avisando, y como `alerts.print-to-console` está en `true` queda escrito en el log aunque no haya ningún operador conectado; lo único que deja de hacer es cancelar. El detalle está en el encabezado de `subir-antitrampas.py`.
+
+**El anti-xray y Grim se pisaban.** De fábrica Grim lee los bloques del mundo del servidor y se los manda al cliente para "arreglar" desincronizaciones, que es justo lo contrario de lo que hace el anti-xray. Por eso `disable-default-resync-handler` quedó en `true`, que es lo que la propia config de Grim recomienda cuando hay mods que mandan bloques falsos por paquete.
+
 ## 5. Carpetas en la PC del jugador
 
 ```

@@ -40,11 +40,34 @@ este script deja de subir el jar suelto solo: se fija cual de las copias sirve.
 **Grim necesita 26.1.2 o mas.** En 26.1 pelado no carga: por eso el servidor esta
 en 26.1.2. Los jugadores siguen en 26.1 y entran igual, porque 26.1, 26.1.1 y
 26.1.2 hablan el mismo protocolo (775).
+
+## Los dos ajustes que no vienen de fabrica
+
+**`disable-default-resync-handler` en true.** De fabrica Grim lee los bloques del
+mundo del servidor y se los manda al cliente para "arreglar" desincronizaciones. Eso
+pelea de frente con el anti-xray, que existe justamente para mentirle al cliente
+sobre esos mismos bloques. Lo dice la propia config de Grim: con mods que mandan
+bloques falsos por paquete, hay que apagarlo.
+
+**`grim.nomodifypacket.fastbreak` para el grupo default.** El check FastBreak no
+avisa y ya: **cancela el picado** (`blockBreak.cancel()` en su FastBreak.java). Para
+saber si el jugador pico demasiado rapido calcula la dureza con el bloque del
+servidor y con el item que el cree que tiene en la mano, y cuando pierde esa cuenta
+--despues de un /home o un /tpa-- le sale que un deepslate_iron_ore tendria que
+haber tardado 20 segundos mas. Ahi le cancela el picado a un jugador legitimo: los
+bloques le quedan irrompibles y sin animacion hasta que se sale y vuelve a entrar,
+porque reconectar es lo unico que resetea ese balance. Le paso a Hanselx911 la
+primera noche, y son los mineros los que peor la pasan: el que mas bloques rompe es
+el que antes lo acumula. Con este permiso Grim sigue simulando, detectando, avisando
+por chat y dejandolo escrito en el log; lo unico que deja de hacer es cancelar.
+
+Los dos son del servidor: nadie tiene que actualizar el launcher ni el pack.
 """
 import hashlib
 import io
 import json
 import os
+import re
 import sys
 import tempfile
 import urllib.request
@@ -77,6 +100,19 @@ MODS = [
 # La version del juego que corre el servidor. La usa la busqueda del cloud que
 # sirve: hay que subir el que NO pida una version mas nueva que esta.
 DEL_SERVIDOR = (26, 1, 2)
+
+# Lo que tiene que quedar puesto en la config de Grim, pase lo que pase. El porque
+# de cada uno esta arriba.
+AJUSTES = [
+    ("disable-default-resync-handler", "true",
+     "Grim resincroniza bloques y le pisa las mentiras al anti-xray"),
+]
+
+# Permisos de LuckPerms para el grupo default, o sea para todos.
+PERMISOS = [
+    ("grim.nomodifypacket.fastbreak",
+     "FastBreak avisa, pero ya no le cancela el picado a nadie"),
+]
 
 CACHE = os.path.join(tempfile.gettempdir(), "sobrinosdepepe-antitrampas")
 
@@ -156,6 +192,46 @@ def cloud_que_sirve(jar_de_grim):
     raise SystemExit("No encontre ningun cloud-fabric adentro del jar de Grim.")
 
 
+def ajustar_config():
+    """
+    Deja los AJUSTES puestos en config/GrimAC/config.yml. Devuelve si cambio algo,
+    que es lo que decide el reinicio: Grim lee su config una sola vez al arrancar.
+
+    Cambia la linea y nada mas, sin parsear el YAML: el archivo es de ellos y viene
+    lleno de comentarios que explican cada opcion, asi que reescribirlo los borraria.
+    """
+    ruta = "config/GrimAC/config.yml"
+    viejo = mc.read(ruta)
+    nuevo = viejo
+
+    for clave, valor, _ in AJUSTES:
+        patron = re.compile(r"^(%s:[ \t]*).*$" % re.escape(clave), re.MULTILINE)
+        if not patron.search(nuevo):
+            raise SystemExit(
+                "No encontre '%s' en %s.\n"
+                "Le habran cambiado el nombre a la opcion: hay que mirar la config."
+                % (clave, ruta))
+        nuevo = patron.sub(lambda coincide: coincide.group(1) + valor, nuevo)
+
+    if nuevo == viejo:
+        print("  la config de Grim ya estaba como va")
+        return False
+
+    mc.write(ruta, nuevo)
+    for clave, valor, por_que in AJUSTES:
+        print("  %s: %s" % (clave, valor))
+        print("      %s" % por_que)
+    return True
+
+
+def dar_permisos():
+    """Entran en caliente: LuckPerms los guarda y Grim los relee cuando el jugador
+    entra, asi que no dependen del reinicio."""
+    for nodo, por_que in PERMISOS:
+        mc.cmd("lp group default permission set %s true" % nodo)
+        print("  %-34s %s" % (nodo, por_que))
+
+
 def subir(ruta, prefijo, estaban):
     """Sube el jar y borra las versiones viejas del mismo mod, que rompen Fabric."""
     nombre = os.path.basename(ruta)
@@ -186,6 +262,10 @@ if __name__ == "__main__":
             suelto = cloud_que_sirve(local)
             if suelto:
                 hay_que_reiniciar |= subir(suelto, "cloud-fabric", estaban)
+
+    print()
+    hay_que_reiniciar |= ajustar_config()
+    dar_permisos()
 
     print()
     if hay_que_reiniciar:
