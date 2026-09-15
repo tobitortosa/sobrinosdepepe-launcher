@@ -82,6 +82,9 @@ public partial class ShellViewModel : ObservableObject
     public void ShowPending(string token, Account account) =>
         Current = new PendingViewModel(this, token, account);
 
+    public void ShowBaneado(Account account) =>
+        Current = new BaneadoViewModel(this, account);
+
     public void ShowHome(string token, Account account) =>
         Current = new HomeViewModel(this, token, account);
 
@@ -115,6 +118,9 @@ public partial class ShellViewModel : ObservableObject
     {
         // Elegir la contraseña propia va antes que todo lo demás.
         if (account.MustChangePassword) Current = new ChangePasswordViewModel(this, token, account);
+        // El baneo va antes que la pantalla de espera: si no, un baneado veía el
+        // JUGAR y se enteraba recien cuando el servidor le rechazaba la conexion.
+        else if (account.IsBanned) ShowBaneado(account);
         else if (account.IsPending) ShowPending(token, account);
         else ShowHome(token, account);
     }

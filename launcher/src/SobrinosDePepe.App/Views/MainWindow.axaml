@@ -29,6 +29,9 @@
     <DataTemplate DataType="vm:PendingViewModel">
       <views:PendingView />
     </DataTemplate>
+    <DataTemplate DataType="vm:BaneadoViewModel">
+      <views:BaneadoView />
+    </DataTemplate>
     <DataTemplate DataType="vm:HomeViewModel">
       <views:HomeView />
     </DataTemplate>

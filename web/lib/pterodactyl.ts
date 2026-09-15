@@ -98,6 +98,14 @@ export async function uploadFile(directory: string, filename: string, bytes: Uin
   }
 }
 
+/** Lee un archivo de texto del servidor, por ejemplo banned-ips.json. */
+export async function readFile(path: string): Promise<string> {
+  const response = await request(
+    `/servers/${env.pterodactylServerId}/files/contents?file=${encodeURIComponent(path)}`,
+  );
+  return response.text();
+}
+
 /** Escribe un archivo de texto en el servidor, por ejemplo whitelist.json. */
 export async function writeFile(path: string, contents: string): Promise<void> {
   await request(`/servers/${env.pterodactylServerId}/files/write?file=${encodeURIComponent(path)}`, {

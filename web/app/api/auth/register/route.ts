@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { fail, ok, readJson } from '@/lib/api';
+import { ipBaneada, ipDeLaPeticion } from '@/lib/baneos';
 import { createSession, hashPassword } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
@@ -18,6 +19,12 @@ export async function POST(request: Request) {
   if (!parsed.success) return fail('Faltan el usuario o la contraseña.');
 
   const { username, password } = parsed.data;
+
+  // Sin esto, un baneado se hace cuentas nuevas todas las que quiera: el registro
+  // se activa solo y entra derecho a la whitelist.
+  if (await ipBaneada(ipDeLaPeticion(request))) {
+    return fail('Estás baneado del servidor.', 403, { status: 'banned' });
+  }
 
   if (!isValidUsername(username)) return fail(USERNAME_RULE);
   if (password.length < 6) return fail('La contraseña necesita al menos 6 caracteres.');

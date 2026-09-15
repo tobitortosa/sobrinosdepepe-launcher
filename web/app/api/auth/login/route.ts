@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { fail, ok, readJson } from '@/lib/api';
+import { ipBaneada, ipDeLaPeticion } from '@/lib/baneos';
 import { checkPassword, createSession } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
@@ -26,6 +27,12 @@ export async function POST(request: Request) {
   if (!(await checkPassword(parsed.data.password, user.passwordHash))) return fail(generic, 401);
 
   if (user.status === 'banned') return fail('Tu cuenta está baneada.', 403, { status: 'banned' });
+
+  // La IP baneada vale igual que la cuenta baneada, salvo para los administradores:
+  // ver el porqué en requireUser.
+  if (user.role !== 'admin' && (await ipBaneada(ipDeLaPeticion(request)))) {
+    return fail('Estás baneado del servidor.', 403, { status: 'banned' });
+  }
 
   // Una cuenta solo queda pendiente si el panel no contestó cuando se registró. Se
   // reintenta acá porque cerrar y abrir el launcher es lo primero que hace cualquiera

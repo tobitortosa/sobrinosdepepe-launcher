@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { bearerToken, userFromToken } from './auth';
+import { ipBaneada, ipDeLaPeticion } from './baneos';
 import type { User } from './db/schema';
 import { PterodactylError } from './pterodactyl';
 
@@ -26,6 +27,12 @@ export async function requireUser(request: Request): Promise<Guard> {
   if (!user) return { response: fail('Tu sesión venció. Volvé a iniciar sesión.', 401) };
   if (user.status === 'banned') {
     return { response: fail('Tu cuenta está baneada.', 403, { status: 'banned' }) };
+  }
+  // Un /ban-ip en el juego cierra también el launcher: si no, el baneado se hace
+  // otra cuenta y vuelve. Los administradores quedan afuera de esta regla a
+  // propósito, porque banear la IP de la casa de uno no puede dejarlo sin panel.
+  if (user.role !== 'admin' && (await ipBaneada(ipDeLaPeticion(request)))) {
+    return { response: fail('Estás baneado del servidor.', 403, { status: 'banned' }) };
   }
   return { user };
 }

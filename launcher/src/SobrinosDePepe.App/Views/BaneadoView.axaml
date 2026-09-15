@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SobrinosDePepe.App.ViewModels"
+             x:Class="SobrinosDePepe.App.Views.BaneadoView"
+             x:DataType="vm:BaneadoViewModel">
+
+  <Grid RowDefinitions="*,Auto,*" Margin="34">
+
+    <StackPanel Grid.Row="1" Spacing="0">
+
+      <Image Source="avares://SobrinosDePepe/Assets/logo.png"
+             Width="72" Height="72" HorizontalAlignment="Center" Margin="0,0,0,18" />
+      <TextBlock Classes="brand" Text="SOBRINOS DE PEPE" Margin="0,0,0,28" />
+
+      <Border Classes="card">
+        <StackPanel Spacing="12">
+          <TextBlock Classes="title" Text="Estás baneado" HorizontalAlignment="Center" />
+          <TextBlock Classes="muted" TextWrapping="Wrap" TextAlignment="Center"
+                     Text="{Binding Username, StringFormat='La cuenta {0} no puede entrar al servidor. Si te parece que es un error, habl&#225; con Pepe.'}" />
+        </StackPanel>
+      </Border>
+
+      <Button Classes="link" Content="Cerrar sesión"
+              Command="{Binding LogOutCommand}"
+              HorizontalAlignment="Center" Margin="0,22,0,0" />
+
+    </StackPanel>
+
+  </Grid>
+</UserControl>
