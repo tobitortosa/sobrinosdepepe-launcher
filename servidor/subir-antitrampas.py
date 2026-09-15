@@ -106,7 +106,18 @@ DEL_SERVIDOR = (26, 1, 2)
 AJUSTES = [
     ("disable-default-resync-handler", "true",
      "Grim resincroniza bloques y le pisa las mentiras al anti-xray"),
+    ("max-transaction-time", "180",
+     "a lanuerademari la echaba a los 60 segundos clavados de entrar, cuatro veces"),
+    ("ping-abuse-limit-threshold", "-1",
+     "TimerLimit solo castiga arriba de 1000 ms de ping, y la echaba por tener mal internet"),
 ]
+
+# OJO: punishments.yml no lo toca este script, y ahi hay dos cambios hechos a mano
+# que conviene no perder. FastBreak caia adentro de la seccion Misc, porque "Break"
+# lo matchea por nombre, y eso le daba el kick de las 60 violaciones: le salta a
+# todos por lag y no echa a nadie de verdad. Quedo excluido de Misc con "!FastBreak"
+# y con seccion propia de solo [log], asi no avisa en el chat ni expulsa, pero sigue
+# quedando registrado.
 
 # Permisos de LuckPerms para el grupo default, o sea para todos.
 PERMISOS = [
