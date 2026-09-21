@@ -1,7 +1,7 @@
 {
   "startingBalance": 10000,
   "dailyAmount": 1000,
-  "dailySellLimit": 2500000,
+  "dailySellLimit": 0,
   "taxRate": 0.1,
   "pvp_balance_loss_percentage": 0.1,
   "standalone_commands": true,

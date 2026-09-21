@@ -183,6 +183,24 @@ COMPRA = {
     "minecraft:dragon_breath": d(1000),
 }
 
+# El vidrio venia sin compra de la tabla de fabrica (786 de los 1.695 items
+# vienen asi) y es lo unico que se pide para construir que no se podia comprar.
+# No hace falta cuidarse de nada: la arena ya se vende a 20 y hay que fundirla,
+# asi que comprar el vidrio hecho es la version comoda y mas cara de lo mismo.
+# Los precios estan por arriba del costo de craftearlo desde la tienda (un panel
+# sale 11 en vidrio y uno de color 15) y muy por arriba del doble de la venta,
+# que es la linea abajo de la cual comprar y revender seria plata gratis.
+COLORES_VIDRIO = [
+    "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
+    "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black",
+]
+COMPRA["minecraft:glass"] = 3 * ESCALA
+COMPRA["minecraft:glass_pane"] = 2 * ESCALA
+COMPRA["minecraft:tinted_glass"] = 90 * ESCALA   # lleva 4 amatistas, que salen 100 cada una
+for _color in COLORES_VIDRIO:
+    COMPRA["minecraft:%s_stained_glass" % _color] = 4 * ESCALA
+    COMPRA["minecraft:%s_stained_glass_pane" % _color] = 2 * ESCALA
+
 # ------------------------------------------------------------------ 4) los ajustes
 # El config de EconomyCraft. No tiene comando de reload: los cambios entran con
 # el reinicio. Y ojo: si se toca a mano con el servidor prendido y despues
@@ -194,12 +212,22 @@ CONFIG = {
     "startingBalance": 1000 * ESCALA,
     "dailyAmount": 100 * ESCALA,
 
-    # Estaba en 10.000, que con los precios nuevos rompia el /sell: un ingot de
-    # netherita vale 17.500 y el limite es todo-o-nada por operacion, asi que la
-    # venta entera se rechazaba sin explicacion. 250.000 deja pasar cualquier
-    # botin de una pelea (una elytra son 21.000, un bloque de netherita 157.500)
-    # y todavia tapa el grifo en unos 3.000 diamantes por dia.
-    "dailySellLimit": 250000 * ESCALA,
+    # Sin tope. El mod toma cualquier valor <= 0 como "no hay limite":
+    # tryRecordDailySell sale por false apenas lo ve, y getDailySellRemaining
+    # devuelve Long.MAX_VALUE.
+    #
+    # Se saca sabiendo lo que cuesta. Con el tope en 2.500.000 ya habia cinco
+    # jugadores que lo tocaban (14 ingots de netherita y se acabo el dia), y en
+    # los ocho dias de log del 12 al 19 de septiembre la plata del servidor paso
+    # de 12,4 a 31,5 millones, con el 95% de lo creado saliendo de venderle
+    # netherita al servidor: el TNT sale 540 en la tienda y el ingot que sale de
+    # ese TNT se vende a 175.000. El tope era lo unico que frenaba esa rueda, y
+    # sin el la plata se crea al ritmo que le den las manos a cada uno.
+    #
+    # Queda asi a proposito hasta que haya mas gente y valga la pena mirar la
+    # economia en serio; el arreglo de fondo es el precio de la netherita, no el
+    # tope.
+    "dailySellLimit": 0,
 
     # El 10% NO es un impuesto general: solo lo cobran las subastas y las
     # ordenes de compra. Es el unico sumidero real de plata que tiene el
