@@ -61,16 +61,43 @@ public final class Kits {
 	private static final Item[] BLOQUES = {
 			Items.COBBLESTONE, Items.OAK_PLANKS, Items.STONE_BRICKS, Items.DEEPSLATE_BRICKS};
 
+	/**
+	 * Como se llama cada clase, en el orden en que las arma `armar`. Es la lista
+	 * que completa el tabulador de `/pvp <jugador> <clase>`.
+	 */
+	public static final List<String> NOMBRES = List.of(
+			"GLADIADOR", "NETHERITA", "CRISTALERO", "ARQUERO",
+			"PERLERO", "BOMBARDERO", "MAZAZO", "CUERO");
+
 	/** Cuantas clases hay. Se usa para el cartel de /pvp. */
-	public static final int CUANTAS = 8;
+	public static final int CUANTAS = NOMBRES.size();
+
+	/** Si ese nombre es una clase, mirando sin distinguir mayusculas. */
+	public static boolean existe(String nombre) {
+		return NOMBRES.stream().anyMatch(n -> n.equalsIgnoreCase(nombre));
+	}
 
 	/**
 	 * Arma el kit del duelo. La semilla del azar sale del duelo, asi que los dos
 	 * jugadores reciben exactamente lo mismo.
+	 *
+	 * `pedida` es la clase que eligio el que reto, o null para que salga una al
+	 * azar, que es lo normal. Que se pueda elegir no rompe que sea pareja: los dos
+	 * pelean con la misma igual, y al retado le llega escrita en el reto antes de
+	 * apretar ACEPTAR. Elegir la clase es proponer una pelea, no imponerla.
+	 *
+	 * El bloque para construir sigue saliendo al azar aunque se elija la clase: es
+	 * decoracion, no cambia como se pelea.
 	 */
-	public static Kit armar(HolderLookup.Provider registros, RandomSource azar) {
+	public static Kit armar(HolderLookup.Provider registros, RandomSource azar, String pedida) {
 		Item bloque = BLOQUES[azar.nextInt(BLOQUES.length)];
-		return switch (azar.nextInt(CUANTAS)) {
+		int cual = azar.nextInt(CUANTAS);
+		if (pedida != null) {
+			for (int i = 0; i < CUANTAS; i++) {
+				if (NOMBRES.get(i).equalsIgnoreCase(pedida)) cual = i;
+			}
+		}
+		return switch (cual) {
 			case 0 -> gladiador(registros, azar, bloque);
 			case 1 -> netherita(registros, azar, bloque);
 			case 2 -> cristalero(registros, azar);

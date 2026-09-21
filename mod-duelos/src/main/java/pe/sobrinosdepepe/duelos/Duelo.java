@@ -73,6 +73,8 @@ public final class Duelo {
 	public final String uno;
 	public final String otro;
 	public final int apuesta;
+	/** La clase que eligio el que reto, o null si sale al azar. */
+	public final String clase;
 	/** Si esta pelea es una llave de torneo, para que el torneo sepa el resultado. */
 	public final boolean deTorneo;
 
@@ -92,13 +94,14 @@ public final class Duelo {
 	private String comoFue = "";
 
 	public Duelo(MinecraftServer servidor, Registro registro, Arena arena,
-			String uno, String otro, int apuesta, boolean deTorneo) {
+			String uno, String otro, int apuesta, String clase, boolean deTorneo) {
 		this.servidor = servidor;
 		this.registro = registro;
 		this.arena = arena;
 		this.uno = uno;
 		this.otro = otro;
 		this.apuesta = apuesta;
+		this.clase = clase;
 		this.deTorneo = deTorneo;
 	}
 
@@ -144,7 +147,7 @@ public final class Duelo {
 		decoracionCuidada = Copia.cuidarLaDecoracion(nivel, arena);
 
 		RandomSource azar = nivel.getRandom();
-		kit = Kits.armar(servidor.registryAccess(), azar);
+		kit = Kits.armar(servidor.registryAccess(), azar, clase);
 
 		// El cobro de la apuesta va antes de tocar el inventario: si algo fallara
 		// aca, nadie perdio todavia nada de lo suyo.

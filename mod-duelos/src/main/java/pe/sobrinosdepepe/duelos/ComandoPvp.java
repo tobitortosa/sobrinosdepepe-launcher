@@ -70,10 +70,22 @@ public final class ComandoPvp {
 
 	public void registrar(CommandDispatcher<CommandSourceStack> dispatcher) {
 		dispatcher.register(Commands.literal("pvp")
+				// Los shards van antes que la clase a proposito: Brigadier prueba los
+				// argumentos en el orden en que se registraron, asi que con el numero
+				// primero, "/pvp Fulano 50" entra por los shards y "/pvp Fulano CUERO"
+				// falla el numero y cae en la clase. Al reves, "50" seria un nombre de
+				// clase que no existe.
 				.then(Commands.argument("jugador", EntityArgument.player())
-						.executes(c -> retar(c, 0))
+						.executes(c -> retar(c, 0, null))
 						.then(Commands.argument("shards", IntegerArgumentType.integer(0))
-								.executes(c -> retar(c, IntegerArgumentType.getInteger(c, "shards")))))
+								.executes(c -> retar(c, IntegerArgumentType.getInteger(c, "shards"), null))
+								.then(Commands.argument("clase", StringArgumentType.word())
+										.suggests((c, sug) -> SharedSuggestionProvider.suggest(Kits.NOMBRES, sug))
+										.executes(c -> retar(c, IntegerArgumentType.getInteger(c, "shards"),
+												StringArgumentType.getString(c, "clase")))))
+						.then(Commands.argument("clase", StringArgumentType.word())
+								.suggests((c, sug) -> SharedSuggestionProvider.suggest(Kits.NOMBRES, sug))
+								.executes(c -> retar(c, 0, StringArgumentType.getString(c, "clase")))))
 				.then(Commands.literal("aceptar")
 						.then(Commands.argument("jugador", StringArgumentType.word())
 								.suggests((c, s) -> SharedSuggestionProvider.suggest(
@@ -134,7 +146,15 @@ public final class ComandoPvp {
 
 	// ------------------------------------------------------------------- el reto
 
-	private int retar(CommandContext<CommandSourceStack> contexto, int apuesta)
+	/**
+	 * `/pvp <jugador> [shards] [clase]`.
+	 *
+	 * La clase es opcional y sin ella sale una al azar, que es lo normal. Que se
+	 * pueda elegir no rompe que la pelea sea pareja: los dos van con la misma
+	 * igual, y al retado le llega escrita en el reto antes de apretar ACEPTAR. Es
+	 * proponer una pelea, no imponerla.
+	 */
+	private int retar(CommandContext<CommandSourceStack> contexto, int apuesta, String clase)
 			throws CommandSyntaxException {
 		ServerPlayer quien = contexto.getSource().getPlayerOrException();
 		ServerPlayer aQuien = EntityArgument.getPlayer(contexto, "jugador");
@@ -144,18 +164,23 @@ public final class ComandoPvp {
 		String el = aQuien.getScoreboardName();
 
 		if (el.equalsIgnoreCase(yo)) return no(quien, Carteles.aVosMismo());
+		if (clase != null && !Kits.existe(clase)) return no(quien, Carteles.claseQueNoExiste(clase));
+		// Guardada siempre en mayusculas: asi el cartel del reto y el del duelo la
+		// muestran igual sin importar como la haya tipeado el que reto.
+		String laClase = clase == null ? null : clase.toUpperCase(java.util.Locale.ROOT);
+
 		Component problema = sePuedePelear(servidor, quien, aQuien, apuesta, yo);
 		if (problema != null) return no(quien, problema);
 		if (duelos.invitaciones().buscar(el, yo) != null) {
 			return no(quien, Carteles.yaLoRetaste(el));
 		}
 
-		duelos.invitaciones().retar(yo, el, apuesta);
-		aQuien.sendSystemMessage(Carteles.teRetaron(yo, apuesta, Invitaciones.SEGUNDOS));
+		duelos.invitaciones().retar(yo, el, apuesta, laClase);
+		aQuien.sendSystemMessage(Carteles.teRetaron(yo, apuesta, laClase, Invitaciones.SEGUNDOS));
 		aQuien.level().playSound(null, aQuien.getX(), aQuien.getY(), aQuien.getZ(),
 				net.minecraft.sounds.SoundEvents.ANVIL_LAND,
 				net.minecraft.sounds.SoundSource.PLAYERS, 0.4f, 1.6f);
-		quien.sendSystemMessage(Carteles.retaste(el, apuesta, Invitaciones.SEGUNDOS));
+		quien.sendSystemMessage(Carteles.retaste(el, apuesta, laClase, Invitaciones.SEGUNDOS));
 		return 1;
 	}
 
@@ -180,7 +205,7 @@ public final class ComandoPvp {
 		Component problema = sePuedePelear(servidor, retador, quien, reto.apuesta(), yo);
 		if (problema != null) return no(quien, problema);
 
-		int lugar = duelos.encolar(reto.retador(), yo, reto.apuesta(), false);
+		int lugar = duelos.encolar(reto.retador(), yo, reto.apuesta(), reto.clase(), false);
 		if (lugar > 1) {
 			quien.sendSystemMessage(Carteles.enLaCola(lugar));
 			retador.sendSystemMessage(Carteles.enLaCola(lugar));

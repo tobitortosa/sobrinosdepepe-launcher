@@ -10,7 +10,7 @@ y espera, que a esta altura casi siempre hay alguien jugando.
 
 ## Qué agrega
 
-    /pvp <jugador> [shards]    retarlo a un duelo
+    /pvp <jugador> [shards] [clase]  retarlo a un duelo
     /pvp aceptar <jugador>     entrar a la arena contra él (le llega un botón)
     /pvp rechazar <jugador>    decirle que no
     /pvp rendirse              abandonar el duelo que estás peleando

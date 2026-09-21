@@ -185,12 +185,16 @@ GRUPOS = [
         ("/home set ", True), ("/home delete ", True), ("/home list", False),
         ("/rtp", False), ("/tpa ", True),
     ]),
-    # El grupo con los seis del duelo y no una linea sola con /pvp, por lo mismo
-    # que EQUIPO: esta lista es de donde la gente saca que existe cada cosa, y un
-    # /pvp pelado no cuenta que se reta, que se apuesta ni que hay un torneo.
+    # Los duelos van con los seis y no con una linea sola de /pvp, por lo mismo que
+    # EQUIPO: esta lista es de donde la gente saca que existe cada cosa, y un /pvp
+    # pelado no cuenta que se reta, que se apuesta ni que hay un torneo.
     ("PELEA", e.KILLS, [
         ("/pvp ", True), ("/pvp apostar ", True), ("/pvp rendirse", False),
-        ("/pvp top", False), ("/pvp duelos", False), ("/pvp torneo", False),
+        ("/pvp top", False), ("/pvp torneo", False), ("/pvp duelos", False),
+    ]),
+    # Los shards salieron de PELEA cuando los duelos le llenaron la fila. Son otra
+    # cosa igual: PELEA es como se pelea y esto es la moneda con la que se paga.
+    ("SHARDS", e.SHARDS, [
         ("/shards", False), ("/tienda", False),
     ]),
     # Grupo propio y con los seis, y no una linea sola con /equipo, porque esta
@@ -227,6 +231,11 @@ for nombre, color, comandos in GRUPOS:
     for comando, pide in comandos:
         lista.append(boton(comando, pide))
     lista.append(t(chr(10)))
+lista.append(t(chr(10) + "  Para retar: ", e.ETIQUETA))
+lista.append(t("/pvp <jugador> [shards] [clase]", e.MARCA, negrita=True))
+lista.append(t(chr(10) + "  Los shards y la clase son opcionales; sin clase sale una al azar.",
+               e.APAGADO))
+lista.append(t(chr(10)))
 lista.append(t(chr(10) + "  Los de VIAJES no andan mientras estas EN PELEA:", e.ERROR))
 lista.append(t(chr(10) + "  se te va la marca 15 segundos despues del ultimo golpe." + chr(10), e.APAGADO))
 lista.append(t(chr(10) + "  Los podes escribir directo, o abrir el menu con ", e.ETIQUETA))

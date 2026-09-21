@@ -695,7 +695,7 @@ Si algún día se habilita `/tpahere` o `/warp`, hay que agregarlos a
 Desde el 2026-09-21 se puede retar a alguien a un duelo uno contra uno en una
 arena marcada. Es el mod `mod-duelos/`, y se sube con `subir-duelos.py`.
 
-    /pvp <jugador> [shards]    retarlo; al otro le llega un boton para aceptar
+    /pvp <jugador> [shards] [clase]   retarlo; al otro le llega un boton
     /pvp aceptar <jugador>     entrar a la arena contra el
     /pvp rechazar <jugador>    decirle que no
     /pvp rendirse              abandonar el duelo que estas peleando
@@ -804,6 +804,21 @@ puesto termina el duelo en dos segundos y no hay pelea, hay sorteo.
 
 Que sea al azar es la mitad de la gracia: nadie se especializa en una sola forma
 de pelear porque no sabe con que le va a tocar.
+
+**Se puede pedir una**, igual: `/pvp <jugador> [shards] <clase>`. No rompe que
+sea pareja, y por una razon concreta: los dos pelean con la misma clase de todas
+formas, y al retado **le llega escrita en el reto** antes de apretar ACEPTAR. Si
+no le gusta con que le proponen pelear, rechaza. Elegir la clase es proponer una
+pelea, no imponerla.
+
+Las llaves del torneo van siempre al azar: ahi nadie reto a nadie, asi que elegir
+la clase seria darle a uno de los dos algo que el otro no pidio.
+
+El orden de los argumentos importa en el codigo: los shards se registran antes
+que la clase porque Brigadier prueba los argumentos en el orden en que se
+registraron. Con el numero primero, `/pvp Fulano 50` entra por los shards y
+`/pvp Fulano CUERO` falla el numero y cae en la clase. Al reves, `50` seria un
+nombre de clase que no existe.
 
 **Nada del kit se queda.** Cada item lleva la marca `sdp_duelo` en su
 `custom_data`, y al terminar se borran los que hayan quedado tirados en la arena

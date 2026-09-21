@@ -746,7 +746,7 @@
                 "color": "dark_gray"
               },
               {
-                "text": "Para retar a alguien a un duelo:   ",
+                "text": "Para retar: /pvp <jugador> [shards] [clase]   ",
                 "italic": false,
                 "color": "gray"
               },
@@ -1110,6 +1110,117 @@
         "action": "open",
         "menu": "sdp:equipo"
       }
+    },
+    {
+      "slot": [
+        4,
+        5
+      ],
+      "type": "item",
+      "item": {
+        "id": "minecraft:chest",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "⚔ LAS OCHO CLASES",
+            "italic": false,
+            "color": "#ffb02e",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  Sale una al azar y es la MISMA para los dos",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "",
+              "italic": false
+            },
+            {
+              "text": "  ▪ GLADIADOR    hierro, espada y escudo",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "  ▪ NETHERITA    netherita, espada de fuego y crystals",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "  ▪ CRISTALERO   crystals, obsidiana y hacha",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "  ▪ ARQUERO      arco, 64 flechas y distancia",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "  ▪ PERLERO      perlas y cargas de viento",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "  ▪ BOMBARDERO   TNT, mechero y pico",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "  ▪ MAZAZO       la maza y cargas de viento",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "  ▪ CUERO        casi nada encima. Rapido",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "",
+              "italic": false
+            },
+            {
+              "text": "  Las ocho llevan perlas y manzanas de oro.",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "",
+              "italic": false
+            },
+            {
+              "text": "  Podes pedir una al retar:",
+              "italic": false,
+              "color": "#ffb02e"
+            },
+            {
+              "text": "  /pvp <jugador> [shards] [clase]",
+              "italic": false,
+              "color": "#00a6ff"
+            },
+            {
+              "text": "  Al otro le llega escrita, asi sabe que acepta.",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "click"
     },
     {
       "slot": [

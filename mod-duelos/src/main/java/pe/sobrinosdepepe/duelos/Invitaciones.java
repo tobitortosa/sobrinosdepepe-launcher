@@ -17,16 +17,19 @@ public final class Invitaciones {
 	/** Cuanto dura un reto sin contestar. */
 	public static final int SEGUNDOS = 60;
 
-	/** Un reto: quien reta, a quien, y cuantos shards se juegan los dos. */
-	public record Reto(String retador, String retado, int apuesta, long vence) {}
+	/**
+	 * Un reto: quien reta, a quien, cuantos shards se juegan los dos y con que
+	 * clase. La clase en null es "la que salga", que es lo normal.
+	 */
+	public record Reto(String retador, String retado, int apuesta, String clase, long vence) {}
 
 	private final List<Reto> pendientes = new ArrayList<>();
 
-	public void retar(String retador, String retado, int apuesta) {
+	public void retar(String retador, String retado, int apuesta, String clase) {
 		limpiar();
 		pendientes.removeIf(r -> r.retador().equalsIgnoreCase(retador)
 				&& r.retado().equalsIgnoreCase(retado));
-		pendientes.add(new Reto(retador, retado, apuesta,
+		pendientes.add(new Reto(retador, retado, apuesta, clase,
 				System.currentTimeMillis() + SEGUNDOS * 1000L));
 	}
 

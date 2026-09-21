@@ -229,7 +229,9 @@ public final class Torneo {
 			return;
 		}
 
-		duelos.encolar(cruce[0], cruce[1], 0, true);
+		// Las llaves del torneo van siempre con la clase al azar: elegirla seria
+		// darle a uno de los dos algo que el otro no pidio.
+		duelos.encolar(cruce[0], cruce[1], 0, null, true);
 	}
 
 	/** Lo llama Duelos cuando termina una pelea que era de torneo. */

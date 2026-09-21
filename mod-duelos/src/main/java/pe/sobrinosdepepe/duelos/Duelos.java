@@ -42,7 +42,8 @@ public final class Duelos {
 	private static final Logger LOG = LoggerFactory.getLogger("duelosdepepe");
 
 	/** Una pelea que espera turno. */
-	public record EnEspera(String uno, String otro, int apuesta, boolean deTorneo) {}
+	public record EnEspera(String uno, String otro, int apuesta, String clase,
+			boolean deTorneo) {}
 
 	private final Registro registro;
 	private final Invitaciones invitaciones = new Invitaciones();
@@ -121,8 +122,8 @@ public final class Duelos {
 				avisar(proximo, Carteles.sinArena());
 				continue;
 			}
-			Duelo duelo = new Duelo(servidor, registro, arena,
-					proximo.uno(), proximo.otro(), proximo.apuesta(), proximo.deTorneo());
+			Duelo duelo = new Duelo(servidor, registro, arena, proximo.uno(), proximo.otro(),
+					proximo.apuesta(), proximo.clase(), proximo.deTorneo());
 			if (duelo.arrancar()) {
 				actual = duelo;
 			} else {
@@ -223,10 +224,10 @@ public final class Duelos {
 	// -------------------------------------------------------------------- la cola
 
 	/** Mete la pelea en la cola. Devuelve en que lugar quedo (1 es la proxima). */
-	public int encolar(String uno, String otro, int apuesta, boolean deTorneo) {
+	public int encolar(String uno, String otro, int apuesta, String clase, boolean deTorneo) {
 		invitaciones.olvidar(uno);
 		invitaciones.olvidar(otro);
-		cola.add(new EnEspera(uno, otro, apuesta, deTorneo));
+		cola.add(new EnEspera(uno, otro, apuesta, clase, deTorneo));
 		return cola.size();
 	}
 

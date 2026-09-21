@@ -409,6 +409,28 @@ coliseo = item("minecraft:iron_sword", e.ESPADAS + " EL COLISEO", e.MARCA, [
     texto("  entre los que acertaron.", e.SHARDS),
 ])
 
+# Las ocho clases, con lo que trae cada una. Va en la fila 4, que estaba vacia, y
+# no adentro del cartel del coliseo: son ocho lineas y ahi abajo se leen solas.
+# Importa que esten escritas porque ahora se puede pedir una al retar.
+clases = item("minecraft:chest", e.ESPADAS + " LAS OCHO CLASES", e.MARCA, [
+    texto("  Sale una al azar y es la MISMA para los dos", e.ETIQUETA),
+    texto("", None),
+    texto("  " + e.VINETA + " GLADIADOR    hierro, espada y escudo", e.BIEN),
+    texto("  " + e.VINETA + " NETHERITA    netherita, espada de fuego y crystals", e.BIEN),
+    texto("  " + e.VINETA + " CRISTALERO   crystals, obsidiana y hacha", e.BIEN),
+    texto("  " + e.VINETA + " ARQUERO      arco, 64 flechas y distancia", e.BIEN),
+    texto("  " + e.VINETA + " PERLERO      perlas y cargas de viento", e.BIEN),
+    texto("  " + e.VINETA + " BOMBARDERO   TNT, mechero y pico", e.BIEN),
+    texto("  " + e.VINETA + " MAZAZO       la maza y cargas de viento", e.BIEN),
+    texto("  " + e.VINETA + " CUERO        casi nada encima. Rapido", e.BIEN),
+    texto("", None),
+    texto("  Las ocho llevan perlas y manzanas de oro.", e.ETIQUETA),
+    texto("", None),
+    texto("  Podes pedir una al retar:", e.MARCA),
+    texto("  /pvp <jugador> [shards] [clase]", e.ACENTO),
+    texto("  Al otro le llega escrita, asi sabe que acepta.", e.ETIQUETA),
+])
+
 guardar("pvp", {
     "name": texto("PVP", e.KILLS, negrita=True),
     "rows": 5,
@@ -422,7 +444,7 @@ guardar("pvp", {
         celda(3, 2, item("minecraft:iron_sword", "RETAR A ALGUIEN", e.KILLS,
                          ["Un duelo de uno contra uno",
                           "en la arena, con kit parejo"]),
-              escribir("/pvp ", "Para retar a alguien a un duelo:")),
+              escribir("/pvp ", "Para retar: /pvp <jugador> [shards] [clase]")),
         celda(3, 3, item("minecraft:gold_nugget", "APOSTAR", e.SHARDS,
                          ["Ponerle shards al que creas",
                           "que va a ganar el duelo"]),
@@ -445,6 +467,7 @@ guardar("pvp", {
         celda(3, 8, item("minecraft:white_banner", "EQUIPO", e.BIEN,
                          ["Con quien andas:", "invitar, echar y salir"]),
               abrir("sdp:equipo"), "select"),
+        celda(4, 5, clases),
         volver(fila=5),
     ],
 })

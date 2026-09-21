@@ -45,14 +45,26 @@ public final class Carteles {
 
 	// --------------------------------------------------------------------- el reto
 
-	/** Lo que ve el retado. Los dos botones son todo: nadie tipea el nombre. */
-	public static Component teRetaron(String retador, int apuesta, int segundos) {
+	/**
+	 * Lo que ve el retado. Los dos botones son todo: nadie tipea el nombre.
+	 *
+	 * La clase se muestra aca, y eso es lo que hace que elegirla no sea sacar
+	 * ventaja: el que acepta ya sabe con que va a pelear. Si no le gusta, rechaza.
+	 */
+	public static Component teRetaron(String retador, int apuesta, String clase, int segundos) {
 		MutableComponent cartel = Component.empty()
 				.append(apagado("\n  " + RAYA.repeat(26) + "\n"))
 				.append(rojo("  " + ESPADAS + " TE RETARON A UN DUELO\n\n"))
 				.append(gris("  "))
 				.append(Component.literal(retador).withStyle(e -> e.withColor(MARCA).withBold(true)))
 				.append(gris(" te quiere pelear en la arena.\n"));
+
+		cartel.append(gris("  Clase: "))
+				.append(clase == null
+						? Component.literal("la que salga").withStyle(e -> e.withColor(MARCA))
+						: Component.literal(clase).withStyle(e -> e.withColor(MARCA).withBold(true)))
+				.append(gris(clase == null ? ", al azar y la misma para los dos\n"
+						: ", la eligió él, y es la misma para los dos\n"));
 
 		if (apuesta > 0) {
 			cartel.append(gris("  Se juegan "))
@@ -73,10 +85,23 @@ public final class Carteles {
 				.append(apagado("  " + RAYA.repeat(26) + "\n"));
 	}
 
-	public static Component retaste(String retado, int apuesta, int segundos) {
+	public static Component retaste(String retado, int apuesta, String clase, int segundos) {
 		MutableComponent cartel = bien("Lo retaste a " + retado + ". ");
+		if (clase != null) cartel.append(gris("Con la clase " + clase + ". "));
 		if (apuesta > 0) cartel.append(gris("Se juegan " + apuesta + " shards cada uno. "));
 		return cartel.append(gris("Tiene " + segundos + " segundos para contestar."));
+	}
+
+	public static Component claseQueNoExiste(String pedida) {
+		return Component.empty()
+				.append(mal("No hay ninguna clase que se llame " + pedida + ".\n"))
+				.append(gris("  Son estas " + Kits.CUANTAS + ", y sin poner ninguna sale una al azar:\n  "))
+				.append(Component.literal(String.join("  ", Kits.NOMBRES))
+						.withStyle(e -> e.withColor(MARCA)))
+				.append(Component.literal("\n"))
+				.append(gris("  Se escribe al final: "))
+				.append(Component.literal("/pvp <jugador> [shards] <clase>")
+						.withStyle(e -> e.withColor(ACENTO)));
 	}
 
 	public static Component teRechazaron(String quien) {
@@ -195,7 +220,11 @@ public final class Carteles {
 				.append(gris("Rompan todo lo que quieran: la arena se\n    arregla sola despues.\n"))
 				.append(Component.literal("  " + VINETA + " ").withStyle(e -> e.withColor(SHARDS)))
 				.append(gris("El resto apuesta shards a quien va a ganar.\n\n"))
-				.append(comando("/pvp ", "retar a alguien: /pvp <jugador> [shards]"))
+				.append(gris("  Las clases, por si querés pedir una:\n  "))
+				.append(Component.literal(String.join("  ", Kits.NOMBRES))
+						.withStyle(e -> e.withColor(MARCA)))
+				.append(gris("\n  Al que retás le llega escrita, así sabe qué acepta.\n\n"))
+				.append(comando("/pvp ", "retar: /pvp <jugador> [shards] [clase]"))
 				.append(comando("/pvp apostar ", "ponerle shards a uno de los dos"))
 				.append(comando("/pvp rendirse", "abandonar el duelo que estas peleando"))
 				.append(comando("/pvp top", "los que mas duelos ganaron"))
