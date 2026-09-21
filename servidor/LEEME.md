@@ -25,6 +25,8 @@ subir tal cual y todo queda como estaba.
 | `configurar-netherite.py` | Prende y apaga la restricción de la netherita (`RESTRICT_NETHERITE`): crafteable con las doce recetas de smithing, o solo desde la tienda de shards. |
 | `ocultar-coordenadas.py` | Apaga `print_teleport_coordinates`: el chat deja de decir a qué coordenadas te llevó `/home`, `/warp`, `/rtp`, `/back` o un `/tpa`. Para poder streamear sin regalar dónde vivís. Apaga el servidor un minuto. |
 | `ajustar-saldos.py` | Deja el saldo de cada uno en proporción a las horas jugadas. |
+| `ver-cofre.py` | Muestra el cofre de ender (y con `--todo` la mochila) de cualquier jugador, aunque esté baneado y no se pueda conectar. Lee el archivo del jugador; no es un comando del juego y nadie más lo ve. |
+| `subir-cofres.py` | Sube el mod de `/cofre <jugador>`, que abre ese mismo cofre de ender adentro del juego y deja sacar y meter cosas. Solo para operadores; al cerrar la ventana reescribe el archivo del jugador. |
 | `estilo.py` | Los colores y los símbolos, en un solo lugar. |
 
 Las credenciales salen de `web/.env.local`, que no está en el repositorio.

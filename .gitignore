@@ -27,6 +27,8 @@ mod-equipos/build/
 mod-equipos/.gradle/
 mod-varita/build/
 mod-varita/.gradle/
+mod-cofres/build/
+mod-cofres/.gradle/
 
 # Sistema
 Thumbs.db

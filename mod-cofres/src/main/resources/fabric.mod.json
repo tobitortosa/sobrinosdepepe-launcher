@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "cofresdepepe",
+  "version": "${version}",
+  "name": "Cofres de Pepe",
+  "description": "/cofre <jugador> abre el cofre de ender de cualquiera, esté conectado o no, aunque esté baneado, y deja sacar y meter cosas. Solo para operadores.",
+  "authors": ["SOBRINOS DE PEPE"],
+  "environment": "server",
+  "entrypoints": {
+    "server": ["pe.sobrinosdepepe.cofres.CofresServidor"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": ">=26.1",
+    "fabric-api": "*"
+  }
+}
