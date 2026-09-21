@@ -1,0 +1,11 @@
+{
+  "executes": [
+    {
+      "command": "tellraw @s [\"\", {\"text\": \"\\n  \\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\n\", \"color\": \"dark_gray\"}, {\"text\": \"  \\u266a VOZ EN EL JUEGO\\n\\n\", \"color\": \"#ffb02e\", \"bold\": true}, {\"text\": \"  Hablas con los que tenes al lado, como en la vida real:\\n\", \"color\": \"gray\"}, {\"text\": \"  cuanto mas cerca, mas fuerte se escucha.\\n\\n\", \"color\": \"gray\"}, {\"text\": \"  Al servidor se entra sin nada de esto. La voz es un mod\\n\", \"color\": \"dark_gray\"}, {\"text\": \"  aparte y va en tu computadora:\\n\\n\", \"color\": \"dark_gray\"}, {\"text\": \"  \\u25aa \", \"color\": \"dark_gray\"}, {\"text\": \"Con el launcher\", \"color\": \"#55ff7f\", \"bold\": true}, {\"text\": \", te lo instala solo\\n\", \"color\": \"gray\"}, {\"text\": \"  \\u25aa \", \"color\": \"dark_gray\"}, {\"text\": \"A mano\", \"color\": \"#55ff7f\", \"bold\": true}, {\"text\": \", bajas el .zip y lo descomprimis\\n\\n\", \"color\": \"gray\"}, {\"text\": \"  [ SOBRINOSDEPEPE.COM ]\", \"color\": \"#00a6ff\", \"bold\": true, \"click_event\": {\"action\": \"open_url\", \"url\": \"https://sobrinosdepepe.com\"}, \"hover_event\": {\"action\": \"show_text\", \"value\": {\"text\": \"Abrir la pagina\", \"color\": \"gray\"}}}, {\"text\": \"\\n\\n  Una vez instalado se abre con la tecla \", \"color\": \"gray\"}, {\"text\": \"V\", \"color\": \"#ffb02e\", \"bold\": true}, {\"text\": \", adentro del juego.\\n\", \"color\": \"gray\"}, {\"text\": \"  \\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\u25ac\\n\", \"color\": \"dark_gray\"}]",
+      "silent": true,
+      "as_console": false,
+      "op_level": 4
+    }
+  ],
+  "id": "voz"
+}

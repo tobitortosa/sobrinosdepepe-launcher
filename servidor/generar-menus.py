@@ -310,6 +310,14 @@ guardar("comandos", {
                          ["Vision nocturna, skin,", "apodo y privados"]),
               abrir("sdp:extras"), "select"),
         celda(3, 8, item("minecraft:barrier", "CERRAR", e.ERROR), cerrar(), "close"),
+        # Abajo y solo, como el cartel de arriba. Es el unico boton del servidor que
+        # habla de algo que el jugador todavia no tiene instalado: al servidor se
+        # entra con el Minecraft pelado y la voz es lo unico que pide un mod. Por eso
+        # esta en el menu principal y no adentro de EXTRAS, donde nadie lo buscaria.
+        celda(4, 5, item("minecraft:note_block", e.NOTA + " VOZ EN EL JUEGO", e.ACENTO,
+                         ["Hablar con los que tenes cerca",
+                          "Como se instala, en un cartel"]),
+              correr("voz")),
     ],
 })
 

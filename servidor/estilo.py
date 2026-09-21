@@ -46,3 +46,4 @@ VOLVER = chr(0xab)
 TILDE = chr(0x2714)
 CRUZ = chr(0x2716)
 ESTRELLA = chr(0x2605)
+NOTA = chr(0x266a)         # la voz

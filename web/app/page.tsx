@@ -1,109 +1,40 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { env } from '@/lib/env';
+import { CopiarIp } from './copiar';
 import { socials } from './socials';
 
-// El link de descarga viene de una variable de entorno: se lee en cada pedido, así
-// cambiarlo no obliga a recompilar el sitio.
+// La dirección, la versión y los dos links de descarga salen de variables de entorno:
+// se leen en cada pedido, así cambiarlos no obliga a recompilar el sitio.
 export const dynamic = 'force-dynamic';
 
-/** El código del launcher es público: cualquiera puede leerlo antes de instalarlo. */
-const REPO = 'https://github.com/tobitortosa/sobrinosdepepe-launcher';
-
 export const metadata = {
-  title: 'SOBRINOS DE PEPE · Launcher',
-  description: 'Descargá el launcher, creá tu cuenta y entrá a jugar. Seis pasos con fotos.',
+  title: 'SOBRINOS DE PEPE · Servidor de Minecraft',
+  description: 'Copiá la IP y entrá. Gratis, sin cuenta premium y sin instalar nada.',
 };
 
 /**
- * Los seis pasos, en el orden en que le pasan a quien descarga por primera vez.
- *
- * Cada uno es un título de tres o cuatro palabras y una sola línea de texto: la foto
- * tiene que explicar sola, porque nadie lee. Tres llevan una nota abajo, y son
- * justo los tres donde la gente se frena: al abrir un .exe bajado de internet, al
- * ver el aviso de Windows, y al que le pidan crear una cuenta. La respuesta va ahí
- * y no en un apartado al final, que nadie llega a leer.
+ * Los tres pasos para poner los mods a mano, para el que ya tiene su Minecraft
+ * andando y no quiere bajar el launcher. Son tres y no seis a propósito: el que
+ * elige este camino ya sabe lo que es una carpeta de mods.
  */
 const pasos = [
   {
     n: 1,
-    titulo: 'Abrí el archivo',
-    texto: 'Doble clic en el que se te descargó.',
-    imagen: '/pasos/paso1.png',
-    alt: 'El archivo SobrinosDePepe-win-Setup.exe con el cursor encima',
-    nota: (
-      <>
-        Se instala en su propia carpeta y sin pedir permisos de administrador. Tu
-        Minecraft de siempre y tu TLauncher quedan igual que ahora.
-      </>
-    ),
+    titulo: 'Instalá Fabric 26.1',
+    texto: 'En TLauncher elegís la versión 26.1 con Fabric y la abrís una vez.',
   },
   {
     n: 2,
-    titulo: 'Tocá "Más información"',
-    texto: 'Windows avisa porque no conoce el programa. Es normal.',
-    imagen: '/pasos/paso2.png',
-    alt: 'El aviso azul de Windows con el enlace Más información señalado',
-    nota: (
-      <>
-        Ese aviso le sale a todo programa sin un certificado de 200 dólares por año. El
-        código está entero acá:{' '}
-        <a href={REPO} target="_blank" rel="noopener noreferrer">
-          GitHub
-          <ExternalArrow />
-        </a>
-      </>
-    ),
+    titulo: 'Descomprimí el zip',
+    texto: 'Adentro hay una carpeta "mods". Va en .minecraft, junto a "saves" y "options.txt".',
   },
   {
     n: 3,
-    titulo: 'Ejecutar de todas formas',
-    texto: 'Aparece ese botón nuevo. Apretalo y se instala solo.',
-    imagen: '/pasos/paso3.png',
-    alt: 'El mismo aviso, ahora con el botón Ejecutar de todas formas',
-  },
-  {
-    n: 4,
-    titulo: 'Creá una cuenta',
-    texto: 'Abajo del botón verde, "Crear una cuenta".',
-    imagen: '/pasos/paso4.png',
-    alt: 'La pantalla de inicio de sesión del launcher',
-    nota: (
-      <>
-        No es tu cuenta de Minecraft. Esta la creás acá y sirve solo para este servidor:
-        no hace falta tener el juego comprado.
-      </>
-    ),
-  },
-  {
-    n: 5,
-    titulo: 'Elegí tu nombre',
-    texto: 'El que pongas es tu nombre en el server. No se puede cambiar.',
-    imagen: '/pasos/paso5.png',
-    alt: 'El formulario para crear la cuenta en el launcher',
-  },
-  {
-    n: 6,
-    titulo: 'JUGAR',
-    texto: 'La primera vez tarda unos minutos: baja el Minecraft y los mods.',
-    imagen: '/pasos/paso6.png',
-    alt: 'La pantalla del launcher con el botón JUGAR',
+    titulo: 'Entrá con la IP',
+    texto: 'Abrís el juego, agregás el servidor y listo. La voz se abre con la tecla V.',
   },
 ];
-
-/** Flecha que avisa que el enlace abre en otra pestaña. */
-function ExternalArrow() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 function DownloadIcon() {
   return (
@@ -120,11 +51,11 @@ function DownloadIcon() {
 }
 
 export default function Home() {
-  const download = env.downloadUrl;
+  const { serverAddress, minecraftVersion, downloadUrl, modsUrl } = env;
 
   return (
     <main className="page">
-      {/* Lo primero y lo único que hay que hacer: bajarlo. */}
+      {/* Lo primero y lo único imprescindible: la dirección. */}
       <header className="hero">
         <Image
           src="/logo.png"
@@ -136,37 +67,70 @@ export default function Home() {
         />
 
         <h1>SOBRINOS DE PEPE</h1>
-        <p className="lead">El launcher instala todo solo. Vos apretás JUGAR.</p>
+        <p className="lead">Copiá la dirección, pegala en tu Minecraft y entrá.</p>
 
-        {download ? (
-          <a className="download" href={download}>
-            <DownloadIcon />
-            Descargar el launcher
-          </a>
-        ) : (
-          <p className="pending">La descarga todavía no está publicada.</p>
-        )}
+        <CopiarIp ip={serverAddress} />
 
-        <p className="requisitos">Windows 64 bits · gratis · no toca tu Minecraft de siempre</p>
+        <p className="requisitos">
+          Minecraft Java · versión {minecraftVersion} · no hace falta tenerlo comprado
+        </p>
       </header>
 
-      {/* Los pasos, con la foto de lo que va a ver en la pantalla. */}
+      {/* Las dos descargas, en el orden en que conviene ofrecerlas. */}
+      <section className="opciones" aria-labelledby="mods">
+        <h2 id="mods">La voz y los mods</h2>
+        <p className="subtitulo">
+          Se entra sin nada de esto. Son para hablar con los que tenés al lado y para que el
+          juego vaya más rápido.
+        </p>
+
+        <div className="tarjetas">
+          <article className="tarjeta">
+            <h3>Los mods sueltos</h3>
+            <p>
+              El chat de voz, los shaders y todo lo que le saca FPS al juego. Lo descomprimís en
+              tu carpeta de Minecraft.
+            </p>
+            {modsUrl ? (
+              <a className="download" href={modsUrl}>
+                <DownloadIcon />
+                Descargar los mods
+              </a>
+            ) : (
+              <p className="pending">Todavía no está publicado.</p>
+            )}
+            <p className="pie">Para el que ya tiene su Minecraft andando</p>
+          </article>
+
+          <article className="tarjeta">
+            <h3>El launcher</h3>
+            <p>
+              Hace lo mismo pero solo: te instala el juego, el Java y los mods, y los mantiene
+              iguales a los del servidor.
+            </p>
+            {downloadUrl ? (
+              <a className="download secundario" href={downloadUrl}>
+                <DownloadIcon />
+                Descargar el launcher
+              </a>
+            ) : (
+              <p className="pending">Todavía no está publicado.</p>
+            )}
+            <p className="pie">
+              Windows · <Link href="/launcher">cómo se instala</Link>
+            </p>
+          </article>
+        </div>
+      </section>
+
+      {/* Solo para el camino a mano: el del launcher ya tiene su propia página. */}
       <section className="pasos" aria-labelledby="como">
-        <h2 id="como">Cómo entrar</h2>
-        <p className="subtitulo">Seis pasos. Una sola vez.</p>
+        <h2 id="como">Poner los mods a mano</h2>
+        <p className="subtitulo">Tres pasos, una sola vez.</p>
 
-        <ol className="grilla">
+        <ol className="grilla tres">
           {pasos.map((paso) => (
-            <li key={paso.n} className="paso">
-              <Image
-                src={paso.imagen}
-                alt={paso.alt}
-                width={500}
-                height={500}
-                className="captura"
-                sizes="(max-width: 44rem) 100vw, 22rem"
-              />
-
+            <li key={paso.n} className="paso simple">
               <div className="texto">
                 <span className="numero">{paso.n}</span>
                 <div>
@@ -174,11 +138,13 @@ export default function Home() {
                   <p>{paso.texto}</p>
                 </div>
               </div>
-
-              {paso.nota && <p className="nota">{paso.nota}</p>}
             </li>
           ))}
         </ol>
+
+        <p className="aviso">
+          Si ya tenías mods de otra versión en esa carpeta, sacalos antes: mezclados no arranca.
+        </p>
       </section>
 
       <footer className="redes">

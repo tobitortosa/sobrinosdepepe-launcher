@@ -42,6 +42,14 @@ export const env = {
     return process.env.DOWNLOAD_URL ?? '';
   },
   /**
+   * El .zip con los mods sueltos, para el que entra por la IP con su propio Minecraft
+   * en vez de usar el launcher. Sale de una release de GitHub, igual que el launcher:
+   * son 20 MB y no tienen por qué vivir en el repositorio ni pasar por el servidor.
+   */
+  get modsUrl() {
+    return process.env.MODS_URL ?? '';
+  },
+  /**
    * Con lo que se firman los permisos de entrada al servidor. El mismo valor está
    * en la config del mod de acceso adentro del servidor, y en ningún otro lugar:
    * quien lo tenga puede emitir permisos.

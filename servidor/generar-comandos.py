@@ -60,7 +60,7 @@ def guardar(cid, doc):
     print("  %s" % cid)
 
 
-def t(texto, color=None, negrita=False, run=None, hover=None):
+def t(texto, color=None, negrita=False, run=None, hover=None, url=None):
     c = {"text": texto}
     if color:
         c["color"] = color
@@ -68,6 +68,10 @@ def t(texto, color=None, negrita=False, run=None, hover=None):
         c["bold"] = True
     if run:
         c["click_event"] = {"action": "run_command", "command": run}
+    if url:
+        # El juego le pregunta al jugador antes de abrir el navegador; no hay forma
+        # de saltearlo ni hace falta, es justo lo que da confianza.
+        c["click_event"] = {"action": "open_url", "url": url}
     if hover:
         c["hover_event"] = {"action": "show_text", "value": {"text": hover, "color": "gray"}}
     return c
@@ -206,7 +210,10 @@ GRUPOS = [
         ("/equipo color", False),
     ]),
     ("EXTRAS", e.MARCA, [
-        ("/nv", False),
+        # /voz va primero del grupo porque es el unico de la lista que explica algo
+        # que el jugador no tiene todavia: al servidor se entra sin ningun mod, y
+        # este es el cartel que cuenta como conseguir el de la voz.
+        ("/voz", False), ("/nv", False),
         ("/msg ", True), ("/nickname set ", True), ("/skin set ", True),
     ]),
 ]
@@ -244,6 +251,43 @@ lista.append(t("/ayuda", e.ACENTO, negrita=True, run="/ayuda",
 lista.append(t(chr(10) + "  " + e.RAYA * 22 + chr(10), e.APAGADO))
 
 guardar("comandos", {"executes": [accion("tellraw @s " + json.dumps(lista))]})
+
+# ------------------------------------------------------------------------- /voz
+# El unico cartel del servidor que manda a alguien afuera del juego, y esta bien
+# que exista: al servidor se entra con el Minecraft pelado, sin un solo mod, y la
+# voz es la unica cosa que de verdad NO se puede resolver del lado del servidor.
+# El audio va por un canal UDP propio que un cliente sin el mod no sabe abrir.
+#
+# Asi que este comando es el reemplazo del candado: antes el launcher era
+# obligatorio y no habia nada que explicar; ahora es opcional y alguien tiene que
+# contar que existe. Lo cuenta aca, cuando el jugador ya esta adentro y ya vio
+# que el servidor le gusta, que es el unico momento en que se baja algo.
+#
+# La direccion sale de SITE_URL, el mismo valor que usa el mod de acceso para su
+# cartel: el dia que cambie el dominio se cambia en web/.env.local y nada mas.
+SITIO = mc.cfg.get("SITE_URL", "sobrinosdepepe.com")
+
+voz = ["",
+       t(chr(10) + "  " + e.RAYA * 22 + chr(10), e.APAGADO),
+       t("  " + e.NOTA + " VOZ EN EL JUEGO" + chr(10) * 2, e.MARCA, negrita=True),
+       t("  Hablas con los que tenes al lado, como en la vida real:" + chr(10), e.ETIQUETA),
+       t("  cuanto mas cerca, mas fuerte se escucha." + chr(10) * 2, e.ETIQUETA),
+       t("  Al servidor se entra sin nada de esto. La voz es un mod" + chr(10), e.APAGADO),
+       t("  aparte y va en tu computadora:" + chr(10) * 2, e.APAGADO),
+       t("  " + e.VINETA + " ", e.APAGADO),
+       t("Con el launcher", e.BIEN, negrita=True),
+       t(", te lo instala solo" + chr(10), e.ETIQUETA),
+       t("  " + e.VINETA + " ", e.APAGADO),
+       t("A mano", e.BIEN, negrita=True),
+       t(", bajas el .zip y lo descomprimis" + chr(10) * 2, e.ETIQUETA),
+       t("  [ " + SITIO.upper() + " ]", e.ACENTO, negrita=True,
+         url="https://" + SITIO, hover="Abrir la pagina"),
+       t(chr(10) * 2 + "  Una vez instalado se abre con la tecla ", e.ETIQUETA),
+       t("V", e.MARCA, negrita=True),
+       t(", adentro del juego." + chr(10), e.ETIQUETA),
+       t("  " + e.RAYA * 22 + chr(10), e.APAGADO)]
+
+guardar("voz", {"executes": [accion("tellraw @s " + json.dumps(voz))]})
 
 # ------------------------------------------------------------- los modificadores
 # Le cambian el requisito o la ejecucion a un comando que ya existe: los que se le

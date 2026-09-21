@@ -265,3 +265,211 @@ h1 {
     transition: none !important;
   }
 }
+
+/* ── La barra de arriba ─────────────────────────────────────────────────────── */
+
+.nav {
+  max-width: 50rem;
+  margin: 0 auto;
+  padding: 1.1rem 1.25rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.marca {
+  color: var(--suave);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.marca:hover {
+  color: var(--texto);
+}
+
+.solapas {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.solapa {
+  padding: 0.45rem 0.9rem;
+  border-radius: 0.6rem;
+  color: var(--tenue);
+  font-size: 0.88rem;
+  text-decoration: none;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.solapa:hover {
+  color: var(--texto);
+  background: var(--panel);
+}
+
+/* ── La dirección del servidor ─────────────────────────────────────────────── */
+
+.ip {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  max-width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--linea);
+  border-radius: 0.9rem;
+  background: var(--panel);
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.35);
+}
+
+.direccion {
+  display: flex;
+  align-items: center;
+  padding: 0 0.9rem;
+  /* La dirección es lo que se viene a buscar: grande, pero que entre en un teléfono. */
+  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  font-size: clamp(0.95rem, 4.2vw, 1.25rem);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.copiar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 1.1rem;
+  border: 0;
+  border-radius: 0.6rem;
+  background: var(--verde);
+  color: #0f1115;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.copiar:hover {
+  background: #6ee7a0;
+}
+
+/* ── Las dos descargas ─────────────────────────────────────────────────────── */
+
+.opciones {
+  margin-top: 4rem;
+  text-align: center;
+}
+
+.opciones h2 {
+  font-size: 1.6rem;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.tarjetas {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  text-align: left;
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1.5rem;
+  background: var(--panel);
+  border: 1px solid var(--linea);
+  border-radius: 1rem;
+}
+
+.tarjeta h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.tarjeta p {
+  margin: 0;
+  color: var(--suave);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+/* El botón de la tarjeta ocupa el ancho y queda abajo de todo, a la misma altura en
+   las dos aunque los textos midan distinto. */
+.tarjeta .download {
+  margin-top: auto;
+  justify-content: center;
+  padding: 0.85rem 1.2rem;
+  font-size: 1rem;
+}
+
+.download.secundario {
+  background: transparent;
+  border: 1px solid #34404d;
+  color: var(--texto);
+  box-shadow: none;
+}
+
+.download.secundario:hover {
+  background: #1f242c;
+  border-color: #46525f;
+  box-shadow: none;
+}
+
+.tarjeta .pie {
+  color: var(--tenue);
+  font-size: 0.78rem;
+}
+
+.tarjeta .pie a {
+  color: var(--verde);
+  text-decoration: none;
+}
+
+.tarjeta .pie a:hover {
+  text-decoration: underline;
+}
+
+/* ── Los tres pasos de la instalación a mano ───────────────────────────────── */
+
+.grilla.tres {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.paso.simple .texto {
+  padding: 1.2rem;
+}
+
+.aviso {
+  margin: 1.5rem 0 0;
+  color: var(--tenue);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 44rem) {
+  .tarjetas,
+  .grilla.tres {
+    grid-template-columns: 1fr;
+  }
+
+  .ip {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .direccion {
+    justify-content: center;
+    padding: 0.5rem;
+  }
+
+  .copiar {
+    justify-content: center;
+  }
+}
