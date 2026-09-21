@@ -718,7 +718,7 @@ y el comando.
 
 Cuatro etapas, y el orden es lo que le da la forma de coliseo:
 
-1. **Apuestas, 45 segundos.** Los dos ya estan parados en la arena, quietos y sin
+1. **Apuestas, 20 segundos.** Los dos ya estan parados en la arena, quietos y sin
    poderse tocar, con el kit puesto, mientras el resto mira y apuesta. Estan
    adentro y no afuera a proposito: la gente le apuesta a alguien que esta
    **viendo**, y no a un nombre en el chat.
@@ -788,6 +788,19 @@ MAZAZO y CUERO. Se saca una al azar por duelo y **es la misma para los dos**,
 cantidades incluidas: el kit se arma UNA vez y despues se copia. Armandolo dos
 veces, uno podria salir con diez gapples y el otro con seis, y ahi ya no gana el
 que pelea mejor.
+
+**Las ocho llevan perlas**, de 3 a 5 en CUERO hasta 16 a 24 en PERLERO. La perla
+no es el sabor de una clase, es lo que hace que el que arranca atras tenga una
+carta para jugar; una clase sin perlas no es una clase distinta, es una clase
+peor.
+
+**Dos de las ocho llevan crystals**, que es con lo que se pelea de verdad en los
+servidores grandes: se apoya obsidiana, se planta el crystal al lado del otro y se
+le pega antes de que reaccione. CRISTALERO es la clase entera dedicada a eso —16 a
+24 crystals, 64 de obsidiana y un hacha de netherita— y NETHERITA lleva unos pocos
+como segunda herramienta, que es exactamente la combinacion de Donut. Las dos van
+con armadura de netherita y Blast Protection IV: sin eso el primer crystal bien
+puesto termina el duelo en dos segundos y no hay pelea, hay sorteo.
 
 Que sea al azar es la mitad de la gracia: nadie se especializa en una sola forma
 de pelear porque no sabe con que le va a tocar.

@@ -32,10 +32,11 @@ import java.util.Set;
  *
  * Las cuatro etapas y por que estan en ese orden:
  *
- *  1. **APUESTAS.** Los dos ya estan parados en la arena, quietos y sin poderse
- *     tocar, mientras el resto del servidor mira y apuesta. Estan adentro y no
+ *  1. **APUESTAS, 20 segundos.** Los dos ya estan parados en la arena, quietos
+ *     y sin poderse tocar, mientras el resto mira y apuesta. Estan adentro y no
  *     afuera a proposito: la gente le apuesta a alguien que esta VIENDO, con el
- *     kit puesto, y no a un nombre en el chat. Es el minuto de coliseo.
+ *     kit puesto, y no a un nombre en el chat. Son veinte segundos y no mas:
+ *     quietos en pantalla, medio minuto se hace largo.
  *  2. **CUENTA.** 3, 2, 1 en pantalla, con el pim de cada numero, y al toque el
  *     ¡PELEEN! en verde grande. Recien ahi se pueden mover.
  *  3. **PELEA.** Hasta que uno cae, se rinde, se desconecta, o se acaban los
@@ -55,7 +56,7 @@ public final class Duelo {
 	private static final Logger LOG = LoggerFactory.getLogger("duelosdepepe");
 
 	/** Cuanto dura cada etapa, en ticks. 20 ticks son un segundo. */
-	public static final int TICKS_APUESTAS = 900;
+	public static final int TICKS_APUESTAS = 400;
 	public static final int TICKS_CUENTA = 80;
 	public static final int TICKS_PELEA = 6000;
 	public static final int TICKS_FINAL = 100;

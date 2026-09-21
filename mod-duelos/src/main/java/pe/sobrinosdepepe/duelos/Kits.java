@@ -103,12 +103,13 @@ public final class Kits {
 				List.of(
 						enc(r, uno(Items.IRON_SWORD), Enchantments.SHARPNESS, 2),
 						varios(Items.GOLDEN_APPLE, entre(azar, 5, 8)),
+						varios(Items.ENDER_PEARL, entre(azar, 8, 12)),
 						varios(bloque, entre(azar, 32, 64)),
 						varios(Items.COOKED_BEEF, 16)));
 	}
 
 	private static Kit netherita(HolderLookup.Provider r, RandomSource azar, Item bloque) {
-		return new Kit("NETHERITA", "Lo mejor que hay, de los dos lados.",
+		return new Kit("NETHERITA", "Lo mejor que hay, de los dos lados. Con crystals.",
 				armadura(r, Items.NETHERITE_HELMET, Items.NETHERITE_CHESTPLATE,
 						Items.NETHERITE_LEGGINGS, Items.NETHERITE_BOOTS, Enchantments.PROTECTION, 3,
 						ItemStack.EMPTY),
@@ -118,20 +119,38 @@ public final class Kits {
 						varios(Items.ENCHANTED_GOLDEN_APPLE, entre(azar, 2, 4)),
 						varios(Items.GOLDEN_APPLE, entre(azar, 6, 10)),
 						varios(Items.ENDER_PEARL, entre(azar, 8, 16)),
+						// Unos pocos crystals y la obsidiana para apoyarlos. No son el arma
+						// principal como en CRISTALERO, pero netherita con crystals es
+						// exactamente lo que se pelea en Donut, y con esto sale dos de cada
+						// ocho duelos en vez de uno.
+						varios(Items.END_CRYSTAL, entre(azar, 4, 8)),
+						varios(Items.OBSIDIAN, 16),
 						varios(bloque, entre(azar, 32, 64)),
 						varios(Items.COOKED_BEEF, 16)));
 	}
 
+	/**
+	 * La clase de crystals, que es con lo que se pelea de verdad en los servidores
+	 * grandes: se apoya obsidiana, se planta el crystal al lado del otro y se le
+	 * pega con el hacha antes de que reaccione.
+	 *
+	 * Va con armadura de netherita y Blast Protection IV y no con diamante: sin eso
+	 * el primer crystal que explota bien puesto termina el duelo en dos segundos y
+	 * no hay pelea, hay sorteo. Y con perlas, que son las que dejan salir de un
+	 * rincon cuando el otro te esta encerrando con obsidiana.
+	 */
 	private static Kit cristalero(HolderLookup.Provider r, RandomSource azar) {
 		return new Kit("CRISTALERO", "Crystals y obsidiana. Se gana con la mano rapida.",
-				armadura(r, Items.DIAMOND_HELMET, Items.DIAMOND_CHESTPLATE, Items.DIAMOND_LEGGINGS,
-						Items.DIAMOND_BOOTS, Enchantments.BLAST_PROTECTION, 3,
-						ItemStack.EMPTY),
+				armadura(r, Items.NETHERITE_HELMET, Items.NETHERITE_CHESTPLATE,
+						Items.NETHERITE_LEGGINGS, Items.NETHERITE_BOOTS,
+						Enchantments.BLAST_PROTECTION, 4, ItemStack.EMPTY),
 				List.of(
 						enc(r, uno(Items.NETHERITE_AXE), Enchantments.SHARPNESS, 4),
-						varios(Items.END_CRYSTAL, entre(azar, 10, 16)),
-						varios(Items.OBSIDIAN, entre(azar, 32, 64)),
-						varios(Items.GOLDEN_APPLE, entre(azar, 6, 10)),
+						varios(Items.END_CRYSTAL, entre(azar, 16, 24)),
+						varios(Items.OBSIDIAN, 64),
+						varios(Items.ENDER_PEARL, entre(azar, 8, 12)),
+						varios(Items.ENCHANTED_GOLDEN_APPLE, entre(azar, 1, 3)),
+						varios(Items.GOLDEN_APPLE, entre(azar, 8, 12)),
 						varios(Items.COOKED_BEEF, 16)));
 	}
 
@@ -144,6 +163,7 @@ public final class Kits {
 						enc(enc(r, uno(Items.BOW), Enchantments.POWER, 4), r, Enchantments.PUNCH, 1),
 						varios(Items.ARROW, 64),
 						uno(Items.STONE_SWORD),
+						varios(Items.ENDER_PEARL, entre(azar, 6, 10)),
 						varios(Items.GOLDEN_APPLE, entre(azar, 4, 6)),
 						varios(bloque, entre(azar, 16, 32)),
 						varios(Items.COOKED_BEEF, 16)));
@@ -156,7 +176,7 @@ public final class Kits {
 						ItemStack.EMPTY),
 				List.of(
 						enc(r, uno(Items.DIAMOND_SWORD), Enchantments.SHARPNESS, 3),
-						varios(Items.ENDER_PEARL, entre(azar, 12, 20)),
+						varios(Items.ENDER_PEARL, entre(azar, 16, 24)),
 						varios(Items.WIND_CHARGE, entre(azar, 32, 64)),
 						varios(Items.GOLDEN_APPLE, entre(azar, 4, 8)),
 						varios(bloque, 64),
@@ -173,6 +193,7 @@ public final class Kits {
 						varios(Items.TNT, entre(azar, 24, 40)),
 						uno(Items.FLINT_AND_STEEL),
 						enc(r, uno(Items.IRON_PICKAXE), Enchantments.EFFICIENCY, 4),
+						varios(Items.ENDER_PEARL, entre(azar, 6, 10)),
 						varios(Items.GOLDEN_APPLE, entre(azar, 6, 10)),
 						varios(bloque, 64),
 						varios(Items.COOKED_BEEF, 16)));
@@ -186,11 +207,17 @@ public final class Kits {
 				List.of(
 						enc(enc(r, uno(Items.MACE), Enchantments.DENSITY, 4), r, Enchantments.BREACH, 2),
 						varios(Items.WIND_CHARGE, entre(azar, 32, 48)),
+						varios(Items.ENDER_PEARL, entre(azar, 6, 10)),
 						varios(Items.GOLDEN_APPLE, entre(azar, 6, 10)),
 						varios(bloque, 64),
 						varios(Items.COOKED_BEEF, 16)));
 	}
 
+	/**
+	 * La clase pobre, que es la que hace que no todos los duelos se parezcan. Igual
+	 * lleva perlas: sin nada con que moverse, el que arranca atras no tiene ninguna
+	 * carta para jugar y eso no es una pelea pareja, es una pelea corta.
+	 */
 	private static Kit cuero(RandomSource azar, Item bloque) {
 		return new Kit("CUERO", "Casi nada encima. Se termina rapido.",
 				sinEncantar(Items.LEATHER_HELMET, Items.LEATHER_CHESTPLATE, Items.LEATHER_LEGGINGS,
@@ -198,6 +225,7 @@ public final class Kits {
 				List.of(
 						item(Items.STONE_SWORD, 1),
 						item(Items.GOLDEN_APPLE, entre(azar, 3, 5)),
+						item(Items.ENDER_PEARL, entre(azar, 3, 5)),
 						item(bloque, entre(azar, 16, 32)),
 						item(Items.COOKED_BEEF, 16)));
 	}
