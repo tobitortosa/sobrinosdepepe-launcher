@@ -102,9 +102,11 @@ public partial class AdminViewModel : ObservableObject
         {
             var users = await _shell.Api.UsersAsync(_token, Search);
 
-            // Quiénes están jugando se le pregunta al servidor directamente: contesta
-            // la lista completa de nombres.
-            var online = await ServerQuery.PlayersAsync(AppConfig.ServerAddress);
+            // Quiénes están jugando sale del mismo ping que el punto verde de la pantalla
+            // de inicio: la respuesta trae los nombres. Antes esto se preguntaba por el
+            // protocolo de consulta, que el servidor tiene apagado (enable-query=false) y
+            // por eso no contestaba nunca: el panel mostraba a todos desconectados.
+            var online = await ServerStatus.QueryAsync(AppConfig.ServerAddress);
             var jugando = online.Names.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             Users.Clear();
@@ -112,13 +114,13 @@ public partial class AdminViewModel : ObservableObject
                 Users.Add(new UserRow(user, Username, jugando.Contains(user.Username)));
 
             PendingCount = users.Count(u => u.IsPending);
-            OnlineSummary = !online.Answered
-                ? "No pude preguntarle al servidor quién está jugando."
-                : jugando.Count == 0
+            OnlineSummary = !online.Online
+                ? "El servidor está apagado."
+                : online.Players == 0
                     ? "Nadie está jugando en este momento."
-                    : jugando.Count == 1
+                    : online.Players == 1
                         ? "1 jugando ahora"
-                        : $"{jugando.Count} jugando ahora";
+                        : $"{online.Players} jugando ahora";
         });
     }
 

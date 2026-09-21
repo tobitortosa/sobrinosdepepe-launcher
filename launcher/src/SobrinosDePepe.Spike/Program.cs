@@ -71,12 +71,12 @@ if (args.Contains("--lista-servidores"))
 if (args.Contains("--conectados"))
 {
     var direccion = Value("--servidor") ?? AppConfigFallback();
-    var jugadores = await ServerQuery.PlayersAsync(direccion);
-    Console.WriteLine(jugadores.Answered
-        ? jugadores.Names.Count == 0
+    var jugadores = await ServerStatus.QueryAsync(direccion);
+    Console.WriteLine(!jugadores.Online
+        ? "El servidor está apagado o no responde."
+        : jugadores.Players == 0
             ? "El servidor contestó: no hay nadie conectado."
-            : $"Conectados ({jugadores.Names.Count}): {string.Join(", ", jugadores.Names)}"
-        : "El servidor no contestó la consulta (¿enable-query está en true?).");
+            : $"Conectados ({jugadores.Players}): {string.Join(", ", jugadores.Names)}");
     return 0;
 }
 

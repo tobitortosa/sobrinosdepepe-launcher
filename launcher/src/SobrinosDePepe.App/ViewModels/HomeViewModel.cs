@@ -61,8 +61,7 @@ public partial class HomeViewModel : ObservableObject
         // abrió el launcher.
         IsGameRunning = GameProcess.IsRunning();
 
-        _ = CheckServerAsync();
-        _ = WatchGameAsync();
+        _ = VigilarAsync();
     }
 
     private async Task CheckServerAsync()
@@ -70,19 +69,31 @@ public partial class HomeViewModel : ObservableObject
         var info = await Core.ServerStatus.QueryAsync(AppConfig.ServerAddress);
         ServerOnline = info.Online;
         ServerChecked = true;
-        ServerLabel = info.Online
-            ? $"Servidor online · {info.Players}/{info.MaxPlayers} jugando"
-            : "Servidor apagado";
+        ServerLabel = !info.Online
+            ? "Servidor apagado"
+            : info.Players == 0
+                ? "Servidor online · no hay nadie jugando"
+                : $"Servidor online · {info.Players}/{info.MaxPlayers} jugando";
     }
 
-    /// <summary>Mira cada tanto si el juego sigue abierto, para que el botón diga la verdad.</summary>
-    private async Task WatchGameAsync()
+    /// <summary>
+    /// El único reloj de la pantalla. Cada tres segundos mira si el juego sigue abierto,
+    /// para que el botón diga la verdad, y cada tres vueltas le vuelve a preguntar al
+    /// servidor cuántos están jugando: ese cartel se armaba una sola vez al abrir el
+    /// launcher y envejecía toda la sesión.
+    /// </summary>
+    private async Task VigilarAsync()
     {
-        while (true)
+        await CheckServerAsync();
+
+        for (var vuelta = 1; ; vuelta++)
         {
             await Task.Delay(TimeSpan.FromSeconds(3));
+
             var running = GameProcess.IsRunning();
             if (running != IsGameRunning) IsGameRunning = running;
+
+            if (vuelta % 3 == 0) await CheckServerAsync();
         }
     }
 

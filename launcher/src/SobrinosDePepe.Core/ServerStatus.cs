@@ -1,4 +1,3 @@
-using System.Buffers.Binary;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
@@ -6,7 +5,18 @@ using DnsClient;
 
 namespace SobrinosDePepe.Core;
 
-public sealed record ServerInfo(bool Online, string? Version, int Protocol, int Players, int MaxPlayers, string? Motd, int LatencyMs);
+/// <summary>
+/// Lo que contesta el servidor cuando se le pide el estado. <paramref name="Names"/> son
+/// los nombres de quienes están jugando: el servidor manda una muestra de hasta doce, así
+/// que con más de doce adentro el número de <paramref name="Players"/> sigue siendo el
+/// bueno y la lista queda corta.
+/// </summary>
+public sealed record ServerInfo(
+    bool Online, string? Version, int Protocol, int Players, int MaxPlayers, string? Motd,
+    int LatencyMs, IReadOnlyList<string> Names)
+{
+    public static readonly ServerInfo Offline = new(false, null, 0, 0, 0, null, 0, []);
+}
 
 /// <summary>
 /// El punto verde o rojo del launcher. Hay un detalle importante: sobrinosdepepe.minehost.pro
@@ -79,15 +89,23 @@ public static class ServerStatus
                 ? on.GetInt32() : 0;
             var max = pl.ValueKind == JsonValueKind.Object && pl.TryGetProperty("max", out var mx)
                 ? mx.GetInt32() : 0;
+            // La muestra puede no venir: el servidor la omite cuando no hay nadie.
+            var names = new List<string>();
+            if (pl.ValueKind == JsonValueKind.Object && pl.TryGetProperty("sample", out var sample) &&
+                sample.ValueKind == JsonValueKind.Array)
+                foreach (var player in sample.EnumerateArray())
+                    if (player.TryGetProperty("name", out var name) && name.GetString() is { } texto)
+                        names.Add(texto);
+
             var motd = root.TryGetProperty("description", out var d)
                 ? (d.ValueKind == JsonValueKind.String ? d.GetString() : d.TryGetProperty("text", out var t) ? t.GetString() : null)
                 : null;
 
-            return new ServerInfo(true, version, protocol, online, max, motd, latency);
+            return new ServerInfo(true, version, protocol, online, max, motd, latency, names);
         }
         catch (Exception ex) when (ex is SocketException or OperationCanceledException or IOException or JsonException)
         {
-            return new ServerInfo(false, null, 0, 0, 0, null, 0);
+            return ServerInfo.Offline;
         }
     }
 
