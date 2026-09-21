@@ -455,7 +455,10 @@ que_es = item("minecraft:white_banner", "QUE ES UN EQUIPO", e.BIEN, [
     texto("", None),
     texto("  " + e.VINETA + " Entre companeros NO se pegan", e.BIEN),
     texto("  " + e.VINETA + " Se ven en la barra de arriba", e.BIEN),
-    texto("  " + e.VINETA + " El nombre va del color del equipo", e.BIEN),
+    texto("  " + e.VINETA + " Les queda el [TAG] del equipo adelante", e.BIEN),
+    texto("    del nombre: en el chat, en el tab y", e.ETIQUETA),
+    texto("    arriba de la cabeza", e.ETIQUETA),
+    texto("  " + e.VINETA + " El color lo elige el jefe, entre 12", e.BIEN),
     texto("", None),
     texto("  Al que no es de tu equipo no lo ves en esa", e.ETIQUETA),
     texto("  barra, y el tampoco te ve a vos.", e.ETIQUETA),
@@ -491,6 +494,14 @@ guardar("equipo", {
         celda(3, 8, item("minecraft:spruce_door", "/equipo salir", e.ACENTO,
                          ["Irte del equipo", "Si quedas solo, se borra"]),
               correr("equipo salir")),
+        # Abajo y solo, separado de los seis de arriba: el color se elige una vez
+        # y despues no se toca. Abre la paleta en el chat, con los doce
+        # clickeables, y el que no es jefe la ve pero no la puede usar.
+        celda(4, 5, item("minecraft:magenta_dye", "/equipo color", e.ACENTO,
+                         ["El color del equipo, que es",
+                          "el del nombre y el del [TAG]",
+                          "Lo elige el jefe"]),
+              correr("equipo color")),
         volver(fila=5),
     ],
 })

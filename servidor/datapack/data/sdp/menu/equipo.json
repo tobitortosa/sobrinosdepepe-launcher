@@ -503,7 +503,22 @@
               "color": "#55ff7f"
             },
             {
-              "text": "  ▪ El nombre va del color del equipo",
+              "text": "  ▪ Les queda el [TAG] del equipo adelante",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "    del nombre: en el chat, en el tab y",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "    arriba de la cabeza",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  ▪ El color lo elige el jefe, entre 12",
               "italic": false,
               "color": "#55ff7f"
             },
@@ -1017,6 +1032,61 @@
       "action": {
         "type": "command",
         "command": "equipo salir",
+        "as_player": true,
+        "silent": false
+      }
+    },
+    {
+      "slot": [
+        4,
+        5
+      ],
+      "type": "item",
+      "item": {
+        "id": "minecraft:magenta_dye",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "/equipo color",
+            "italic": false,
+            "color": "#00a6ff",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  El color del equipo, que es",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  el del nombre y el del [TAG]",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  Lo elige el jefe",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "click",
+      "action": {
+        "type": "command",
+        "command": "equipo color",
         "as_player": true,
         "silent": false
       }

@@ -8,6 +8,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Todo lo que el jugador lee de los equipos.
@@ -29,6 +30,26 @@ public final class Carteles {
 	private static final String RAYA = "▬";
 	private static final String FLECHA = "»";
 
+	// --------------------------------------------------------------------- el tag
+
+	/**
+	 * El `[NOMBRE] ` que va adelante del nombre del jugador. Es el prefijo del
+	 * equipo del scoreboard, y con eso solo aparece en el chat cuando escribe, en
+	 * el tab y arriba de la cabeza, sin tocar ninguna de las tres cosas.
+	 *
+	 * Los corchetes van grises y el nombre del equipo con SU color: el juego le
+	 * tiñe el color del equipo al conjunto pero respeta el estilo propio de cada
+	 * hijo, asi que los corchetes se quedan grises y no le compiten al nombre. Lo
+	 * que queda del color del equipo es el nombre del equipo y el del jugador, que
+	 * es lo que se tiene que leer de un vistazo.
+	 */
+	public static Component tag(Registro.Equipo equipo) {
+		return Component.empty()
+				.append(Component.literal("[").withStyle(ChatFormatting.DARK_GRAY))
+				.append(Component.literal(equipo.nombre).withStyle(equipo.color))
+				.append(Component.literal("] ").withStyle(ChatFormatting.DARK_GRAY));
+	}
+
 	// ------------------------------------------------------------------ el estado
 
 	/** `/equipo` a secas cuando el jugador no tiene ninguno. */
@@ -44,9 +65,12 @@ public final class Carteles {
 	/** `/equipo` a secas cuando si tiene: quienes son y que puede hacer. */
 	public static Component elEquipo(MinecraftServer servidor, Registro.Equipo equipo, String quienPregunta) {
 		MutableComponent cartel = Component.empty()
-				.append(Component.literal("  " + equipo.nombre.toUpperCase())
+				.append(Component.literal("  "))
+				.append(tag(equipo))
+				.append(Component.literal(equipo.nombre.toUpperCase())
 						.withStyle(estilo -> estilo.withColor(equipo.color).withBold(true)))
-				.append(gris("   " + equipo.miembros.size() + "/" + Registro.TOPE + "\n\n"));
+				.append(gris("   " + equipo.miembros.size() + "/" + Registro.TOPE
+				+ "   " + Colores.comoSeLlama(equipo.color) + "\n\n"));
 
 		for (String miembro : equipo.miembros) {
 			boolean conectado = servidor.getPlayerList().getPlayerByName(miembro) != null;
@@ -62,7 +86,8 @@ public final class Carteles {
 		cartel.append(Component.literal("\n"));
 		if (equipo.manda(quienPregunta)) {
 			cartel.append(comando("/equipo invitar ", "sumar a alguien que esté conectado"))
-					.append(comando("/equipo echar ", "sacar a alguien del equipo"));
+					.append(comando("/equipo echar ", "sacar a alguien del equipo"))
+					.append(comando("/equipo color", "elegir el color del equipo"));
 		}
 		cartel.append(comando("/equipo salir", equipo.miembros.size() == 1
 				? "irte, y el equipo se borra porque quedás solo"
@@ -89,6 +114,78 @@ public final class Carteles {
 	public static Component invitaste(String invitado, int minutos) {
 		return bien("Lo invitaste a " + invitado + ". Tiene " + minutos
 				+ " minuto" + (minutos == 1 ? "" : "s") + " para aceptar.");
+	}
+
+	// ------------------------------------------------------------------ los colores
+
+	/**
+	 * Los doce colores, cada uno escrito del suyo y clickeable.
+	 *
+	 * Es la forma de elegir que no obliga a acordarse de ningun nombre: se ven
+	 * todos, se ve cual es el propio y se ve cual no se puede porque ya lo usa
+	 * otro equipo. Los que no se pueden van en gris y sin click.
+	 *
+	 * @param libre si ese color no lo esta usando otro equipo
+	 * @param puede si el que mira lo puede cambiar, o sea si es el jefe
+	 */
+	public static Component paleta(Registro.Equipo equipo, Predicate<String> libre, boolean puede) {
+		MutableComponent cartel = Component.empty()
+				.append(apagado("\n  " + RAYA.repeat(22) + "\n"))
+				.append(dorado("  EL COLOR DE " + equipo.nombre.toUpperCase() + "\n\n"))
+				.append(Component.literal("  " + VINETA + " "))
+				.append(Component.literal("ahora es " + Colores.comoSeLlama(equipo.color))
+						.withStyle(estilo -> estilo.withColor(equipo.color).withBold(true)))
+				.append(Component.literal("\n\n"));
+
+		int enLaFila = 0;
+		for (Colores.Color color : Colores.TODOS) {
+			if (enLaFila == 0) cartel.append(Component.literal("  "));
+
+			boolean esElSuyo = color.formato() == equipo.color;
+			boolean loPuedeElegir = puede && !esElSuyo && libre.test(color.nombre());
+			MutableComponent palabra = Component.literal(color.nombre() + "  ");
+
+			if (esElSuyo) {
+				palabra.withStyle(estilo -> estilo.withColor(color.formato()).withBold(true)
+						.withHoverEvent(new HoverEvent.ShowText(gris("El que tenés puesto"))));
+			} else if (loPuedeElegir) {
+				palabra.withStyle(estilo -> estilo.withColor(color.formato())
+						.withClickEvent(new ClickEvent.RunCommand("/equipo color " + color.nombre()))
+						.withHoverEvent(new HoverEvent.ShowText(gris("Clickea para dejarlo " + color.nombre()))));
+			} else {
+				palabra.withStyle(estilo -> estilo.withColor(0x555555)
+						.withHoverEvent(new HoverEvent.ShowText(gris(puede
+								? "Ese color ya lo usa otro equipo"
+								: "El color lo elige el jefe"))));
+			}
+
+			cartel.append(palabra);
+			if (++enLaFila == 4) {
+				cartel.append(Component.literal("\n"));
+				enLaFila = 0;
+			}
+		}
+
+		cartel.append(gris(puede
+				? "\n  Clickeá el que quieras y el equipo entero cambia.\n"
+				: "\n  El color lo elige el jefe del equipo.\n"));
+		return cartel.append(apagado("  " + RAYA.repeat(22) + "\n"));
+	}
+
+	public static Component quedoDe(Registro.Equipo equipo) {
+		return Component.empty()
+				.append(Component.literal("  El equipo quedó de color ").withStyle(estilo -> estilo.withColor(BIEN)))
+				.append(Component.literal(Colores.comoSeLlama(equipo.color))
+						.withStyle(estilo -> estilo.withColor(equipo.color).withBold(true)));
+	}
+
+	public static Component colorOcupado(String color, Registro.Equipo otro) {
+		return mal("El color " + color + " ya lo usa " + otro.nombre + ". Elegí otro.");
+	}
+
+	public static Component colorRaro(String color) {
+		return mal("No hay ningún color que se llame " + color
+				+ ". Escribí /equipo color a secas para verlos todos.");
 	}
 
 	// ------------------------------------------------------------ los avisos cortos

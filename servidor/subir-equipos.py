@@ -61,8 +61,22 @@ BARRA_URL = ("https://cdn.modrinth.com/data/eGoLIHLR/versions/NyunndYc/"
 
 # El nuestro sale de mod-equipos/build/libs. Se compila con un JDK 25:
 #     JAVA_HOME=<el jdk 25> ./gradlew build
-NUESTRO = os.path.join(os.path.dirname(AQUI), "mod-equipos", "build", "libs",
-                       "equipos-sobrinosdepepe-1.0.0.jar")
+#
+# La version no esta escrita aca sino que se lee de gradle.properties, que es de
+# donde la saca Gradle para nombrar el jar: escrita en los dos lados, subir una
+# version nueva sale mal una de cada dos veces.
+MOD = os.path.join(os.path.dirname(AQUI), "mod-equipos")
+
+
+def version_del_mod():
+    for linea in io.open(os.path.join(MOD, "gradle.properties"), encoding="utf-8"):
+        if linea.startswith("mod_version="):
+            return linea.split("=", 1)[1].strip()
+    raise SystemExit("mod-equipos/gradle.properties no dice mod_version")
+
+
+NUESTRO = os.path.join(MOD, "build", "libs",
+                       "equipos-sobrinosdepepe-%s.jar" % version_del_mod())
 
 MOTIVO_DEL_KICK = "Volvemos en un minuto: se estan instalando los equipos."
 

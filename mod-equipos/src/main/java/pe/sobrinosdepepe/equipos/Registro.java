@@ -41,8 +41,9 @@ import java.util.Set;
  *
  *  - `friendlyFire` en false: entre companeros no se pega. Lo hace el juego, no
  *    nosotros.
- *  - el color del nombre, que es como en una pelea se ve de un vistazo quien es
- *    de quien.
+ *  - el color del nombre y el `[TAG]` adelante, que salen del prefijo del
+ *    equipo y aparecen en el chat, en el tab y arriba de la cabeza sin que
+ *    haya que tocar ninguna de esas tres cosas.
  *  - la barra de arriba. team-only-locator-bar mira `ServerPlayer.getTeam()`, o
  *    sea el equipo del scoreboard: sin el espejo, la barra no muestra a nadie.
  */
@@ -58,20 +59,14 @@ public final class Registro {
 	 */
 	public static final int TOPE = 6;
 
-	/** Lo que se acepta como nombre: ni vacio, ni con espacios, ni una pared de texto. */
-	public static final int LARGO_MINIMO = 3;
-	public static final int LARGO_MAXIMO = 16;
-
 	/**
-	 * Los ocho colores que se reparten, en orden. Son los que se distinguen sobre
-	 * el pasto y sobre la piedra; quedan afuera el negro, los dos grises y el
-	 * blanco, que es el color del que no tiene equipo.
+	 * Lo que se acepta como nombre: ni vacio, ni con espacios, ni una pared de
+	 * texto. El maximo es doce y no dieciseis porque el nombre no se queda
+	 * adentro del `/equipo`: va como `[TAG]` adelante del nombre del jugador en
+	 * cada linea del chat, en el tab y arriba de la cabeza.
 	 */
-	private static final ChatFormatting[] COLORES = {
-			ChatFormatting.AQUA, ChatFormatting.GREEN, ChatFormatting.YELLOW,
-			ChatFormatting.LIGHT_PURPLE, ChatFormatting.RED, ChatFormatting.BLUE,
-			ChatFormatting.GOLD, ChatFormatting.DARK_GREEN,
-	};
+	public static final int LARGO_MINIMO = 3;
+	public static final int LARGO_MAXIMO = 12;
 
 	/**
 	 * El prefijo de los equipos del scoreboard. Existe para no pisar los equipos
@@ -151,6 +146,21 @@ public final class Registro {
 		return equipo;
 	}
 
+	/** El jefe eligio otro color. El tag y el nombre cambian para todos al toque. */
+	public void pintar(Equipo equipo, ChatFormatting color) {
+		equipo.color = color;
+		aplicar(equipo);
+		guardar();
+	}
+
+	/** Que equipo tiene ya ese color, o null si esta libre. */
+	public Equipo quienUsa(ChatFormatting color, Equipo salvo) {
+		for (Equipo equipo : equipos) {
+			if (equipo != salvo && equipo.color == color) return equipo;
+		}
+		return null;
+	}
+
 	public void sumar(Equipo equipo, String jugador) {
 		equipo.miembros.add(jugador);
 		aplicar(equipo);
@@ -223,6 +233,13 @@ public final class Registro {
 
 		team.setDisplayName(Component.literal(equipo.nombre));
 		team.setColor(equipo.color);
+		// El `[TAG] ` adelante del nombre. No hace falta tocar el chat, ni el tab,
+		// ni el cartel de arriba de la cabeza: los tres arman el nombre del
+		// jugador con Player.getDisplayName(), que es PlayerTeam.formatNameForTeam,
+		// que es prefijo + nombre + sufijo teñidos del color del equipo. Y cada
+		// setter de aca adentro llama solo a Scoreboard.onTeamChanged, asi que a
+		// los que ya estan conectados les cambia en el momento.
+		team.setPlayerPrefix(Carteles.tag(equipo));
 		// Lo unico que de verdad cambia como se juega: entre companeros no se pega.
 		team.setAllowFriendlyFire(false);
 
@@ -252,13 +269,17 @@ public final class Registro {
 		if (team != null) scoreboard.removePlayerTeam(team);
 	}
 
-	/** El primero de la lista que no este en uso, y si estan todos, el que toque. */
+	/**
+	 * El primero de la paleta que no este en uso, y si estan todos, el que toque.
+	 * El que arma un equipo no tiene que elegir color para empezar a jugar; si no
+	 * le gusta, `/equipo color` se lo cambia.
+	 */
 	private ChatFormatting colorLibre() {
 		Collection<ChatFormatting> usados = equipos.stream().map(e -> e.color).toList();
-		for (ChatFormatting color : COLORES) {
-			if (!usados.contains(color)) return color;
+		for (Colores.Color color : Colores.TODOS) {
+			if (!usados.contains(color.formato())) return color.formato();
 		}
-		return COLORES[equipos.size() % COLORES.length];
+		return Colores.TODOS.get(equipos.size() % Colores.TODOS.size()).formato();
 	}
 
 	private void leer() {
@@ -282,9 +303,13 @@ public final class Registro {
 				String jefe = miembros.stream().anyMatch(m -> m.equalsIgnoreCase(escrito))
 						? escrito : miembros.get(0);
 
+				// getByName devuelve null si el archivo trae cualquier cosa donde va el
+				// color, y un color null hace explotar el formateo del nombre para
+				// todos. Ahi se cae al primero de la paleta.
+				ChatFormatting color = ChatFormatting.getByName(o.get("color").getAsString());
 				equipos.add(new Equipo(
 						o.get("nombre").getAsString(),
-						ChatFormatting.getByName(o.get("color").getAsString()),
+						color != null ? color : Colores.TODOS.get(0).formato(),
 						jefe,
 						miembros));
 			}

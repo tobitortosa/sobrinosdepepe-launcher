@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -22,6 +23,7 @@ import java.util.List;
  *     /equipo invitar <jugador>    solo el jefe, y el otro tiene que estar conectado
  *     /equipo aceptar <equipo>     entrar, mientras la invitacion no venza
  *     /equipo echar <jugador>      solo el jefe
+ *     /equipo color <color>       solo el jefe, y sin el muestra la paleta
  *     /equipo salir                irte
  *
  * No lleva `requires`, o sea que lo puede usar cualquiera sin ser operador: es
@@ -61,6 +63,12 @@ public final class ComandoEquipo {
 								.suggests((contexto, sugerencias) -> SharedSuggestionProvider.suggest(
 										companeros(contexto.getSource().getTextName()), sugerencias))
 								.executes(this::echar)))
+								.then(Commands.literal("color")
+																.executes(this::verLosColores)
+																.then(Commands.argument("color", StringArgumentType.word())
+																								.suggests((contexto, sugerencias) -> SharedSuggestionProvider.suggest(
+																																Colores.nombres(), sugerencias))
+																								.executes(this::pintar)))
 				.then(Commands.literal("salir")
 						.executes(this::salir)));
 	}
@@ -261,6 +269,65 @@ public final class ComandoEquipo {
 			avisar(servidor, equipo, Carteles.salio(nombre), null);
 			if (mandaba) avisar(servidor, equipo, Carteles.mandaOtro(equipo.jefe), null);
 		}
+		return 1;
+	}
+
+	// ------------------------------------------------------------- /equipo color
+
+	/**
+	 * `/equipo color` a secas: la paleta entera, con los colores clickeables.
+	 *
+	 * La ve cualquiera del equipo y no solo el jefe, porque saber de que color son
+	 * es de todos; lo que el que no manda no tiene es el click.
+	 */
+	private int verLosColores(CommandContext<CommandSourceStack> contexto) throws CommandSyntaxException {
+		ServerPlayer jugador = contexto.getSource().getPlayerOrException();
+		String nombre = jugador.getScoreboardName();
+		Registro.Equipo equipo = registro.de(nombre);
+
+		if (equipo == null) {
+			jugador.sendSystemMessage(Carteles.noTenesEquipo());
+			return 0;
+		}
+
+		jugador.sendSystemMessage(Carteles.paleta(equipo,
+								color -> registro.quienUsa(Colores.porNombre(color), equipo) == null,
+								equipo.manda(nombre)));
+		return 1;
+	}
+
+	private int pintar(CommandContext<CommandSourceStack> contexto) throws CommandSyntaxException {
+		ServerPlayer jugador = contexto.getSource().getPlayerOrException();
+		String nombre = jugador.getScoreboardName();
+		String pedido = StringArgumentType.getString(contexto, "color");
+
+		Registro.Equipo equipo = registro.de(nombre);
+		if (equipo == null) {
+			jugador.sendSystemMessage(Carteles.noTenesEquipo());
+			return 0;
+		}
+		if (!equipo.manda(nombre)) {
+			jugador.sendSystemMessage(Carteles.noSosElJefe(equipo.jefe));
+			return 0;
+		}
+
+		ChatFormatting color = Colores.porNombre(pedido);
+		if (color == null) {
+			jugador.sendSystemMessage(Carteles.colorRaro(pedido));
+			return 0;
+		}
+
+		// Dos equipos del mismo color es quedarse sin el color: en una pelea el color
+		// es justamente lo que dice de un vistazo quien es de quien.
+		Registro.Equipo otro = registro.quienUsa(color, equipo);
+		if (otro != null) {
+			jugador.sendSystemMessage(Carteles.colorOcupado(pedido, otro));
+			return 0;
+		}
+
+		registro.pintar(equipo, color);
+		// A todos, y tambien al jefe: el tag y el nombre les cambian a los seis.
+		avisar(contexto.getSource().getServer(), equipo, Carteles.quedoDe(equipo), null);
 		return 1;
 	}
 

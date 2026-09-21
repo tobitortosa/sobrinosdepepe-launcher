@@ -199,6 +199,7 @@ GRUPOS = [
     ("EQUIPO", e.BIEN, [
         ("/equipo", False), ("/equipo crear ", True), ("/equipo invitar ", True),
         ("/equipo aceptar ", True), ("/equipo echar ", True), ("/equipo salir", False),
+        ("/equipo color", False),
     ]),
     ("EXTRAS", e.MARCA, [
         ("/nv", False),
