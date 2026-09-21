@@ -41,7 +41,7 @@ este script deja de subir el jar suelto solo: se fija cual de las copias sirve.
 en 26.1.2. Los jugadores siguen en 26.1 y entran igual, porque 26.1, 26.1.1 y
 26.1.2 hablan el mismo protocolo (775).
 
-## Los dos ajustes que no vienen de fabrica
+## Los ajustes que no vienen de fabrica
 
 **`disable-default-resync-handler` en true.** De fabrica Grim lee los bloques del
 mundo del servidor y se los manda al cliente para "arreglar" desincronizaciones. Eso
@@ -60,6 +60,27 @@ porque reconectar es lo unico que resetea ese balance. Le paso a Hanselx911 la
 primera noche, y son los mineros los que peor la pasan: el que mas bloques rompe es
 el que antes lo acumula. Con este permiso Grim sigue simulando, detectando, avisando
 por chat y dejandolo escrito en el log; lo unico que deja de hacer es cancelar.
+
+**`grim.exempt.airliquidplace` para el grupo default.** AirLiquidPlace salta cuando
+alguien apoya un bloque contra aire o contra un liquido, que es lo que hace un
+scaffold. El problema es que tambien salta sin que nadie haga nada: el jugador
+apoya contra un bloque que para el servidor ya no esta --porque otro lo rompio,
+porque venia con lag, o porque acaba de teleportarse-- y para el check eso es
+apoyar contra aire. Y viene con `cancelvl: 0`, o sea que cancela **desde la
+primera** violacion: el bloque no se coloca y al jugador le parece que el juego le
+come lo que tiene en la mano.
+
+Del lado de Grim un check se saca con un permiso y no con la config: no hay ningun
+`enabled` por check en `config.yml`. Los tres que arma la clase `Check` son
+`grim.exempt.<check>`, `grim.nosetback.<check>` y `grim.nomodifypacket.<check>`, con
+el nombre del `@CheckData` en minuscula. Con **exempt** el check no registra nada:
+`recordFlag` se va antes de sumar violacion, asi que no avisa, no cancela y no
+castiga. Es mas que lo de FastBreak, que solo dejo de cancelar. Si algun dia
+queremos volver a enterarnos sin que moleste, el del medio es
+`grim.nomodifypacket.airliquidplace`.
+
+Entra en caliente: Grim relee los permisos solo (tiene `TickPermissions` y el
+enganche con LuckPerms), asi que no hay que reiniciar ni que nadie se reconecte.
 
 Los dos son del servidor: nadie tiene que actualizar el launcher ni el pack.
 """
@@ -123,6 +144,8 @@ AJUSTES = [
 PERMISOS = [
     ("grim.nomodifypacket.fastbreak",
      "FastBreak avisa, pero ya no le cancela el picado a nadie"),
+    ("grim.exempt.airliquidplace",
+     "AirLiquidPlace cancelaba colocaciones legitimas por desincronizacion"),
 ]
 
 CACHE = os.path.join(tempfile.gettempdir(), "sobrinosdepepe-antitrampas")
