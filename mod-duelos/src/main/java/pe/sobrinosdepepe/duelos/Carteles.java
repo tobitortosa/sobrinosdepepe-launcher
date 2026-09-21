@@ -240,7 +240,7 @@ public final class Carteles {
 
 	// --------------------------------------------------------------------- la arena
 
-	public static Component laArena(Arena arena, boolean hayDuelo) {
+	public static Component laArena(Arena arena, boolean hayDuelo, List<String> zonasQuePisan) {
 		return Component.empty()
 				.append(apagado("\n  " + RAYA.repeat(26) + "\n"))
 				.append(dorado("  LA ARENA\n\n"))
@@ -258,6 +258,7 @@ public final class Carteles {
 				.append(hayDuelo
 						? rojo("  Ahora mismo se esta peleando.\n")
 						: gris("  Libre.\n"))
+				.append(zonaEncima(zonasQuePisan))
 				.append(Component.literal("\n"))
 				.append(comando("/pvp arena punto1", "que el que reta aparezca donde estas parado"))
 				.append(comando("/pvp arena punto2", "lo mismo para el otro"))
@@ -269,22 +270,32 @@ public final class Carteles {
 		return Component.empty()
 				.append(apagado("\n  " + RAYA.repeat(26) + "\n"))
 				.append(dorado("  TODAVIA NO HAY ARENA\n\n"))
-				.append(gris("  Se marca con la varita de zonas, la misma del\n"))
-				.append(gris("  palo de depuracion, pero con el click IZQUIERDO:\n\n"))
-				.append(Component.literal("  " + VINETA + " ").withStyle(e -> e.withColor(MARCA)))
-				.append(gris("click izquierdo en una esquina de ABAJO\n"))
-				.append(Component.literal("  " + VINETA + " ").withStyle(e -> e.withColor(MARCA)))
-				.append(gris("click izquierdo en la esquina de ARRIBA opuesta\n"))
-				.append(Component.literal("  " + VINETA + " ").withStyle(e -> e.withColor(MARCA)))
-				.append(gris("/pvp arena guardar\n\n"))
-				.append(gris("  El click DERECHO sigue siendo el de Safe Zone y\n"))
-				.append(gris("  no se toca: ese marca zonas protegidas.\n\n"))
-				.append(rojo("  Marca la caja ALTA: de ahi adentro no se sale\n"))
-				.append(rojo("  mientras se pelea, asi que si el techo de la caja\n"))
-				.append(rojo("  esta a la altura del piso, el primer salto los saca.\n\n"))
-				.append(rojo("  Y que NO caiga adentro de una zona protegida:\n"))
-				.append(gris("  ahi Safe Zone no deja romper ni poner nada, y al\n"))
-				.append(gris("  dueño de la zona las explosiones no le hacen daño.\n"))
+				.append(gris("  Hay dos formas, y las dos usan la misma varita.\n\n"))
+				.append(Component.literal("  " + VINETA + " LA CORTA").withStyle(e -> e.withColor(BIEN)))
+				.append(gris("  (con la zona que ya sabes marcar)\n"))
+				.append(gris("    1. Marca una zona con el click DERECHO, como\n"))
+				.append(gris("       siempre: una esquina y la opuesta.\n"))
+				.append(gris("    2. Parate adentro y escribi "))
+				.append(Component.literal("/pvp arena guardar").withStyle(e -> e.withColor(ACENTO)))
+				.append(gris("\n    3. "))
+				.append(Component.literal("Borra la zona").withStyle(e -> e.withColor(ERROR)))
+				.append(gris(" con /sz remove, parado adentro.\n\n"))
+				.append(Component.literal("  " + VINETA + " LA LARGA").withStyle(e -> e.withColor(MARCA)))
+				.append(gris("  (sin crear ninguna zona)\n"))
+				.append(gris("    click IZQUIERDO en una esquina de ABAJO,\n"))
+				.append(gris("    click IZQUIERDO en la de ARRIBA opuesta, y\n"))
+				.append(Component.literal("    /pvp arena guardar").withStyle(e -> e.withColor(ACENTO)))
+				.append(Component.literal("\n\n"))
+				.append(rojo("  El paso 3 de la corta no es opcional. "))
+				.append(gris("Adentro de\n  una zona protegida nadie puede romper ni poner un\n"))
+				.append(gris("  bloque, y al dueño de la zona las explosiones no le\n"))
+				.append(gris("  hacen daño: con la zona puesta, los duelos no andan.\n\n"))
+				.append(gris("  De una zona el alto lo pone el comando, porque las\n"))
+				.append(gris("  zonas no tienen altura. Son 24 salvo que pidas otro:\n  "))
+				.append(Component.literal("/pvp arena guardar 40").withStyle(e -> e.withColor(ACENTO)))
+				.append(gris("   o  "))
+				.append(Component.literal("/pvp arena zona <id> 40").withStyle(e -> e.withColor(ACENTO)))
+				.append(Component.literal("\n"))
 				.append(apagado("  " + RAYA.repeat(26) + "\n"));
 	}
 
@@ -313,16 +324,52 @@ public final class Carteles {
 				+ "memoria del servidor. Marcala mas chica.");
 	}
 
-	public static Component arenaGuardada(Arena arena) {
+	public static Component arenaGuardada(Arena arena, String deDonde, List<String> zonasQuePisan) {
 		return Component.empty()
-				.append(bien("Arena guardada: " + arena.ancho() + " x " + arena.largo() + " x "
-						+ arena.alto() + ". Ya se puede retar con /pvp <jugador>.\n"))
-				// El aviso va aca y no solo en la ayuda: es el unico error de marcado
-				// que no se ve hasta la primera pelea, y cuando se ve parece un bug del
-				// duelo y no una zona protegida puesta encima.
-				.append(gris("  Fijate que no caiga adentro de una zona protegida: ahi Safe Zone\n"
-						+ "  no deja romper ni poner nada, y al dueño de la zona las\n"
-						+ "  explosiones no le hacen daño mientras este parado adentro."));
+				.append(bien("Arena guardada de " + deDonde + ": " + arena.ancho() + " x "
+						+ arena.largo() + " de piso y " + arena.alto() + " de alto, de Y="
+						+ arena.min.getY() + " a Y=" + arena.max.getY() + ".\n"))
+				.append(zonaEncima(zonasQuePisan));
+	}
+
+	/**
+	 * El aviso de que la arena quedo abajo de una zona protegida.
+	 *
+	 * Va aca arriba de todo y en rojo porque es el unico error de marcado que no se
+	 * ve hasta la primera pelea, y cuando se ve parece un bug del duelo: los dos
+	 * con TNT en la mano y el piso que no se rompe.
+	 */
+	private static MutableComponent zonaEncima(List<String> zonas) {
+		if (zonas.isEmpty()) {
+			return Component.empty()
+					.append(bien("\n  " + TILDE + " No hay ninguna zona protegida encima.\n"));
+		}
+		MutableComponent cartel = Component.empty()
+				.append(Component.literal("\n  " + CRUZ + " HAY UNA ZONA PROTEGIDA ENCIMA: ")
+						.withStyle(e -> e.withColor(ERROR).withBold(true)))
+				.append(Component.literal(String.join(", ", zonas))
+						.withStyle(e -> e.withColor(ERROR)))
+				.append(Component.literal("\n"))
+				.append(gris("  Asi los duelos no andan: adentro de una zona nadie puede\n"))
+				.append(gris("  romper ni poner un bloque, y al dueño las explosiones no le\n"))
+				.append(gris("  hacen daño. Borrala parado adentro con "))
+				.append(Component.literal("/sz remove").withStyle(e -> e.withColor(ACENTO)))
+				.append(gris("\n  La arena ya quedo guardada: borrar la zona no la borra.\n"));
+		return cartel;
+	}
+
+	public static Component nadaQueGuardar() {
+		return Component.empty()
+				.append(mal("No encontre de donde sacar la arena.\n"))
+				.append(gris("  O estas parado adentro de una zona protegida "))
+				.append(Component.literal("(/sz list)").withStyle(e -> e.withColor(ACENTO)))
+				.append(gris(",\n  o marcaste las dos esquinas con la varita y el click\n"))
+				.append(gris("  IZQUIERDO. El click derecho es el de las zonas.\n  "))
+				.append(boton("[ COMO SE HACE ]", "/pvp arena", MARCA, "Ver las dos formas"));
+	}
+
+	public static Component zonaQueNoExiste(String id) {
+		return mal("No hay ninguna zona que se llame " + id + ". Los ids salen de /sz list.");
 	}
 
 	public static Component puntoGuardado(int cual) {
@@ -333,9 +380,6 @@ public final class Carteles {
 		return aviso("Arena borrada. Hasta que marques otra no se puede pelear.");
 	}
 
-	public static Component faltaLaOtraEsquina() {
-		return mal("Te falta la otra esquina. Click izquierdo con la varita en la esquina opuesta.");
-	}
 
 	// ------------------------------------------------------------------ los errores
 

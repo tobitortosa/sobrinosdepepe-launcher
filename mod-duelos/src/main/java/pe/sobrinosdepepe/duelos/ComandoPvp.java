@@ -48,6 +48,14 @@ import java.util.List;
  * los demas no son asunto de nadie.
  */
 public final class ComandoPvp {
+	/**
+	 * Cuanto mide de alto una arena sacada de una zona protegida, si no se dice
+	 * otra cosa. Las zonas de Safe Zone no tienen altura —la proteccion es la
+	 * columna entera— asi que el alto lo pone este comando. 24 le entran bien a un
+	 * coliseo con gradas; si el techo esta mas arriba, `/pvp arena guardar 40`.
+	 */
+	private static final int ALTO_POR_DEFECTO = 24;
+
 	private final Duelos duelos;
 	private final Registro registro;
 	private final Varita varita;
@@ -90,7 +98,19 @@ public final class ComandoPvp {
 				.then(Commands.literal("arena")
 						.requires(ComandoPvp::esOperador)
 						.executes(this::verArena)
-						.then(Commands.literal("guardar").executes(this::guardarArena))
+						.then(Commands.literal("guardar")
+								.executes(c -> guardarArena(c, ALTO_POR_DEFECTO))
+								.then(Commands.argument("alto", IntegerArgumentType.integer(4, 320))
+										.executes(c -> guardarArena(c,
+												IntegerArgumentType.getInteger(c, "alto")))))
+						.then(Commands.literal("zona")
+								.then(Commands.argument("zona", StringArgumentType.word())
+										.suggests((c, s) -> SharedSuggestionProvider.suggest(
+												Zonas.ids(c.getSource().getServer()), s))
+										.executes(c -> guardarDeZona(c, ALTO_POR_DEFECTO))
+										.then(Commands.argument("alto", IntegerArgumentType.integer(4, 320))
+												.executes(c -> guardarDeZona(c,
+														IntegerArgumentType.getInteger(c, "alto"))))))
 						.then(Commands.literal("punto1").executes(c -> ponerPunto(c, 1)))
 						.then(Commands.literal("punto2").executes(c -> ponerPunto(c, 2)))
 						.then(Commands.literal("borrar").executes(this::borrarArena)))
@@ -260,16 +280,49 @@ public final class ComandoPvp {
 		Arena arena = registro.arena();
 		quien.sendSystemMessage(arena == null
 				? Carteles.sinArenaTodavia()
-				: Carteles.laArena(arena, duelos.actual() != null));
+				: Carteles.laArena(arena, duelos.actual() != null,
+						Zonas.lasQuePisan(contexto.getSource().getServer(), arena)));
 		return 1;
 	}
 
-	private int guardarArena(CommandContext<CommandSourceStack> contexto)
+	/**
+	 * `/pvp arena guardar [alto]`, por los dos caminos.
+	 *
+	 * Primero mira si marcaste dos esquinas con la varita (click izquierdo). Si no,
+	 * agarra **la zona protegida en la que estas parado**, que es el camino corto:
+	 * marcar una zona con el click derecho ya se sabe hacer y lo hace todo el
+	 * mundo, y pedirle a alguien que se acuerde de cual de los dos botones era para
+	 * hacer lo mismo es pedir de mas.
+	 *
+	 * De una zona sale el rectangulo tal cual, pero el alto lo pone este comando:
+	 * la proteccion de Safe Zone no mira la altura, asi que casi todas las zonas
+	 * estan marcadas con las dos esquinas a la misma altura y de ahi no se puede
+	 * sacar el alto de un coliseo.
+	 */
+	private int guardarArena(CommandContext<CommandSourceStack> contexto, int alto)
 			throws CommandSyntaxException {
 		ServerPlayer quien = contexto.getSource().getPlayerOrException();
-		BlockPos[] esquinas = varita.seleccionDe(quien);
-		if (esquinas == null) return no(quien, Carteles.faltaLaOtraEsquina());
+		MinecraftServer servidor = contexto.getSource().getServer();
 
+		BlockPos[] esquinas = varita.seleccionDe(quien);
+		if (esquinas != null) return dejarArena(quien, esquinas, "las dos esquinas que marcaste");
+
+		Zonas.Zona zona = Zonas.dondeEsta(servidor, quien);
+		if (zona == null) return no(quien, Carteles.nadaQueGuardar());
+		return dejarArena(quien, zona.esquinas(alto), "la zona " + zona.id());
+	}
+
+	private int guardarDeZona(CommandContext<CommandSourceStack> contexto, int alto)
+			throws CommandSyntaxException {
+		ServerPlayer quien = contexto.getSource().getPlayerOrException();
+		String pedida = StringArgumentType.getString(contexto, "zona");
+
+		Zonas.Zona zona = Zonas.porId(contexto.getSource().getServer(), pedida);
+		if (zona == null) return no(quien, Carteles.zonaQueNoExiste(pedida));
+		return dejarArena(quien, zona.esquinas(alto), "la zona " + zona.id());
+	}
+
+	private int dejarArena(ServerPlayer quien, BlockPos[] esquinas, String deDonde) {
 		Arena arena = Arena.deLasEsquinas((ServerLevel) quien.level(), esquinas[0], esquinas[1]);
 		if (arena.volumen() > Arena.TOPE_BLOQUES) {
 			return no(quien, Carteles.cajaMuyGrande(arena.volumen()));
@@ -277,8 +330,10 @@ public final class ComandoPvp {
 
 		registro.ponerArena(arena);
 		varita.olvidar(quien);
-		quien.sendSystemMessage(Carteles.arenaGuardada(arena));
-		quien.sendSystemMessage(Carteles.laArena(arena, false));
+		quien.sendSystemMessage(Carteles.arenaGuardada(arena, deDonde,
+				Zonas.lasQuePisan(quien.level().getServer(), arena)));
+		quien.sendSystemMessage(Carteles.laArena(arena, duelos.actual() != null,
+				Zonas.lasQuePisan(quien.level().getServer(), arena)));
 		return 1;
 	}
 

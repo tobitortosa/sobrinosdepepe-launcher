@@ -18,6 +18,7 @@ y espera, que a esta altura casi siempre hay alguien jugando.
     /pvp top                   los que más duelos ganaron
     /pvp duelos                cómo funciona todo esto
     /pvp arena ...             marcar y mirar la arena (operadores)
+    /pvp arena zona <id> [alto] tomar una zona protegida como arena
     /pvp torneo ...            abrir, anotarse y arrancar el torneo
     /pvp probar                probar el guardado del inventario (operadores)
 
@@ -30,16 +31,33 @@ de Melius sobrevive sin importar cuál de los dos registre primero.
 
 ## Cómo se marca la arena
 
-Con la misma varita de las zonas (el palo de depuración), pero con el click
-**izquierdo**:
+**Lo más fácil, con una zona protegida de las de siempre:**
 
-    click izquierdo en una esquina de ABAJO
-    click izquierdo en la esquina de ARRIBA opuesta
-    /pvp arena guardar
+    click derecho en una esquina y en la opuesta   (la zona de siempre)
+    parado adentro:  /pvp arena guardar [alto]
+    /sz remove       parado adentro, para borrar la zona
 
-El click derecho sigue siendo el de Safe Zone y no se toca. Que sean gestos
-distintos no es un detalle: si fueran el mismo, marcar una arena reclamaría un
-terreno sin querer, y el orden entre dos mods escuchando el mismo evento no está
+**El tercer paso no es opcional.** Adentro de una zona de Safe Zone nadie puede
+romper ni poner un bloque, y el dueño de la zona es inmune al daño de explosión
+mientras esté parado adentro: con la zona encima, los kits de TNT y de crystals
+quedan de adorno y el dueño del coliseo gana todos los duelos sin despeinarse.
+Borrar la zona **no borra la arena**, que ya quedó guardada con sus coordenadas.
+El mod avisa en rojo, con el id de la zona, en `/pvp arena guardar` y en
+`/pvp arena`.
+
+El alto lo pone el comando y no la zona, porque la protección de Safe Zone no
+mira la altura: son 24 por defecto, contados desde un bloque abajo del piso que
+se clickeó. `/pvp arena guardar 40` para otro, o `/pvp arena zona <id> 40` sin
+estar parado adentro (el id sale de `/sz list`).
+
+**La otra forma, sin crear ninguna zona**, es el mismo palo de depuración pero
+con el click **izquierdo**: una esquina de abajo, la de arriba opuesta y
+`/pvp arena guardar`. Ahí el alto sale de los dos clicks y no hay zona que
+borrar.
+
+Los dos gestos conviven porque son distintos: el derecho es de Safe Zone, el
+izquierdo es de esto. Si fueran el mismo, marcar una arena reclamaría un terreno
+sin querer, y el orden entre dos mods escuchando el mismo evento no está
 garantizado.
 
 **La caja va ALTA.** De ahí adentro no se sale mientras se pelea, así que si el

@@ -703,6 +703,7 @@ arena marcada. Es el mod `mod-duelos/`, y se sube con `subir-duelos.py`.
     /pvp top                   los que mas duelos ganaron
     /pvp duelos                la ficha que explica todo
     /pvp arena ...             marcar y mirar la arena (operadores)
+    /pvp arena zona <id> [alto] tomar una zona protegida como arena
     /pvp torneo ...            abrir, anotarse, arrancar y cancelar
     /pvp probar                probar el guardado del inventario (operadores)
 
@@ -799,21 +800,47 @@ unica forma de que una pieza de netherita del kit termine en la economia. Los
 items **sin** la marca no se tocan, asi que lo que alguien haya dejado tirado en
 el coliseo antes de la pelea sigue ahi.
 
-### La arena se marca con la misma varita
+### La arena se marca con la misma varita, de dos formas
 
-Con el palo de depuracion, pero con el click **izquierdo**:
+**La corta, con una zona protegida.** Es la que se usa, porque marcar una zona
+con el click derecho ya se sabe hacer:
 
-    click izquierdo en una esquina de ABAJO
-    click izquierdo en la esquina de ARRIBA opuesta
-    /pvp arena guardar
+    click derecho en una esquina y en la opuesta   (la zona de siempre)
+    parado adentro:  /pvp arena guardar [alto]
+    /sz remove       parado adentro, para borrar la zona
 
-El click derecho no se toca: ese es el de Safe Zone (las esquinas de una zona
-protegida) y el del mod de la varita sobre un bicho. Que sean gestos distintos no
-es un detalle: si fueran el mismo, marcar una arena reclamaria un terreno sin
-querer, y el orden entre dos mods escuchando el mismo evento no esta garantizado.
-En supervivencia el palo de depuracion no hace nada por su cuenta
-(`canUseGameMasterBlocks()` da false), asi que cancelar el golpe no le saca
-ninguna funcion a nadie.
+**El tercer paso no es opcional**, y es lo unico incomodo de este camino:
+adentro de una zona de Safe Zone nadie puede romper ni poner un bloque, y el
+dueño de la zona es **inmune al daño de explosion mientras este parado adentro**
+(`ClaimEntityProtection.shouldBlockExplosionDamage`). Con la zona puesta encima,
+los kits de TNT y de crystals quedan de adorno y el dueño del coliseo gana todos
+los duelos sin despeinarse. Borrar la zona **no borra la arena**: la arena ya
+quedo guardada en `config/duelos-de-pepe.json` con sus coordenadas.
+
+El mod avisa solo: lee `world/safe-zone/claims.json` y en `/pvp arena guardar` y
+en `/pvp arena` dice en rojo si hay una zona encima, con su id. Safe Zone escribe
+ese archivo en el momento en que se crea la zona —medido: una zona creada a las
+13:44 ya estaba— asi que no hay que recargar nada.
+
+**De una zona el alto lo pone el comando.** La proteccion de Safe Zone no mira la
+altura (protege la columna entera de la roca madre al cielo), asi que casi todas
+las zonas estan marcadas con las dos esquinas a la misma altura y de ahi no sale
+el alto de un coliseo. Son 24 por defecto, contados desde un bloque abajo del
+piso que se clickeo; `/pvp arena guardar 40` para otro. Tambien se puede nombrar
+la zona sin estar parado adentro: `/pvp arena zona <id> [alto]`, con el id de
+`/sz list`.
+
+**La larga, sin crear ninguna zona:** el mismo palo de depuracion pero con el
+click **izquierdo**, una esquina de abajo y la de arriba opuesta, y
+`/pvp arena guardar`. Ahi el alto sale de los dos clicks y no hay zona que
+borrar.
+
+Los dos gestos conviven porque son distintos: el derecho es de Safe Zone y del
+mod de la varita sobre un bicho, el izquierdo es este. Si fueran el mismo, marcar
+una arena reclamaria un terreno sin querer, y el orden entre dos mods escuchando
+el mismo evento no esta garantizado. En supervivencia el palo de depuracion no
+rompe bloques por su cuenta (`DebugStickItem.canDestroyBlock` devuelve siempre
+false), asi que cancelar el golpe no le saca ninguna funcion a nadie.
 
 **La caja va ALTA.** De ahi adentro no se sale mientras se pelea, asi que si el
 techo de la caja queda a la altura del piso, al primero que salte lo devuelve de
