@@ -1,6 +1,7 @@
 /**
  * Agrega un solo .jar al pack y publica la versión nueva.
  *   npm run pack:jar -- ../mod-precios/build/libs/precios-sobrinosdepepe-1.0.0.jar
+ *   npm run pack:jar -- <ruta> --sin-publicar
  *
  * A diferencia de pack:publish, no toca los demás mods: ese script usa una
  * carpeta como fuente de verdad y quita del pack todo lo que no esté ahí, así
@@ -14,6 +15,10 @@ import { db } from '../lib/db';
 import { users } from '../lib/db/schema';
 
 const ruta = process.argv[2];
+// Cambiar un mod por otro es subir sin publicar y despues quitar el viejo con
+// pack:quitar, que publica los dos cambios de una: cada publicacion saca del
+// juego a quien este jugando.
+const sinPublicar = process.argv.includes('--sin-publicar');
 if (!ruta) {
   console.log('Falta el .jar. Ejemplo: npm run pack:jar -- ../mod-precios/build/libs/mod.jar');
   process.exit(1);
@@ -57,6 +62,11 @@ for (const bad of uploaded.rejected) {
 }
 for (const mod of uploaded.added) {
   console.log(`subido: ${mod.title} ${mod.version} (${mod.side}, ${mod.sizeKb} KB, ${mod.license})`);
+}
+
+if (sinPublicar) {
+  console.log('Queda en el borrador, sin publicar (--sin-publicar).');
+  process.exit(0);
 }
 
 const publish = (await import('../app/api/admin/pack/publish/route')).POST;

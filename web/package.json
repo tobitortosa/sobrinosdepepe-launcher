@@ -17,6 +17,7 @@
     "db:check": "tsx --env-file=.env.local scripts/check-db.mts",
     "pack:publish": "tsx --env-file=.env.local scripts/publish-pack.mts",
     "pack:jar": "tsx --env-file=.env.local scripts/add-jar.mts",
+    "pack:mod": "tsx --env-file=.env.local scripts/agregar-mod.mts",
     "pack:check": "tsx --env-file=.env.local scripts/check-pack.mts",
     "pack:shader": "tsx --env-file=.env.local scripts/add-shader.mts",
     "whitelist": "tsx --env-file=.env.local scripts/sync-whitelist.mts",
