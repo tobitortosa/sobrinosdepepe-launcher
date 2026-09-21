@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "duelosdepepe",
+  "version": "${version}",
+  "name": "Duelos de Pepe",
+  "description": "El coliseo: /pvp <jugador> reta a alguien, los dos caen en la arena con el mismo kit al azar, la cuenta de 3 2 1 y a pelear. El resto apuesta shards a quien gana. La arena se marca con la varita.",
+  "authors": ["SOBRINOS DE PEPE"],
+  "environment": "server",
+  "entrypoints": {
+    "server": ["pe.sobrinosdepepe.duelos.DuelosServidor"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": ">=26.1",
+    "fabric-api": "*"
+  }
+}

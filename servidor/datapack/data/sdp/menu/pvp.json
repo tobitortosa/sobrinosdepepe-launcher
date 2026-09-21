@@ -469,7 +469,7 @@
     {
       "slot": [
         2,
-        5
+        4
       ],
       "type": "item",
       "item": {
@@ -578,8 +578,400 @@
     },
     {
       "slot": [
+        2,
+        6
+      ],
+      "type": "item",
+      "item": {
+        "id": "minecraft:iron_sword",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "⚔ EL COLISEO",
+            "italic": false,
+            "color": "#ffb02e",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  Duelos de uno contra uno en la arena",
+              "italic": false,
+              "color": "#ffb02e"
+            },
+            {
+              "text": "",
+              "italic": false
+            },
+            {
+              "text": "  ▪ Lo retas y le llega un boton para aceptar",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  ▪ Caen los dos con el MISMO kit, sacado al",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "    azar entre ocho clases",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  ▪ Cuenta de 3, 2, 1 y a pelear",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "",
+              "italic": false
+            },
+            {
+              "text": "  NO se pierde nada: el inventario tuyo te",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "  espera afuera y te vuelve entero al terminar.",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "  Lo unico que se juega es lo que apostaste.",
+              "italic": false,
+              "color": "#55ff7f"
+            },
+            {
+              "text": "",
+              "italic": false
+            },
+            {
+              "text": "  Nadie se puede meter adentro de la arena, y",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  lo que rompan se arregla solo despues.",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "",
+              "italic": false
+            },
+            {
+              "text": "  El resto apuesta shards a quien va a ganar:",
+              "italic": false,
+              "color": "#a503fc"
+            },
+            {
+              "text": "  lo que ponen los que erraron se reparte",
+              "italic": false,
+              "color": "#a503fc"
+            },
+            {
+              "text": "  entre los que acertaron.",
+              "italic": false,
+              "color": "#a503fc"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "click"
+    },
+    {
+      "slot": [
+        3,
+        2
+      ],
+      "type": "item",
+      "item": {
+        "id": "minecraft:iron_sword",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "RETAR A ALGUIEN",
+            "italic": false,
+            "color": "#ff0000",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  Un duelo de uno contra uno",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  en la arena, con kit parejo",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "click",
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
+              },
+              {
+                "text": "Para retar a alguien a un duelo:   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/pvp ",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/pvp "
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
+                }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
+              }
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
+        }
+      ]
+    },
+    {
+      "slot": [
         3,
         3
+      ],
+      "type": "item",
+      "item": {
+        "id": "minecraft:gold_nugget",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "APOSTAR",
+            "italic": false,
+            "color": "#a503fc",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  Ponerle shards al que creas",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  que va a ganar el duelo",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "click",
+      "action": [
+        {
+          "type": "message",
+          "message": {
+            "text": "",
+            "extra": [
+              {
+                "text": "  » ",
+                "italic": false,
+                "color": "dark_gray"
+              },
+              {
+                "text": "Para apostarle shards a uno de los dos:   ",
+                "italic": false,
+                "color": "gray"
+              },
+              {
+                "text": "/pvp apostar ",
+                "color": "#00a6ff",
+                "bold": true,
+                "italic": false,
+                "click_event": {
+                  "action": "suggest_command",
+                  "command": "/pvp apostar "
+                },
+                "hover_event": {
+                  "action": "show_text",
+                  "value": {
+                    "text": "Clickea y completa lo que falta",
+                    "italic": false,
+                    "color": "gray"
+                  }
+                }
+              },
+              {
+                "text": "   clickealo y completalo",
+                "italic": false,
+                "color": "dark_gray"
+              }
+            ]
+          }
+        },
+        {
+          "type": "navigate",
+          "action": "close"
+        }
+      ]
+    },
+    {
+      "slot": [
+        3,
+        4
+      ],
+      "type": "item",
+      "item": {
+        "id": "minecraft:golden_helmet",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "TORNEO",
+            "italic": false,
+            "color": "#ffb02e",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  La llave hasta que",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  quede uno solo",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "click",
+      "action": {
+        "type": "command",
+        "command": "pvp torneo",
+        "as_player": true,
+        "silent": false
+      }
+    },
+    {
+      "slot": [
+        3,
+        5
+      ],
+      "type": "item",
+      "item": {
+        "id": "minecraft:nether_star",
+        "count": 1,
+        "components": {
+          "minecraft:custom_name": {
+            "text": "TOP DE DUELOS",
+            "italic": false,
+            "color": "#ffb02e",
+            "bold": true
+          },
+          "minecraft:lore": [
+            {
+              "text": "  Los que mas duelos ganaron",
+              "italic": false,
+              "color": "gray"
+            }
+          ],
+          "minecraft:tooltip_display": {
+            "hidden_components": [
+              "minecraft:attribute_modifiers",
+              "minecraft:potion_contents",
+              "minecraft:unbreakable",
+              "minecraft:stored_enchantments",
+              "minecraft:enchantments"
+            ]
+          },
+          "minecraft:custom_data": {
+            "sdp": "menu"
+          }
+        }
+      },
+      "sound": "click",
+      "action": {
+        "type": "command",
+        "command": "pvp top",
+        "as_player": true,
+        "silent": false
+      }
+    },
+    {
+      "slot": [
+        3,
+        6
       ],
       "type": "item",
       "item": {
@@ -629,7 +1021,7 @@
     {
       "slot": [
         3,
-        5
+        7
       ],
       "type": "item",
       "item": {
@@ -673,7 +1065,7 @@
     {
       "slot": [
         3,
-        7
+        8
       ],
       "type": "item",
       "item": {

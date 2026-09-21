@@ -295,7 +295,7 @@ guardar("comandos", {
                          ["Homes, spawn, rtp", "y teletransportes"]),
               abrir("sdp:casa"), "select"),
         celda(3, 4, item("minecraft:netherite_sword", "PVP", e.KILLS,
-                         ["Como se pelea aca"]),
+                         ["Duelos en la arena, apuestas", "y como se pelea aca"]),
               abrir("sdp:pvp"), "select"),
         # El del medio, que hasta el 2026-09-09 era el hueco de la fila. Va entre
         # PVP y la tienda de shards porque un equipo aca es una cosa de pelea:
@@ -386,28 +386,63 @@ reglas = item("minecraft:netherite_chestplate", e.CALAVERA + " COMO SE PELEA ACA
     texto("  no se pegan, y se ven en la barra de arriba.", e.BIEN),
 ])
 
+# El cartel del coliseo va al lado del de las reglas y no adentro: son las dos
+# formas de pelear que tiene el servidor y son opuestas. Afuera se pierde todo y
+# no hay reglas; en la arena no se pierde nada y esta todo parejo.
+coliseo = item("minecraft:iron_sword", e.ESPADAS + " EL COLISEO", e.MARCA, [
+    texto("  Duelos de uno contra uno en la arena", e.MARCA),
+    texto("", None),
+    texto("  " + e.VINETA + " Lo retas y le llega un boton para aceptar", e.ETIQUETA),
+    texto("  " + e.VINETA + " Caen los dos con el MISMO kit, sacado al", e.ETIQUETA),
+    texto("    azar entre ocho clases", e.ETIQUETA),
+    texto("  " + e.VINETA + " Cuenta de 3, 2, 1 y a pelear", e.ETIQUETA),
+    texto("", None),
+    texto("  NO se pierde nada: el inventario tuyo te", e.BIEN),
+    texto("  espera afuera y te vuelve entero al terminar.", e.BIEN),
+    texto("  Lo unico que se juega es lo que apostaste.", e.BIEN),
+    texto("", None),
+    texto("  Nadie se puede meter adentro de la arena, y", e.ETIQUETA),
+    texto("  lo que rompan se arregla solo despues.", e.ETIQUETA),
+    texto("", None),
+    texto("  El resto apuesta shards a quien va a ganar:", e.SHARDS),
+    texto("  lo que ponen los que erraron se reparte", e.SHARDS),
+    texto("  entre los que acertaron.", e.SHARDS),
+])
+
 guardar("pvp", {
     "name": texto("PVP", e.KILLS, negrita=True),
     "rows": 5,
-    # La misma forma que sdp:tienda: el cartel que explica arriba y solo, y las
-    # dos puertas abajo repartidas alrededor de la columna del medio. Quedo
-    # corrido a la izquierda (columnas 2, 4 y 6) al sacar las dos entradas del
-    # bounty y no volver a centrar lo que quedaba.
-    # Los tres botones en 3, 5 y 7, o sea centrados en la columna del medio.
-    # Estuvieron en 2, 4 y 6 desde que se sacaron las dos entradas del bounty y
-    # nadie volvio a centrar lo que quedaba.
+    # Los dos carteles arriba, uno de cada forma de pelear, y abajo la fila entera
+    # de botones centrada en la columna del medio. Los tres de la derecha —shards,
+    # tienda y equipo— estaban antes y se quedan: el que entra a PVP tiene que
+    # enterarse de que existen.
     "items": marco(5, saltar=[(5, 5)]) + [
-        celda(2, 5, reglas),
-        celda(3, 3, item("minecraft:amethyst_shard", "/shards", e.SHARDS,
+        celda(2, 4, reglas),
+        celda(2, 6, coliseo),
+        celda(3, 2, item("minecraft:iron_sword", "RETAR A ALGUIEN", e.KILLS,
+                         ["Un duelo de uno contra uno",
+                          "en la arena, con kit parejo"]),
+              escribir("/pvp ", "Para retar a alguien a un duelo:")),
+        celda(3, 3, item("minecraft:gold_nugget", "APOSTAR", e.SHARDS,
+                         ["Ponerle shards al que creas",
+                          "que va a ganar el duelo"]),
+              escribir("/pvp apostar ", "Para apostarle shards a uno de los dos:")),
+        celda(3, 4, item("minecraft:golden_helmet", "TORNEO", e.MARCA,
+                         ["La llave hasta que", "quede uno solo"]),
+              correr("pvp torneo")),
+        celda(3, 5, item("minecraft:nether_star", "TOP DE DUELOS", e.MARCA,
+                         ["Los que mas duelos ganaron"]),
+              correr("pvp top")),
+        celda(3, 6, item("minecraft:amethyst_shard", "/shards", e.SHARDS,
                          ["Cuantos shards tenes", "y como se ganan"]),
               correr("shards")),
-        celda(3, 5, item("minecraft:diamond_sword", "TIENDA DE SHARDS", e.SHARDS,
+        celda(3, 7, item("minecraft:diamond_sword", "TIENDA DE SHARDS", e.SHARDS,
                          ["Lo que se compra matando"]),
               abrir("sdp:tienda"), "select"),
         # La misma puerta que hay en el menu principal. Esta repetida a proposito:
         # el que entra a PVP a ver como se pelea tiene que enterarse de que se
         # puede armar equipo, que es la otra mitad de como se pelea aca.
-        celda(3, 7, item("minecraft:white_banner", "EQUIPO", e.BIEN,
+        celda(3, 8, item("minecraft:white_banner", "EQUIPO", e.BIEN,
                          ["Con quien andas:", "invitar, echar y salir"]),
               abrir("sdp:equipo"), "select"),
         volver(fila=5),

@@ -10,6 +10,7 @@ subir tal cual y todo queda como estaba.
 | `subir-datapack.py` | Sube el datapack entero (funciones, advancements, menús) y recarga. |
 | `subir-acceso.py` | Sube el mod de acceso y su config: el candado (`REQUIRE_LAUNCHER`), el secreto y el link. Con el candado puesto, al servidor se entra solo con el launcher. |
 | `subir-cuadros.py` | Deja en `/mods` el jar de My Photo Paintings, el mod de colgar imágenes propias como cuadros. |
+| `subir-duelos.py` | Sube el mod del coliseo: `/pvp <jugador>`, la arena, las apuestas y el torneo. |
 | `subir-equipos.py` | Deja en `/mods` los dos jars de los equipos: el nuestro, que es el comando `/equipo`, y team-only-locator-bar, que deja la barra de arriba mostrando solo a los compañeros. |
 | `generar-precios.py` | Arma `prices.json` y `config.json` de EconomyCraft, rearma el mod cliente de precios y verifica que no haya plata infinita. |
 | `verificar-precios.py` | Solo la verificación, contra el servidor o contra un archivo. |
@@ -688,6 +689,260 @@ descubra jugando:
 
 Si algún día se habilita `/tpahere` o `/warp`, hay que agregarlos a
 `combate.json`: son las otras dos formas de salir de un lugar.
+
+## El coliseo: los duelos de `/pvp`
+
+Desde el 2026-09-21 se puede retar a alguien a un duelo uno contra uno en una
+arena marcada. Es el mod `mod-duelos/`, y se sube con `subir-duelos.py`.
+
+    /pvp <jugador> [shards]    retarlo; al otro le llega un boton para aceptar
+    /pvp aceptar <jugador>     entrar a la arena contra el
+    /pvp rechazar <jugador>    decirle que no
+    /pvp rendirse              abandonar el duelo que estas peleando
+    /pvp apostar <jug> <n>     ponerle shards a uno de los dos
+    /pvp top                   los que mas duelos ganaron
+    /pvp duelos                la ficha que explica todo
+    /pvp arena ...             marcar y mirar la arena (operadores)
+    /pvp torneo ...            abrir, anotarse, arrancar y cancelar
+    /pvp probar                probar el guardado del inventario (operadores)
+
+`/pvp` **a secas no cambio**: lo sigue abriendo Melius con el menu de cofre
+`sdp:pvp`. El mod registra solo los hijos, sin `executes` en la raiz, y Brigadier
+los fusiona -- `CommandNode.addChild` pisa el `command` del nodo solo si el nuevo
+trae uno, asi que con el nuestro en null el de Melius sobrevive sin importar cual
+de los dos mods registre primero. Es lo que evita tener que elegir entre el menu
+y el comando.
+
+### Como es un duelo
+
+Cuatro etapas, y el orden es lo que le da la forma de coliseo:
+
+1. **Apuestas, 45 segundos.** Los dos ya estan parados en la arena, quietos y sin
+   poderse tocar, con el kit puesto, mientras el resto mira y apuesta. Estan
+   adentro y no afuera a proposito: la gente le apuesta a alguien que esta
+   **viendo**, y no a un nombre en el chat.
+2. **La cuenta.** 3, 2, 1 en pantalla, con un pim por numero cada vez mas agudo,
+   y el PELEEN en verde grande. Recien ahi se sueltan.
+3. **La pelea**, hasta cinco minutos. Termina cuando uno cae, se rinde o se
+   desconecta; si se acaba el tiempo gana el que llego con mas vida, y si estan
+   iguales es empate y vuelve todo para atras.
+4. **El final, 5 segundos.** El ganador en pantalla y los fuegos artificiales, y
+   despues se deshace todo: los inventarios vuelven, la arena vuelve, la barra de
+   arriba se va.
+
+Se pelea **una pelea a la vez**. Hay una sola arena y el coliseo es para mirar:
+con tres duelos simultaneos no habria a que apostarle. Los demas hacen cola.
+
+### Nadie muere de verdad
+
+El golpe que mataria se cancela (`ServerLivingEntityEvents.ALLOW_DEATH`) y en su
+lugar termina el duelo. **No es cosmetico.** Si la muerte pasara de verdad:
+
+- el que pierde soltaria el kit prestado en el piso;
+- el que gana cobraria los 10 shards de la kill, el 10% de la plata del muerto y
+  todo el equipo, o sea que dos amigos turnandose serian una maquina de shards,
+  que es exactamente por lo que se saco Simple Revive;
+- y el muerto perderia de verdad lo suyo, que es lo contrario de lo que tiene que
+  ser un duelo.
+
+Cancelar la muerte **no le devuelve la vida**: el juego ya le puso la vida en
+cero antes de preguntar (el evento es un `Redirect` sobre `isDeadOrDying` adentro
+de `hurtServer`), asi que hay que sanarlo a mano en el mismo enganche. Sin eso
+queda parado en cero corazones y se muere con el proximo golpe de cualquier cosa.
+
+### El inventario, que es lo unico que no se puede perder
+
+Adentro se juega con un kit prestado, asi que al empezar el duelo **se le vacia
+el inventario de verdad a los dos**. La copia se escribe en
+`config/duelos-de-pepe.json` **antes** de tocar nada, y se borra recien cuando ya
+volvio a su dueno. Si el servidor se cae en el medio de una pelea (que en este
+servidor pasa por RAM) al arrancar de nuevo las copias siguen ahi y cada uno
+recupera lo suyo al conectarse, en el tick siguiente a entrar.
+
+Lo unico que no vuelve de una caida son los efectos de pocion, que se guardan
+solo en memoria. Es lo unico de la lista que se puede volver a tomar.
+
+**`/pvp probar` prueba justamente eso, y no toca nada.** Guarda tu inventario
+como lo guardaria un duelo, lo escribe, lo vuelve a leer y compara casillero por
+casillero; contesta cuantos volvieron identicos y, si alguno no volvio, cual.
+Correlo parado con lo mejor que tengas —elytra, shulkers llenas, netherita
+encantada— porque asi queda probado contra items de verdad.
+
+La prueba vive adentro del juego y no en un test de Gradle a proposito: en 26.1
+los componentes de los items son **data-driven**, asi que fuera del servidor no
+se puede ni siquiera construir un `ItemStack` (`Bootstrap.bootStrap()` registra
+los 1.506 items pero deja sus componentes sin atar, y el constructor revienta con
+`Components not bound yet`). Probar la ida y vuelta de verdad pide el servidor
+de verdad.
+
+Se recorre el inventario por indice y no por sus listas de adentro: en 26.1
+`Inventory.getContainerSize()` cuenta los 36 casilleros **mas** la armadura y la
+mano de atras, y `getItem(i)` sabe a cual de las dos partes va cada indice.
+Recorrer `getNonEquipmentItems()` se comeria la armadura puesta.
+
+### Los kits, y por que son al azar
+
+Ocho clases: GLADIADOR, NETHERITA, CRISTALERO, ARQUERO, PERLERO, BOMBARDERO,
+MAZAZO y CUERO. Se saca una al azar por duelo y **es la misma para los dos**,
+cantidades incluidas: el kit se arma UNA vez y despues se copia. Armandolo dos
+veces, uno podria salir con diez gapples y el otro con seis, y ahi ya no gana el
+que pelea mejor.
+
+Que sea al azar es la mitad de la gracia: nadie se especializa en una sola forma
+de pelear porque no sabe con que le va a tocar.
+
+**Nada del kit se queda.** Cada item lleva la marca `sdp_duelo` en su
+`custom_data`, y al terminar se borran los que hayan quedado tirados en la arena
+y diez bloques alrededor. El margen es lo que importa: un jugador no puede salir
+de la arena, pero si puede tirar un item por arriba de la pared, y esa es la
+unica forma de que una pieza de netherita del kit termine en la economia. Los
+items **sin** la marca no se tocan, asi que lo que alguien haya dejado tirado en
+el coliseo antes de la pelea sigue ahi.
+
+### La arena se marca con la misma varita
+
+Con el palo de depuracion, pero con el click **izquierdo**:
+
+    click izquierdo en una esquina de ABAJO
+    click izquierdo en la esquina de ARRIBA opuesta
+    /pvp arena guardar
+
+El click derecho no se toca: ese es el de Safe Zone (las esquinas de una zona
+protegida) y el del mod de la varita sobre un bicho. Que sean gestos distintos no
+es un detalle: si fueran el mismo, marcar una arena reclamaria un terreno sin
+querer, y el orden entre dos mods escuchando el mismo evento no esta garantizado.
+En supervivencia el palo de depuracion no hace nada por su cuenta
+(`canUseGameMasterBlocks()` da false), asi que cancelar el golpe no le saca
+ninguna funcion a nadie.
+
+**La caja va ALTA.** De ahi adentro no se sale mientras se pelea, asi que si el
+techo de la caja queda a la altura del piso, al primero que salte lo devuelve de
+un tiron. Los dos puntos donde aparece cada uno salen solos de la caja (los
+extremos del lado mas largo, sobre el primer piso firme buscando de abajo hacia
+arriba) y se pisan a mano con `/pvp arena punto1` y `punto2`, parado donde uno
+quiera que aparezcan.
+
+El tope son **400.000 bloques** (por ejemplo 100 x 100 de piso por 40 de alto):
+antes de cada pelea se saca una foto entera de la arena, y esa foto es un arreglo
+con un bloque por casillero que vive en la RAM del servidor.
+
+**La arena NO puede caer adentro de una zona protegida de Safe Zone**, y es el
+unico error de marcado que no se ve hasta la primera pelea. Adentro de una zona
+nadie puede romper ni poner un bloque, asi que los kits de TNT y de crystals
+quedan de adorno; y peor, el dueño de la zona y sus trusted son **inmunes al
+dano de explosion mientras esten parados adentro**
+(ClaimEntityProtection.shouldBlockExplosionDamage), o sea que el dueño del
+coliseo ganaria todos los duelos de crystals sin despeinarse. El mod lo avisa al
+guardar la arena, pero no lo puede comprobar: las zonas las guarda Safe Zone en
+world/safe-zone/claims.json y leerlas seria atarse al formato de otro mod.
+
+### La arena vuelve a como estaba
+
+Se puede romper todo, poner crystals y volar el piso con TNT. Al terminar se
+rehace bloque por bloque desde la foto. Sin esto el coliseo dura una pelea.
+
+Se guarda la caja entera y no solo lo que cambia: guardar solo lo que cambia
+pediria enterarse de cada bloque que se rompe y de cada uno que se pone, y hay
+formas de cambiar un bloque que ningun evento avisa -- la explosion, el fuego que
+se propaga, la arena que cae, el agua que corre. La foto entera no se puede
+equivocar.
+
+Al devolver se usa `UPDATE_CLIENTS` pelado, **sin avisarle a los vecinos**: si se
+avisara, devolver la arena dispararia en cadena la arena que cae, el agua que
+corre y las antorchas que se caen, y el final de la reposicion se pelearia con el
+principio. Como se devuelve TODO al estado que tenia, el resultado ya es
+consistente.
+
+Lo que **no** se recupera es una caida del servidor con la pelea empezada: la
+foto vive en memoria, asi que ahi el coliseo queda como haya quedado.
+
+### Que no se meta nadie
+
+Es lo que hace que una pelea sea una pelea y no una montonera. Tres candados
+independientes:
+
+- al que no esta peleando y se mete en la caja lo saca dos bloques afuera de la
+  pared mas cercana, con un aviso cada dos segundos para no llenarle el chat al
+  que salta en el borde;
+- **el dano no pasa** ni de adentro para afuera ni de afuera para adentro: el de
+  las gradas no le puede tirar una flecha al que va ganando, y el que pelea
+  tampoco le pega a nadie de afuera. Antes de la cuenta y despues del final los
+  dos son ademas intocables, porque ahi estan quietos y no se pueden defender;
+- romper y poner bloques adentro de la caja es solo de los dos que pelean, asi
+  nadie tapa un agujero desde afuera ni le abre el piso a uno.
+
+Y para el otro lado: al que se va de la caja lo devuelve al borde por donde se
+iba, y no al principio. Devolverlo al punto de aparicion seria regalarle la
+posicion al otro.
+
+### La marca de pelea, en los dos sentidos
+
+Mientras dura el duelo los dos llevan `sdp_combate`, asi que no andan `/home`,
+`/spawn`, `/rtp`, `/tpa` ni `/back`. No hubo que programar nada de eso: lo unico
+que mira `modificadores/combate.json` es esa etiqueta.
+
+**La etiqueta sola no alcanza, y esto costo entenderlo.** `sdp:tick` corre todos
+los ticks `execute as @a[tag=sdp_combate,scores={sdp_combate=..0}] run function
+sdp:combate_salir`, o sea que a cualquiera que tenga la etiqueta con el reloj en
+cero se la saca al instante. Un jugador que ya peleo alguna vez tiene el objetivo
+en cero, asi que poner solo la etiqueta la perdia en el tick siguiente y ademas
+le tiraba el cartel de "saliste de la pelea" en la cara apenas entraba a la
+arena. El mod pone la etiqueta **y** el reloj en 300, y lo repone una vez por
+segundo.
+
+Y al reves: **no se puede entrar a un duelo estando EN PELEA**. Ni retar ni
+aceptar. Sin eso, la arena seria la forma perfecta de escaparse de una pelea de
+verdad: adentro nadie de afuera te toca, y al salir estas curado y del otro lado
+del mundo.
+
+### Las apuestas son en shards, nunca en plata
+
+No es una preferencia. La plata de EconomyCraft no vive en ningun scoreboard y
+sus comandos devuelven exito aunque el jugador no tenga un peso (`eco
+removemoney` y `pay` devuelven 1 siempre, ver mas arriba "El unico lector de
+saldo"). Cobrarle una apuesta en plata a alguien sin saldo saldria bien y el
+servidor regalaria la diferencia. El objetivo `Shards` se lee y se escribe con un
+numero exacto.
+
+Se cobran **al apostar** y no al final: cobrando al final, el que aposto 500 y
+los gasto en la tienda mientras miraba la pelea pagaria con shards que ya no
+tiene, y el objetivo se iria a negativo sin que nada se queje.
+
+El reparto es el de una rifa de carrera: todo lo que pusieron los que erraron se
+reparte entre los que acertaron **en proporcion a lo que arriesgo cada uno**, y
+el que acerto recupera ademas lo suyo. Sin comision de la casa. Lo que la
+division no da entero se lo lleva el que gano la pelea: tiene que ir a algun
+lado, o los shards se irian evaporando de a uno por duelo.
+
+Los shards de un duelo **no se crean ni se destruyen**: los que pone el que
+pierde son exactamente los que cobra el que gana. Es la unica forma de meter
+apuestas sin inflar la economia.
+
+Si nadie le aposto al que gano, a los que erraron se les devuelve todo: perder
+porque nadie mas jugo no es perder.
+
+### El torneo
+
+`/pvp torneo abrir <entrada>` (operadores), la gente se anota con `/pvp torneo
+entrar`, y `/pvp torneo arrancar` arma la llave. Cada cruce es un duelo normal
+(kit al azar, la misma arena, la gente apostando) y el campeon se lleva el pozo
+entero de las entradas.
+
+**Se encola una pelea por vez y no la ronda entera.** Encolar la ronda completa
+suena mas prolijo y es una fuente de peleas fantasma: alguien se desconecta, su
+llave desaparece de la cola y el torneo se queda esperando un resultado que no va
+a llegar nunca. Al que se desconecta antes de que le toque no se lo saca de la
+lista: se resuelve cuando le toca, y ahi el que estaba pasa de ronda sin pelear.
+
+Funciona con cualquier cantidad de anotados y no solo con 4, 8 o 16: el que queda
+desparejo en una ronda pasa derecho. Si se cancela el torneo, la entrada vuelve a
+**todos** los que la pagaron y no solo a los que siguen en pie.
+
+### Los dos objetivos nuevos del scoreboard
+
+`sdp_duelos_g` y `sdp_duelos_p`, los ganados y los perdidos de cada uno. Los crea
+el mod al arrancar si no estan, que es lo que hace que esto funcione solo en un
+mundo recien hecho. Son de donde sale `/pvp top`.
 
 ## Los equipos, y la barra de arriba que era un radar
 

@@ -29,6 +29,9 @@ mod-varita/build/
 mod-varita/.gradle/
 mod-cofres/build/
 mod-cofres/.gradle/
+mod-duelos/build/
+mod-duelos/.gradle/
+mod-duelos/logs/
 
 # Sistema
 Thumbs.db

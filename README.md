@@ -38,6 +38,21 @@ mod-precios/                   muestra en cada item cuanta plata paga el servido
 mod-varita/                    la varita de zonas tambien protege bichos
 └── VaritaServidor             click derecho a un animal y no lo mata nadie
 
+mod-duelos/                    el coliseo: /pvp <jugador> reta a alguien a un duelo
+├── DuelosServidor             arma todo y registra el comando y los enganches
+├── Arena                      la caja de la cancha y donde aparece cada uno
+├── Varita                     la misma varita de las zonas, pero con el click izquierdo
+├── Duelo                      una pelea: apuestas, la cuenta de 3 2 1, la pelea y el final
+├── Duelos                     una pelea a la vez, la cola, y que no se meta nadie
+├── Kits                       las ocho clases, una al azar y la misma para los dos
+├── Guardado                   el inventario de cada uno mientras pelea, y como vuelve
+├── Copia                      la foto de la arena, para dejarla como estaba
+├── Apuestas                   quien le puso cuanto a quien, y el reparto
+├── Torneo                     la llave hasta que queda uno solo
+├── Puntos                     los shards y las cuentas de duelos del scoreboard
+├── Invitaciones               los retos esperando respuesta, un minuto
+└── ComandoPvp                 /pvp y sus subcomandos, colgados del /pvp que ya existia
+
 mod-equipos/                   los equipos: /equipo crear, invitar, aceptar, echar y salir
 ├── EquiposServidor            registra el comando y carga los equipos al arrancar
 ├── Registro                   quien esta con quien, en config/equipos-de-pepe.json,
@@ -127,6 +142,14 @@ Backend: ver [`web/README.md`](web/README.md) para la puesta en marcha real.
     MIS MODS y se instalan en cualquier computadora donde entre esa cuenta. Que solo
     el admin pueda es lo que evita que esto sea la vieja `mods-propios.txt`: la lista
     ya no la escribe el jugador en su PC, la decide el backend. `docs/02`, 4.8.
+15. **En la arena no se pierde nada y nadie muere de verdad.** El duelo de
+    `/pvp <jugador>` guarda el inventario de los dos, les presta un kit igual y
+    se los devuelve entero al terminar; el golpe que mataria se cancela. Si la
+    muerte pasara de verdad, el que gana cobraria la kill, los shards y la plata
+    del muerto, y dos amigos turnandose serian una maquina de shards. Lo unico
+    que se juega es lo que se aposto, y eso es en shards y nunca en plata porque
+    la plata no se puede cobrar sin regalar la diferencia. `servidor/LEEME.md`,
+    "El coliseo".
 14. **Las trampas se frenan del lado del servidor, no del cliente.** Todo lo que le
     preguntamos al cliente lo puede contestar con mentiras; el anti-xray y el anticheat
     viven adentro del servidor, donde el cliente no llega. Se instalan con

@@ -185,7 +185,12 @@ GRUPOS = [
         ("/home set ", True), ("/home delete ", True), ("/home list", False),
         ("/rtp", False), ("/tpa ", True),
     ]),
+    # El grupo con los seis del duelo y no una linea sola con /pvp, por lo mismo
+    # que EQUIPO: esta lista es de donde la gente saca que existe cada cosa, y un
+    # /pvp pelado no cuenta que se reta, que se apuesta ni que hay un torneo.
     ("PELEA", e.KILLS, [
+        ("/pvp ", True), ("/pvp apostar ", True), ("/pvp rendirse", False),
+        ("/pvp top", False), ("/pvp duelos", False), ("/pvp torneo", False),
         ("/shards", False), ("/tienda", False),
     ]),
     # Grupo propio y con los seis, y no una linea sola con /equipo, porque esta

@@ -664,7 +664,12 @@
           },
           "minecraft:lore": [
             {
-              "text": "  Como se pelea aca",
+              "text": "  Duelos en la arena, apuestas",
+              "italic": false,
+              "color": "gray"
+            },
+            {
+              "text": "  y como se pelea aca",
               "italic": false,
               "color": "gray"
             }
