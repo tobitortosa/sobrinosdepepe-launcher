@@ -110,6 +110,7 @@
 | DPAPI | .NET `System.Security.Cryptography.ProtectedData` (CurrentUser); Electron `safeStorage` |
 | GitHub Releases | archivos < 2 GiB, sin límite de ancho de banda, `releases/latest/download/<asset>`; API 60 req/h sin token |
 | raw.githubusercontent.com | cache 5 min y rate limit agresivo: no usarlo como CDN del manifest |
+| El JSON del pack es un contrato viejo | El launcher instalado no se puede cambiar: lo que sale de `/api/pack` tiene que entrar en el modelo del launcher **que ya tiene la gente**. `requires` es `List<string>` en `Pack.cs`, así que mandarlo como objetos `{projectId, versionId}` rompe JUGAR con `JsonException: The JSON value could not be converted to System.String`. Pasó con el pack 1.0.21 (2026-09-08), el primero con un mod que declara dependencias; se arregló mandando solo los ids. Cualquier campo nuevo del payload se agrega, nunca se cambia de forma |
 | Ley 25.326 | IPs = dato personal; aviso de privacidad, retención acotada, derechos de acceso/supresión; una base que no sea "uso exclusivamente personal" formalmente se inscribe en el RNBD |
 
 ## Firma y SmartScreen

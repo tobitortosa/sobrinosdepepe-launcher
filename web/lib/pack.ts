@@ -29,7 +29,16 @@ export type PackPayload = {
     folder: string;
     license: string;
     pageUrl: string;
-    requires: { projectId: string; versionId: string | null }[];
+    /**
+     * Los ids de Modrinth de los mods que este necesita, y nada más. El launcher no
+     * resuelve dependencias: eso pasa acá, en validate(), antes de publicar, y para
+     * eso están las filas de la base, que sí guardan la versión pedida.
+     *
+     * Va como lista de textos porque así lo lee el launcher (`List<string>`), y un
+     * launcher ya instalado no se puede cambiar: mandarle objetos rompe la pantalla
+     * de JUGAR con un error de JSON y deja a todos afuera. Pasó con el pack 1.0.21.
+     */
+    requires: string[];
   }[];
 };
 
@@ -58,7 +67,7 @@ export function toPayload(mods: PackMod[], version: string): PackPayload {
         folder: m.kind === 'shader' ? 'shaderpacks' : m.kind === 'resourcepack' ? 'resourcepacks' : 'mods',
         license: m.license,
         pageUrl: m.pageUrl,
-        requires: m.requires,
+        requires: m.requires.map((dependencia) => dependencia.projectId),
       })),
   };
 }
