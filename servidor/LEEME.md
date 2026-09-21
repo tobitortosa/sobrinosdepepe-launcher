@@ -23,6 +23,7 @@ subir tal cual y todo queda como estaba.
 | `generar-recursos.py` | Arma el resource pack propio del servidor, lo publica en GitHub y apunta el servidor. |
 | `configurar-zonas.py` | Deja Safe Zone como herramienta de administrador: nadie más puede proteger zonas. |
 | `configurar-netherite.py` | Prende y apaga la restricción de la netherita (`RESTRICT_NETHERITE`): crafteable con las doce recetas de smithing, o solo desde la tienda de shards. |
+| `ocultar-coordenadas.py` | Apaga `print_teleport_coordinates`: el chat deja de decir a qué coordenadas te llevó `/home`, `/warp`, `/rtp`, `/back` o un `/tpa`. Para poder streamear sin regalar dónde vivís. Apaga el servidor un minuto. |
 | `ajustar-saldos.py` | Deja el saldo de cada uno en proporción a las horas jugadas. |
 | `estilo.py` | Los colores y los símbolos, en un solo lugar. |
 
