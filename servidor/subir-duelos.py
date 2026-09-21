@@ -62,8 +62,13 @@ del servidor.
 - **No se mete nadie.** Al que no está peleando lo saca de la arena, y los golpes
   no pasan ni para adentro ni para afuera. Romper y poner bloques adentro es solo
   de los dos que pelean.
-- **La arena vuelve a como estaba.** Se puede romper todo, poner crystals y volar
-  el piso con TNT; al terminar se rehace bloque por bloque.
+- **La arena vuelve a como estaba, después de CADA pelea.** Se puede romper todo,
+  poner crystals y volar el piso con TNT. Vuelven los bloques, vuelve lo que los
+  bloques tenían adentro (el contenido de un cofre, el texto de un cartel, el
+  dibujo de un estandarte) y se barre lo que quedó tirado. La decoración que no es
+  un bloque —cuadros, soportes de armadura, vitrinas— se hace intocable mientras
+  dura el duelo, así no hay nada que rehacer. Lo que alguien construya o decore
+  **entre** dos peleas entra en la foto siguiente y se respeta.
 
 ## La plata
 

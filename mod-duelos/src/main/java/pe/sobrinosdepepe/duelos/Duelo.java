@@ -79,6 +79,8 @@ public final class Duelo {
 	private int reloj = TICKS_APUESTAS;
 	private Kits.Kit kit;
 	private Copia foto;
+	/** La decoracion de la arena a la que le pusimos proteccion mientras se pelea. */
+	private java.util.List<java.util.UUID> decoracionCuidada = java.util.List.of();
 	private final Apuestas apuestas = new Apuestas();
 	private ServerBossEvent barra;
 	private int avisoDeAfuera;
@@ -138,6 +140,7 @@ public final class Duelo {
 		// coliseo y no el coliseo con la basura de la pelea anterior adentro.
 		Copia.limpiar(nivel, arena);
 		foto = Copia.sacar(nivel, arena);
+		decoracionCuidada = Copia.cuidarLaDecoracion(nivel, arena);
 
 		RandomSource azar = nivel.getRandom();
 		kit = Kits.armar(servidor.registryAccess(), azar);
@@ -476,9 +479,15 @@ public final class Duelo {
 		devolverLoSuyo(otro);
 
 		ServerLevel nivel = arena.nivel(servidor);
-		if (nivel != null && foto != null) {
-			int arreglados = foto.devolver(nivel);
-			if (arreglados > 0) LOG.info("La arena volvio a como estaba: {} bloques", arreglados);
+		if (nivel != null) {
+			Copia.soltarLaDecoracion(nivel, decoracionCuidada);
+			decoracionCuidada = java.util.List.of();
+			if (foto != null) {
+				int arreglados = foto.devolver(nivel);
+				if (arreglados > 0) {
+					LOG.info("La arena volvio a como estaba: {} bloques", arreglados);
+				}
+			}
 		}
 
 		if (barra != null) {

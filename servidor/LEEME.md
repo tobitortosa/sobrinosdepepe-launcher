@@ -839,7 +839,42 @@ world/safe-zone/claims.json y leerlas seria atarse al formato de otro mod.
 ### La arena vuelve a como estaba
 
 Se puede romper todo, poner crystals y volar el piso con TNT. Al terminar se
-rehace bloque por bloque desde la foto. Sin esto el coliseo dura una pelea.
+rehace desde la foto, y se rehace **despues de cada pelea**, no al final del
+torneo. Sin esto el coliseo dura una pelea.
+
+La foto se saca al empezar cada duelo, asi que lo que alguien haya construido o
+decorado ENTRE dos peleas ya esta adentro de la foto siguiente y se respeta. Lo
+unico que se deshace es lo que cambio mientras se peleaba.
+
+Son cuatro cosas, y hacen falta las cuatro para que de verdad quede igual:
+
+1. **Los bloques**, con el estado exacto que tenian.
+2. **Lo que los bloques tienen adentro.** Devolver el bloque y nada mas te deja
+   el cofre de decoracion vacio, el cartel en blanco y el estandarte sin dibujo,
+   que es justo lo que se nota. Se guarda el NBT de cada block entity de la caja
+   —son cuatro o cinco en una arena— y al reponer el bloque se le vuelve a poner
+   adentro con `BlockEntity.loadStatic`.
+3. **La decoracion que no es un bloque** —los cuadros, los soportes de armadura,
+   las vitrinas, algun bicho— se hace **intocable** mientras dura el duelo, en vez
+   de guardarse y rehacerse. Es a proposito: rehacer una entidad es crear una
+   entidad, y si algo sale mal en el medio quedan dos cuadros donde habia uno. Un
+   coliseo con la decoracion duplicada es peor que uno con un cuadro roto. Se
+   marca solo a los que no eran invulnerables ya, asi no se le pisa la proteccion
+   a lo que haya marcado la varita.
+4. **Lo que quedo tirado** se barre: flechas, crystals, TNT encendida, la
+   experiencia, los bloques cayendo y todos los items que **no estaban antes de
+   empezar**. Los que si estaban no se tocan — el PvP aca es libre y en todo el
+   mundo, asi que alguien pudo morirse adentro del coliseo un minuto antes, y
+   quitarle lo suyo por haber muerto en el lugar equivocado seria bastante peor
+   que dejar el piso un poco sucio.
+
+El punto 4 no es prolijidad: el bloque que alguien rompe del piso **vuelve a su
+lugar igual**, asi que si su drop se quedara tirado, cada pelea fabricaria items
+de la nada.
+
+Lo unico que no vuelve es un cuadro colgado de una pared que voló: el juego lo
+descuelga en cuanto le sacan el bloque de atras, antes de que nadie pueda
+frenarlo. La pared vuelve, el cuadro no.
 
 Se guarda la caja entera y no solo lo que cambia: guardar solo lo que cambia
 pediria enterarse de cada bloque que se rompe y de cada uno que se pone, y hay
