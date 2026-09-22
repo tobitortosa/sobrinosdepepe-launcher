@@ -4,8 +4,8 @@ import { env } from '@/lib/env';
 import { CopiarIp } from './copiar';
 import { socials } from './socials';
 
-// La dirección, la versión y los dos links de descarga salen de variables de entorno:
-// se leen en cada pedido, así cambiarlos no obliga a recompilar el sitio.
+// La dirección, la versión y el link de descarga salen de variables de entorno: se
+// leen en cada pedido, así cambiarlos no obliga a recompilar el sitio.
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
@@ -14,26 +14,16 @@ export const metadata = {
 };
 
 /**
- * Los tres pasos para poner los mods a mano, para el que ya tiene su Minecraft
- * andando y no quiere bajar el launcher. Son tres y no seis a propósito: el que
- * elige este camino ya sabe lo que es una carpeta de mods.
+ * Tres pasos y ni una palabra de más: el que llega hasta acá ya decidió bajarse el
+ * zip, y lo único que le falta es dónde va cada cosa.
+ *
+ * No se nombra ningún launcher en particular. La mayoría usa TLauncher, pero no
+ * todos, y el paso es el mismo en cualquiera: elegir la versión con Fabric.
  */
 const pasos = [
-  {
-    n: 1,
-    titulo: 'Instalá Fabric 26.1',
-    texto: 'En TLauncher elegís la versión 26.1 con Fabric y la abrís una vez.',
-  },
-  {
-    n: 2,
-    titulo: 'Descomprimí el zip',
-    texto: 'Adentro hay una carpeta "mods". Va en .minecraft, junto a "saves" y "options.txt".',
-  },
-  {
-    n: 3,
-    titulo: 'Entrá con la IP',
-    texto: 'Abrís el juego, agregás el servidor y listo. La voz se abre con la tecla V.',
-  },
+  { n: 1, titulo: 'Fabric 26.1', texto: 'Elegí esa versión en tu launcher y abrila una vez.' },
+  { n: 2, titulo: 'Descomprimí', texto: 'Las dos carpetas van adentro de .minecraft.' },
+  { n: 3, titulo: 'Entrá', texto: 'Agregás el servidor con la IP. La voz se abre con la tecla V.' },
 ];
 
 function DownloadIcon() {
@@ -51,101 +41,62 @@ function DownloadIcon() {
 }
 
 export default function Home() {
-  const { serverAddress, minecraftVersion, downloadUrl, modsUrl } = env;
+  const { serverAddress, minecraftVersion, modsUrl } = env;
 
   return (
     <main className="page">
-      {/* Lo primero y lo único imprescindible: la dirección. */}
       <header className="hero">
         <Image
           src="/logo.png"
           alt="Sobrinos de Pepe"
-          width={124}
-          height={124}
+          width={112}
+          height={112}
           priority
           className="logo"
         />
 
         <h1>SOBRINOS DE PEPE</h1>
-        <p className="lead">Copiá la dirección, pegala en tu Minecraft y entrá.</p>
+        <p className="lead">Copiá la IP y entrá.</p>
 
         <CopiarIp ip={serverAddress} />
 
-        <p className="requisitos">
-          Minecraft Java · versión {minecraftVersion} · no hace falta tenerlo comprado
-        </p>
+        <p className="requisitos">Minecraft Java {minecraftVersion} · no hace falta comprarlo</p>
       </header>
 
-      {/* Las dos descargas, en el orden en que conviene ofrecerlas. */}
-      <section className="opciones" aria-labelledby="mods">
-        <h2 id="mods">La voz y los mods</h2>
-        <p className="subtitulo">
-          Se entra sin nada de esto. Son para hablar con los que tenés al lado y para que el
-          juego vaya más rápido.
-        </p>
+      {/* Una sola descarga acá, y a propósito: si al lado hubiera un botón del
+          launcher, la mitad se bajaría el que no quería. */}
+      <section className="descarga" aria-labelledby="mods">
+        <h2 id="mods">Chat de voz y más FPS</h2>
+        <p className="subtitulo">Opcional. Se entra sin nada de esto.</p>
 
-        <div className="tarjetas">
-          <article className="tarjeta">
-            <h3>Los mods sueltos</h3>
-            <p>
-              El chat de voz, los shaders y todo lo que le saca FPS al juego. Lo descomprimís en
-              tu carpeta de Minecraft.
-            </p>
-            {modsUrl ? (
-              <a className="download" href={modsUrl}>
-                <DownloadIcon />
-                Descargar los mods
-              </a>
-            ) : (
-              <p className="pending">Todavía no está publicado.</p>
-            )}
-            <p className="pie">Para el que ya tiene su Minecraft andando</p>
-          </article>
-
-          <article className="tarjeta">
-            <h3>El launcher</h3>
-            <p>
-              Hace lo mismo pero solo: te instala el juego, el Java y los mods, y los mantiene
-              iguales a los del servidor.
-            </p>
-            {downloadUrl ? (
-              <a className="download secundario" href={downloadUrl}>
-                <DownloadIcon />
-                Descargar el launcher
-              </a>
-            ) : (
-              <p className="pending">Todavía no está publicado.</p>
-            )}
-            <p className="pie">
-              Windows · <Link href="/launcher">cómo se instala</Link>
-            </p>
-          </article>
-        </div>
-      </section>
-
-      {/* Solo para el camino a mano: el del launcher ya tiene su propia página. */}
-      <section className="pasos" aria-labelledby="como">
-        <h2 id="como">Poner los mods a mano</h2>
-        <p className="subtitulo">Tres pasos, una sola vez.</p>
+        {modsUrl ? (
+          <a className="download" href={modsUrl}>
+            <DownloadIcon />
+            Descargar los mods
+          </a>
+        ) : (
+          <p className="pending">Todavía no está publicado.</p>
+        )}
 
         <ol className="grilla tres">
           {pasos.map((paso) => (
-            <li key={paso.n} className="paso simple">
-              <div className="texto">
-                <span className="numero">{paso.n}</span>
-                <div>
-                  <h3>{paso.titulo}</h3>
-                  <p>{paso.texto}</p>
-                </div>
+            <li key={paso.n} className="paso">
+              <span className="numero">{paso.n}</span>
+              <div>
+                <h3>{paso.titulo}</h3>
+                <p>{paso.texto}</p>
               </div>
             </li>
           ))}
         </ol>
-
-        <p className="aviso">
-          Si ya tenías mods de otra versión en esa carpeta, sacalos antes: mezclados no arranca.
-        </p>
       </section>
+
+      {/* El launcher, abajo y en chico: es para el que no quiere hacer nada de lo de
+          arriba, no la puerta de entrada. */}
+      <p className="alternativa">
+        ¿No querés tocar carpetas? <Link href="/launcher">Usá el launcher</Link>, te instala todo
+        solo.
+      </p>
 
       <footer className="redes">
         {socials.map((social) => (
