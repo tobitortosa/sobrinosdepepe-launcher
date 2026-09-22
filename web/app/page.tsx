@@ -61,6 +61,12 @@ export default function Home() {
         <CopiarIp ip={serverAddress} />
 
         <p className="requisitos">Minecraft Java {minecraftVersion} · no hace falta comprarlo</p>
+
+        {/* Lo dice acá y no adentro del juego solamente: el que entra y no se puede
+            mover piensa que el servidor está roto y se va antes de leer el cartel. */}
+        <p className="registro">
+          La primera vez vas a elegir una contraseña: <code>/register clave clave</code>
+        </p>
       </header>
 
       {/* Una sola descarga acá, y a propósito: si al lado hubiera un botón del

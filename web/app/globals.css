@@ -486,3 +486,20 @@ h1 {
     margin-top: 3.5rem;
   }
 }
+
+/* La contraseña del primer ingreso, abajo de la dirección. */
+.registro {
+  margin: 0.55rem 0 0;
+  color: var(--suave);
+  font-size: 0.84rem;
+}
+
+.registro code {
+  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  font-size: 0.82rem;
+  color: var(--verde);
+  background: rgba(74, 222, 128, 0.08);
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+  white-space: nowrap;
+}

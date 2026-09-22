@@ -28,6 +28,7 @@ subir tal cual y todo queda como estaba.
 | `ajustar-saldos.py` | Deja el saldo de cada uno en proporción a las horas jugadas. |
 | `ver-cofre.py` | Muestra el cofre de ender (y con `--todo` la mochila) de cualquier jugador, aunque esté baneado y no se pueda conectar. Lee el archivo del jugador; no es un comando del juego y nadie más lo ve. |
 | `subir-cofres.py` | Sube el mod de `/cofre <jugador>`, que abre ese mismo cofre de ender adentro del juego y deja sacar y meter cosas. Solo para operadores; al cerrar la ventana reescribe el archivo del jugador. |
+| `configurar-auth.py` | Deja EasyAuth como lo queremos: al servidor se entra con contraseña. |
 | `estilo.py` | Los colores y los símbolos, en un solo lugar. |
 
 Las credenciales salen de `web/.env.local`, que no está en el repositorio.
@@ -38,6 +39,36 @@ excepciones son los dos mods nuestros que también van del lado del cliente: el
 de precios (ver más abajo) y el de acceso, que es el que exige el launcher para
 entrar — ese va en los dos lados y su orden de publicación está en el encabezado
 de `subir-acceso.py`.
+
+## Al servidor se entra con contraseña
+
+Desde el 2026-09-21 la puerta está abierta: se promociona la IP y entra cualquiera,
+con el Minecraft pelado y sin el launcher. Eso deja un agujero que antes no existía.
+El servidor es **offline-mode**, o sea que el nombre no lo verifica nadie: cualquiera
+escribe `Chichon` y entra como Chichon, con su casa y su plata. Mientras el candado
+estuvo puesto no importaba, porque el permiso lo firmaba el backend.
+
+Lo tapa **EasyAuth** (`easyauth-mc26.1-3.4.4.jar`, `environment: server`). Se
+configura con `configurar-auth.py`, que explica en su encabezado cómo se ve desde
+adentro del juego y qué quedó apagado a propósito.
+
+**Nadie pierde nada al registrarse**, y esto es lo primero que va a preguntar todo el
+mundo. El inventario, la plata, los shards, las casas y los avances cuelgan del UUID,
+y el UUID sale del nombre (`OfflinePlayer:<nombre>`, v3), igual que siempre. Las dos
+únicas opciones capaces de cambiarlo —`premium-auto-login` y `forced-offline-uuid`—
+quedaron las dos en `false`.
+
+**Lo que sí se puede perder es el nombre.** El primero que escribe `/register` con un
+nombre se queda con él, y como la puerta se abrió antes de que esto estuviera puesto,
+hubo un rato en que cualquiera pudo haber entrado como cualquiera. Si alguien
+aparece diciendo que su cuenta ya estaba registrada y no fue él, se arregla con
+`/auth unregister <nombre>` y que se registre de nuevo, pero conviene mirar el log
+antes: `log-player-registration` quedó en `true` justo para eso.
+
+Las contraseñas viven hasheadas en un SQLite del propio mod
+(`/config/EasyAuth/EasyAuth/easyauth.db`) y **no las respalda ningún script**. Si ese
+archivo se pierde, cada uno se vuelve a registrar —y el nombre vuelve a quedar libre
+para el primero que llegue.
 
 ## Cómo funciona la economía
 
