@@ -43,11 +43,11 @@ export const env = {
   },
   /**
    * El .zip con los mods sueltos, para el que entra por la IP con su propio Minecraft
-   * en vez de usar el launcher. Sale de una release de GitHub, igual que el launcher:
-   * son 20 MB y no tienen por qué vivir en el repositorio ni pasar por el servidor.
+   * en vez de usar el launcher. Lo arma `npm run mods:zip` desde el pack publicado y
+   * queda en public/, así lo sirve el CDN y no hay que pasar 24 MB por una función.
    */
   get modsUrl() {
-    return process.env.MODS_URL ?? '';
+    return process.env.MODS_URL ?? '/SobrinosDePepe-mods.zip';
   },
   /**
    * Con lo que se firman los permisos de entrada al servidor. El mismo valor está

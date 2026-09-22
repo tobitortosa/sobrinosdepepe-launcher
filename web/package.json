@@ -23,7 +23,8 @@
     "whitelist": "tsx --env-file=.env.local scripts/sync-whitelist.mts",
     "users": "tsx --env-file=.env.local scripts/users.mts",
     "check:password": "tsx --env-file=.env.local scripts/check-password-flow.mts",
-    "pack:quitar": "tsx --env-file=.env.local scripts/quitar-mod.mts"
+    "pack:quitar": "tsx --env-file=.env.local scripts/quitar-mod.mts",
+    "mods:zip": "tsx --env-file=.env.local scripts/armar-zip.mts"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.2.0",
