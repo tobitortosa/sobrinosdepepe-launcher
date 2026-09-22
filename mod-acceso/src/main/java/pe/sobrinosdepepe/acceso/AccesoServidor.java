@@ -4,6 +4,7 @@ import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.networking.v1.FriendlyByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerLoginConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerLoginNetworking;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -67,6 +68,12 @@ public final class AccesoServidor implements DedicatedServerModInitializer {
 		ServerLoginConnectionEvents.QUERY_START.register((handler, server, sender, sync) ->
 				sender.sendPacket(Canal.ID, FriendlyByteBufs.create()));
 
+		// Cuando el que entro con el launcher ya esta en el mundo, se lo da por
+		// autenticado: su identidad la probo el ticket, mejor que una contrasena
+		// escrita en el chat. Ver Autenticacion.
+		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
+				Autenticacion.alEntrar(handler.getPlayer(), server, LOG));
+
 		ServerLoginNetworking.registerGlobalReceiver(Canal.ID,
 				(server, handler, entendido, respuesta, sync, sender) -> {
 					// La config se lee de nuevo en cada intento y no una sola vez al
@@ -103,6 +110,7 @@ public final class AccesoServidor implements DedicatedServerModInitializer {
 
 					if (veredicto.pasa()) {
 						LOG.info("{} entra con el launcher", nombre);
+						Autenticacion.anotar(nombre);
 						return;
 					}
 

@@ -38,7 +38,14 @@ public final class Tramposos {
 	private static final List<String> PEDAZOS = List.of(
 			"xray", "killaura", "aimbot", "autoclicker", "wallhack", "nuker",
 			"seedcracker", "baritone", "freecam", "autototem", "autocrystal",
-			"bhop", "noclip", "speedhack", "scaffold", "aurabot");
+			"bhop", "noclip", "speedhack", "scaffold", "aurabot",
+			// Los minimapas van aca por el radar de jugadores, que es lo que los hace
+			// un problema en un servidor de PvP libre: te dicen siempre donde esta
+			// todo el mundo, que es justo lo contrario de lo que hace divertido salir
+			// a buscar pelea. Por eso mismo Xaero salio del pack el 2026-09-06. El
+			// mapa en si no molesta; el radar no se puede apagar desde el servidor,
+			// asi que se va el mod entero.
+			"minimap");
 
 	/**
 	 * Estos tienen que ser el nombre entero del mod. Van aparte de los de arriba
@@ -48,7 +55,11 @@ public final class Tramposos {
 	private static final List<String> ENTEROS = List.of(
 			"meteor-client", "wurst", "impact", "sigma", "liquidbounce", "rusherhack",
 			"future", "trollhack", "diamond-scanner", "x_ray", "x-to-xray",
-			"cheat", "cheats", "hack", "hacks");
+			"cheat", "cheats", "hack", "hacks",
+			// Los otros dos minimapas grandes, que no llevan "minimap" en el nombre.
+			"journeymap", "voxelmap", "antiquevoxelmap",
+			// Tweakeroo trae freecam y el vuelo de creativo entre sus "tweaks".
+			"tweakeroo");
 
 	/**
 	 * El primer mod prohibido de la lista que mando el cliente, o null si esta

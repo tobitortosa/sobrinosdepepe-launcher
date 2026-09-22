@@ -146,6 +146,23 @@ PERMISOS = [
      "FastBreak avisa, pero ya no le cancela el picado a nadie"),
     ("grim.exempt.airliquidplace",
      "AirLiquidPlace cancelaba colocaciones legitimas por desincronizacion"),
+    # Los dos de abajo salieron de la noche del 2026-09-21, con el coliseo en obra.
+    # A Felix1256 (nick ~elpetizoTV) en creativo y a Luquitas1410 sin creativo les
+    # cancelaba la colocacion una y otra vez: "failed PositionPlace" y "failed Post
+    # (player block placement)" cada pocos segundos, y los bloques no aparecian.
+    #
+    # La causa de fondo no era el check sino el lag: el servidor estaba corriendo
+    # 40 ticks atras ("Can't keep up! Running 2327ms behind") con cinco jugadores.
+    # Grim compara su simulacion con lo que dice el cliente, y dos segundos de
+    # atraso alcanzan para que esa cuenta no cierre y marque lo que esta bien.
+    #
+    # Va nomodifypacket y no exempt a proposito, igual que FastBreak: sigue
+    # simulando, detectando, avisando y escribiendo en el log; lo unico que deja de
+    # hacer es cancelar. Construir sin que te cancelen es lo unico que hacia falta.
+    ("grim.nomodifypacket.positionplace",
+     "PositionPlace avisa, pero ya no le cancela la colocacion a nadie"),
+    ("grim.nomodifypacket.post",
+     "Post avisa, pero ya no le cancela la colocacion a nadie"),
 ]
 
 CACHE = os.path.join(tempfile.gettempdir(), "sobrinosdepepe-antitrampas")

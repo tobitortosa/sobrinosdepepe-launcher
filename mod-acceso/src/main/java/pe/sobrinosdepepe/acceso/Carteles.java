@@ -82,6 +82,16 @@ public final class Carteles {
 		return aviso(jugador + " quiso entrar con " + mod + ". No lo dejé.", ChatFormatting.RED);
 	}
 
+	/**
+	 * Este no es para los ops: es para el que acaba de entrar con el launcher. Se lo
+	 * dice porque si no, ve que a los demas les piden contrasena y cree que a el se
+	 * le rompio algo, o peor, se pone a buscar donde registrarse.
+	 */
+	public static Component sinContrasena() {
+		return aviso("Entraste con el launcher: acá no te hace falta contraseña.",
+				ChatFormatting.GREEN);
+	}
+
 	public static Component avisoSinLauncher(String jugador, String motivo) {
 		return aviso(jugador + " entró sin el launcher (" + motivo + ")", ChatFormatting.YELLOW);
 	}
