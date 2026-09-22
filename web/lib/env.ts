@@ -27,8 +27,14 @@ export const env = {
   get serverName() {
     return process.env.SERVER_NAME ?? 'SOBRINOS DE PEPE';
   },
+  /**
+   * La que se publicita y la que se copia de la pagina. Desde el 2026-09-21 es el
+   * dominio propio: tiene un registro SRV (`_minecraft._tcp`) que apunta a
+   * sv36.minehost.pro:25445, asi que el jugador escribe la direccion sola, sin
+   * puerto, y el juego resuelve el resto.
+   */
   get serverAddress() {
-    return process.env.SERVER_ADDRESS ?? 'sobrinosdepepe.minehost.pro';
+    return process.env.SERVER_ADDRESS ?? 'sobrinosdepepe.com';
   },
   /**
    * La contraseña que se le pone a una cuenta cuando el administrador la restablece.
