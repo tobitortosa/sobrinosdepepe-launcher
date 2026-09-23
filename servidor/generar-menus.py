@@ -28,6 +28,7 @@ Como es un archivo de menu:
 """
 import json
 import os
+import re
 import sys
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
@@ -80,13 +81,31 @@ ENC_ARCO = {"power": 5, "unbreaking": 3, "mending": 1, "flame": 1}
 ENC_BALLESTA = {"piercing": 4, "unbreaking": 3, "mending": 1}
 
 
-def texto(t, color=None, negrita=False, cursiva=False):
+def texto(t, color=None, negrita=False, cursiva=False, titila=False):
     c = {"text": t, "italic": cursiva}
     if color:
         c["color"] = color
     if negrita:
         c["bold"] = True
+    if titila:
+        c["obfuscated"] = True
     return c
+
+
+def titilando(nombre, color, adorno="||"):
+    """
+    El nombre con dos barras que titilan a los costados.
+
+    `obfuscated` es lo unico animado que da Minecraft sin resource pack: cambia
+    los caracteres veinte veces por segundo manteniendo el ancho. Va en el adorno
+    y **nunca** en lo que hay que leer, que es el error clasico: un titulo entero
+    titilando no se lee, y encima el ancho baila y mueve todo lo que tiene al lado.
+    """
+    return {"text": "", "italic": False, "extra": [
+        texto(adorno + " ", color, titila=True),
+        texto(nombre, color, negrita=True),
+        texto(" " + adorno, color, titila=True),
+    ]}
 
 
 BRILLO = {"minecraft:enchantment_glint_override": True}
@@ -136,7 +155,9 @@ SIN_CARTEL = {"minecraft:tooltip_display": {"hide_tooltip": True}}
 def item(iid, nombre, color, lore=(), componentes=None, cantidad=1):
     """El stack como lo serializa el juego: id, count y components."""
     comp = {
-        "minecraft:custom_name": texto(nombre, color, negrita=True),
+        # El nombre puede venir ya armado (ver titilando), y entonces manda ese.
+        "minecraft:custom_name": (nombre if isinstance(nombre, dict)
+                                  else texto(nombre, color, negrita=True)),
         "minecraft:lore": [l if isinstance(l, dict) else texto("  " + l, e.ETIQUETA)
                            for l in lore],
     }
@@ -423,7 +444,7 @@ coliseo = item("minecraft:iron_sword", e.ESPADAS + " EL COLISEO", e.MARCA, [
 clases = item("minecraft:chest", e.ESPADAS + " LAS OCHO CLASES", e.MARCA, [
     texto("  Sale una al azar y es la MISMA para los dos", e.ETIQUETA),
     texto("", None),
-    texto("  " + e.VINETA + " GLADIADOR    hierro, espada y escudo", e.BIEN),
+    texto("  " + e.VINETA + " GLADIADOR    hierro, espada, hacha y escudo", e.BIEN),
     texto("  " + e.VINETA + " NETHERITA    netherita, espada de fuego y crystals", e.BIEN),
     texto("  " + e.VINETA + " CRISTALERO   crystals, obsidiana y hacha", e.BIEN),
     texto("  " + e.VINETA + " ARQUERO      arco, 64 flechas y distancia", e.BIEN),
@@ -734,3 +755,232 @@ guardar("tienda_pociones", {
 
 print("menus escritos en servidor/datapack/data/sdp/menu/")
 print("subilos con: python servidor/subir-datapack.py")
+
+
+# --------------------------------------------------------------------- el lobby
+# El unico menu que se abre estando en el lobby, y lo abre la perla del mod
+# (`/menu juegos`, ver mod-lobby/Perla). Hoy tiene un solo modo y aun asi existe
+# como menu: el dia que haya coliseo o minijuegos, este es el lugar donde se
+# eligen, y el jugador ya sabe de memoria donde apretar.
+# Esto lo lee gente que entra por primera vez, asi que no puede explicar el
+# servidor **desde los cambios que le hicimos**: "aparecés donde lo dejaste" o "ya
+# no es en el survival" solo se entienden si viviste la version anterior, y al que
+# recien llega no le dicen nada. Dos renglones de que se hace adentro, y el
+# triangulito al final, que es lo unico que hay que entender para apretar.
+#
+# Se genera DOS veces, con y sin el boton de volver al lobby, y la perla abre el
+# que corresponde (ver mod-lobby/Perla). Un menu de cofre es un JSON fijo y no
+# sabe donde esta parado el que lo abre, asi que esconder un boton segun el lugar
+# solo se puede haciendo dos archivos. Estando en el lobby, "IR AL LOBBY" no seria
+# un boton: seria una pregunta.
+SURVIVAL = celda(2, 4, item("minecraft:grass_block", "SURVIVAL SMP", e.PLATA,
+                            ["Construí, mineá y hacé plata",
+                             "PvP abierto en todo el mapa",
+                             "",
+                             texto("  " + e.ENTRAR + " ENTRAR AL MUNDO",
+                                   e.ACENTO, negrita=True)]),
+                 correr("survival"), sonido="page_turn")
+
+COLISEO = item("minecraft:netherite_sword", titilando("EL COLISEO", e.SHARDS), e.SHARDS,
+               ["1v1, 2v2 y equipo contra equipo",
+                "El mismo kit para los dos",
+                "Se apuesta en shards",
+                "",
+                texto("  " + e.ENTRAR + " ENTRAR A PELEAR", e.ACENTO, negrita=True)])
+
+AL_LOBBY = item("minecraft:oak_door", "IR AL LOBBY", e.MARCA,
+                ["Te devuelve al patio del lobby",
+                 "",
+                 texto("  " + e.ENTRAR + " VOLVER", e.ACENTO, negrita=True)])
+
+guardar("juegos", {
+    "name": texto("MODOS DE JUEGO", e.MARCA, negrita=True),
+    "rows": 3,
+    "items": marco(3) + [
+        SURVIVAL,
+        celda(2, 6, COLISEO, abrir("sdp:coliseo"), sonido="page_turn"),
+    ],
+})
+
+guardar("juegos_afuera", {
+    "name": texto("MODOS DE JUEGO", e.MARCA, negrita=True),
+    "rows": 3,
+    "items": marco(3) + [
+        SURVIVAL,
+        celda(2, 6, COLISEO, abrir("sdp:coliseo"), sonido="page_turn"),
+        celda(2, 8, AL_LOBBY, correr("lobby"), sonido="page_turn"),
+    ],
+})
+
+
+# ------------------------------------------------------------------- el coliseo
+# El menu de a pasos: primero el modo, despues anotarse. Cada paso es un menu
+# propio y no una fila mas, porque un cofre de tres filas con todo junto obliga a
+# leer para encontrar el boton, y esto se aprieta mientras uno espera para pelear.
+def paso(fila, columna, iid, titulo, lineas, accion):
+    return celda(fila, columna, item(iid, titulo, e.MARCA, lineas), accion,
+                 sonido="page_turn")
+
+
+ANOTARSE = texto("  " + e.ENTRAR + " ANOTARME", e.ACENTO, negrita=True)
+
+# No hay boton de VER LA PELEA, y es a proposito: casi siempre no hay ninguna
+# jugandose, y un boton que la mayor parte del tiempo no hace nada ensucia el
+# menu. El comando `/pvp ver` sigue existiendo para el que este mirando de arriba
+# mientras espera su turno.
+guardar("coliseo", {
+    "name": titilando("COLISEO", e.SHARDS),
+    "rows": 4,
+    "items": marco(4, saltar=[(4, 5)]) + [
+        paso(2, 3, "minecraft:iron_sword", "1 VS 1",
+             ["Mano a mano. El que cae, pierde",
+              "Te cruzan con el que aparezca", "", ANOTARSE],
+             abrir("sdp:coliseo_1v1")),
+        paso(2, 5, "minecraft:diamond_sword", "2 VS 2",
+             ["Dos contra dos. El compañero",
+              "te toca por orden de llegada", "", ANOTARSE],
+             abrir("sdp:coliseo_2v2")),
+        paso(2, 7, "minecraft:netherite_sword", "EQUIPO VS EQUIPO",
+             ["Tu equipo entero contra otro", "", ANOTARSE],
+             abrir("sdp:coliseo_equipos")),
+        # Armar una pelea abre una pantalla que dibuja el MOD y no el datapack:
+        # hay que mostrar quien esta conectado, y un JSON no sabe eso. Ver
+        # mod-duelos/PantallaMesa.
+        paso(3, 3, "minecraft:name_tag", "ARMAR UNA PELEA",
+             ["Elegís vos a quién invitar,",
+              "de tu lado y del otro",
+              "",
+              "Para jugar con quien querés"],
+             abrir("sdp:coliseo_armar")),
+        paso(3, 5, "minecraft:chest", "LOS KITS",
+             ["Las ocho formas de pelear", "Mirá con qué te puede tocar"],
+             abrir("sdp:coliseo_kits")),
+        paso(3, 7, "minecraft:spyglass", "VER EL MAPA",
+             ["Recorrelo de espectador: volás",
+              "y atravesás las paredes",
+              "",
+              "Para salir: /lobby"],
+             correr("coliseo")),
+        volver("sdp:juegos", fila=4),
+    ],
+})
+
+
+# ---------------------------------------------------------------------- los kits
+# Para mirarlos, no para elegirlos: el kit sale al azar y les toca el mismo a los
+# dos, que es lo que hace que la pelea sea pareja. Saber de antemano cuales hay es
+# la mitad de la gracia; no saber con cual te va a tocar es la otra mitad.
+#
+# Los nombres y el "como se pelea" estan escritos en mod-duelos/Kits.java. Aca
+# estan copiados porque un menu es un JSON y no puede leer Java, y de que no se
+# separen en silencio se encarga `kits_de_java()`.
+KITS = [
+    ("minecraft:shield", "GLADIADOR",
+     "Espada, hacha y escudo", "La pelea de toda la vida"),
+    ("minecraft:netherite_chestplate", "NETHERITA",
+     "Lo mejor que hay, de los dos lados", "Con crystals"),
+    ("minecraft:end_crystal", "CRISTALERO",
+     "Crystals y obsidiana", "Se gana con la mano rápida"),
+    ("minecraft:bow", "ARQUERO",
+     "De lejos", "El que se deja acorralar pierde"),
+    ("minecraft:ender_pearl", "PERLERO",
+     "Perlas y cargas de viento", "Nunca estás donde te buscan"),
+    ("minecraft:tnt", "BOMBARDERO",
+     "TNT y un mechero", "El piso no va a quedar igual"),
+    ("minecraft:mace", "MAZAZO",
+     "Una maza", "Pega más cuanto más alto saltes"),
+    ("minecraft:leather_chestplate", "CUERO",
+     "Casi nada encima", "Se termina rápido"),
+]
+
+
+def kits_de_java():
+    """
+    Los nombres de las clases, leidos de Kits.java.
+
+    El menu promete ocho formas de pelear y las nombra una por una: si alguien
+    agrega la novena en el mod, este menu pasaria a mentir sin que nadie se
+    entere. Esto lo hace fallar ruidosamente, que es lo unico que sirve.
+    """
+    ruta = os.path.join(os.path.dirname(AQUI), "mod-duelos", "src", "main", "java",
+                        "pe", "sobrinosdepepe", "duelos", "Kits.java")
+    if not os.path.isfile(ruta):
+        print("  (no encontré Kits.java: no verifico los kits)")
+        return None
+    bloque = re.search(r"NOMBRES = List\.of\((.*?)\);",
+                       open(ruta, encoding="utf-8").read(), re.S)
+    return re.findall(r'"([A-Z]+)"', bloque.group(1)) if bloque else None
+
+
+_enJava = kits_de_java()
+assert _enJava is None or _enJava == [k[1] for k in KITS], (
+    "los kits del menú no son los de Kits.java:\n  menú: %s\n  mod:  %s"
+    % ([k[1] for k in KITS], _enJava))
+
+guardar("coliseo_kits", {
+    "name": texto("LOS KITS", e.SHARDS, negrita=True),
+    "rows": 4,
+    "items": marco(4, saltar=[(4, 3), (4, 5)]) + [
+        # Dos filas de cuatro, salteando una columna, que es lo que entra en las
+        # siete utiles sin que queden pegados.
+        celda(2 + i // 4, 2 + (i % 4) * 2, item(iid, nombre, e.MARCA, [uno, otro]))
+        for i, (iid, nombre, uno, otro) in enumerate(KITS)
+    ] + [
+        celda(4, 3, item("minecraft:paper", "CÓMO SE REPARTE", e.MARCA,
+                         ["Antes de cada pelea sale uno al azar",
+                          "y les toca el MISMO a los dos",
+                          "",
+                          "No se elige: gana el que mejor lo use"])),
+        volver("sdp:coliseo", fila=4),
+    ],
+})
+
+
+# Los dos botones llaman al mod, que abre su propia pantalla con las caras de los
+# conectados. Desde ahi se elige a quien va de cada lado.
+guardar("coliseo_armar", {
+    "name": texto("ARMAR UNA PELEA", e.SHARDS, negrita=True),
+    "rows": 3,
+    "items": marco(3, saltar=[(3, 5)]) + [
+        paso(2, 3, "minecraft:iron_sword", "1 VS 1",
+             ["Vos contra alguien que vos elegís",
+              "",
+              "Se le avisa y tiene que aceptar"],
+             correr("pvp mesa 1v1")),
+        paso(2, 7, "minecraft:diamond_sword", "2 VS 2",
+             ["Elegís a tu compañero y a los",
+              "dos rivales, uno por uno",
+              "",
+              "Cada uno tiene que aceptar"],
+             correr("pvp mesa 2v2")),
+        volver("sdp:coliseo", fila=3),
+    ],
+})
+
+
+def listaDeEspera(nombre, modo, titulo, iid, lineas):
+    guardar(nombre, {
+        "name": texto(titulo, e.SHARDS, negrita=True),
+        "rows": 3,
+        "items": marco(3, saltar=[(3, 5)]) + [
+            paso(2, 3, iid, "ANOTARME",
+                 lineas + ["", "Arranca sola cuando haya con quién"],
+                 correr("pvp cola " + modo)),
+            paso(2, 7, "minecraft:barrier", "BAJARME",
+                 ["Te saca de la lista de espera"],
+                 correr("pvp salir")),
+            volver("sdp:coliseo", fila=3),
+        ],
+    })
+
+
+listaDeEspera("coliseo_1v1", "1v1", "1 VS 1", "minecraft:iron_sword",
+              ["Mano a mano, hasta que uno caiga",
+               "Te cruzan con el próximo que se anote"])
+listaDeEspera("coliseo_2v2", "2v2", "2 VS 2", "minecraft:diamond_sword",
+              ["Dos contra dos. El compañero te toca",
+               "por orden de llegada, no se elige"])
+listaDeEspera("coliseo_equipos", "equipos", "EQUIPO VS EQUIPO",
+              "minecraft:netherite_sword",
+              ["Tu equipo entero contra otro",
+               "Hace falta estar en uno: /equipo"])

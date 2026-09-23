@@ -3,7 +3,7 @@
   "id": "varitadepepe",
   "version": "${version}",
   "name": "Varita de Pepe",
-  "description": "La varita de zonas también protege bichos: click derecho sobre un animal y no lo puede matar nadie. Solo para operadores, y nunca sobre un jugador.",
+  "description": "Lo que le falta a Safe Zone: la varita de zonas también protege bichos (click derecho sobre un animal y no lo puede matar nadie), y con /sz bichos una zona se queda sin hostiles.",
   "authors": ["SOBRINOS DE PEPE"],
   "environment": "server",
   "entrypoints": {
@@ -12,6 +12,7 @@
   "depends": {
     "fabricloader": ">=0.19.0",
     "minecraft": ">=26.1",
-    "fabric-api": "*"
+    "fabric-api": "*",
+    "safe-zone": "*"
   }
 }

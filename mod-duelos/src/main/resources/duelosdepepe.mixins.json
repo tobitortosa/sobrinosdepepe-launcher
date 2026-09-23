@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "pe.sobrinosdepepe.duelos.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "server": [
+    "ClaimEntityProtectionMixin",
+    "ClaimManagerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

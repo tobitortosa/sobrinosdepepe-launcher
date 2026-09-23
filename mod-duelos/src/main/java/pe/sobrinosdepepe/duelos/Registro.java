@@ -61,6 +61,7 @@ public final class Registro {
 		} else {
 			LOG.info("Todavia no hay arena. Se marca con la varita: /pvp arena");
 		}
+
 		if (!pendientes.isEmpty()) {
 			LOG.warn("Quedaron {} inventarios sin devolver de la ultima vez: {}",
 					pendientes.size(), String.join(", ", pendientes.keySet()));
@@ -133,6 +134,7 @@ public final class Registro {
 			if (json.has("arena") && json.get("arena").isJsonObject()) {
 				arena = Arena.deJson(json.getAsJsonObject("arena"));
 			}
+
 
 			if (json.has("pendientes")) {
 				for (JsonElement elemento : json.getAsJsonArray("pendientes")) {

@@ -47,3 +47,6 @@ TILDE = chr(0x2714)
 CRUZ = chr(0x2716)
 ESTRELLA = chr(0x2605)
 NOTA = chr(0x266a)         # la voz
+ENTRAR = chr(0x25b6)       # el triangulito de "clickea aca"
+ESCUDO = chr(0x26e8)       # defensa
+FUEGO = chr(0x2739)        # lo que explota

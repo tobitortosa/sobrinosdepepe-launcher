@@ -9,6 +9,9 @@
   "entrypoints": {
     "server": ["pe.sobrinosdepepe.duelos.DuelosServidor"]
   },
+  "mixins": [
+    "duelosdepepe.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=0.19.0",
     "minecraft": ">=26.1",

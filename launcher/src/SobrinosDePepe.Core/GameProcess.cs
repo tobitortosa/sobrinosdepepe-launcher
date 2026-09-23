@@ -40,6 +40,15 @@ public static class GameProcess
             {
                 try
                 {
+                    // Un proceso que ya murió sigue apareciendo en la lista un rato.
+                    // Sin este chequeo el launcher cree que el juego sigue abierto
+                    // después de cerrarlo, y entonces no se deja cerrar a sí mismo.
+                    if (process.HasExited)
+                    {
+                        process.Dispose();
+                        continue;
+                    }
+
                     var path = process.MainModule?.FileName;
                     if (path is not null && Path.GetFullPath(path).StartsWith(ours, StringComparison.OrdinalIgnoreCase))
                         return process;
@@ -60,6 +69,47 @@ public static class GameProcess
     {
         using var process = Find();
         return process is not null;
+    }
+
+    /// <summary>
+    /// Si el juego está andando **y tiene una ventana**.
+    ///
+    /// La diferencia con <see cref="IsRunning"/> importa cuando el juego se cierra mal
+    /// y deja el proceso de Java vivo sin ventana: para la persona el juego está
+    /// cerrado —no ve nada en pantalla— pero el proceso sigue ahí, y el launcher que
+    /// solo mira si hay proceso se niega a cerrarse para siempre.
+    ///
+    /// Mientras el juego arranca tampoco hay ventana todavía, pero ahí nadie está
+    /// tratando de cerrar el launcher: está mirando la barra de carga.
+    /// </summary>
+    public static bool HasWindow()
+    {
+        using var process = Find();
+        if (process is null) return false;
+        try
+        {
+            process.Refresh();
+            return process.MainWindowHandle != IntPtr.Zero;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Mata el juego sin pedir permiso, para cuando el launcher se está cerrando.
+    ///
+    /// <see cref="CloseAsync"/> le pide a la ventana que se cierre y espera ocho
+    /// segundos, que es lo correcto cuando la persona aprieta "cerrar el juego". Acá
+    /// no hay ventana a la que pedirle nada ni tiempo para esperarla: el launcher se
+    /// está yendo y lo que queda es un proceso colgado.
+    /// </summary>
+    public static void KillLeftovers()
+    {
+        using var process = Find();
+        if (process is null) return;
+        try { process.Kill(entireProcessTree: true); } catch (Exception) { }
     }
 
     /// <summary>

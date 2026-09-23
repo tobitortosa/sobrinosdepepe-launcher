@@ -55,11 +55,25 @@ todo lo que hayan construido en la tierra nueva.
 
 El Nether lleva el mismo número y no la octava parte. Achicarlo para que
 coincidiera geográficamente con el overworld cortaría chunks que ya están
-generados, que es justo lo que no queremos. Y no abre ningún agujero para
-escaparse: el juego recorta el portal de vuelta contra el borde del overworld, así
-que caminar hasta el borde del Nether no deja a nadie a ocho veces esa distancia
-del spawn.
+generados, que es justo lo que no queremos.
+
+**2026-09-22, el overworld deja de tener borde de verdad.** El lobby y el coliseo
+se mudaron al overworld, a 500.000 bloques del spawn, y afuera del borde el juego
+daña y empuja: con una pared en 15.000 no se puede jugar ahí. Como en 26.1 el
+borde es por dimensión, el overworld pasa a 30.000.000 —sin límite práctico— y el
+Nether y el End conservan el de siempre.
+
+El límite del survival no desaparece: lo hace el datapack, en `sdp:tick`, que
+devuelve al que se mete en la banda que va de 15.020 a 400.000 del spawn. Más allá
+de los 400.000 están los dos lugares nuestros, y para llegar caminando hay que
+cruzar la banda primero. WORLD_BORDER_RADIUS sigue siendo la palanca única: pone
+la pared del Nether y del End, y este script verifica que el datapack diga lo
+mismo.
+
+Lo que se pierde con esto es el aviso rojo en pantalla al acercarse, que el borde
+de verdad daba gratis. A cambio, el que cruza no recibe daño: lo devuelven.
 """
+import io
 import json
 import os
 import re
@@ -90,7 +104,17 @@ TAMANO = RADIO * 2
 AVISO_BLOQUES = 32
 AVISO_TICKS = 200
 
-DIMENSIONES = ["minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"]
+# El borde de verdad, el que frena y hace daño, queda solamente en el Nether y en
+# el End. En 26.1 cada nivel guarda el suyo aparte, asi que esto se puede.
+CON_PARED = ["minecraft:the_nether", "minecraft:the_end"]
+
+# El overworld no puede tener pared: el lobby y el coliseo estan a 500.000 del
+# spawn y afuera del borde el juego daña y empuja.
+SIN_PARED = "minecraft:overworld"
+TAMANO_SIN_PARED = 30000000
+
+# Donde el datapack escribe el mismo limite, para que no se separen.
+TICK = os.path.join(AQUI, "datapack", "data", "sdp", "function", "tick.mcfunction")
 
 
 def t(texto, color=None, negrita=False):
@@ -107,7 +131,7 @@ def miles(n):
 
 
 def aplicar():
-    for dim in DIMENSIONES:
+    for dim in CON_PARED:
         for comando in [
             "worldborder center %d %d" % (CENTRO_X, CENTRO_Z),
             "worldborder set %d" % TAMANO,
@@ -116,6 +140,28 @@ def aplicar():
         ]:
             mc.cmd("execute in %s run %s" % (dim, comando))
         print("  %s: %d bloques de lado" % (dim, TAMANO))
+
+    mc.cmd("execute in %s run worldborder center %d %d" % (SIN_PARED, CENTRO_X, CENTRO_Z))
+    mc.cmd("execute in %s run worldborder set %d" % (SIN_PARED, TAMANO_SIN_PARED))
+    print("  %s: %d (sin pared; el límite lo hace el datapack)"
+          % (SIN_PARED, TAMANO_SIN_PARED))
+
+
+def el_datapack_dice_lo_mismo():
+    """
+    El limite blando del overworld esta escrito en `sdp:tick`, y tiene que decir
+    el mismo numero que el .env. Separados, el Nether tendria una pared en un lado
+    y el overworld te devolveria en otro, y nadie entenderia por que.
+    """
+    if not os.path.isfile(TICK):
+        print("  (no encontré %s: no lo puedo verificar)" % TICK)
+        return True
+    texto = io.open(TICK, encoding="utf-8").read()
+    esperado = "tp @s %d ~ ~" % (RADIO - 10)
+    ok = esperado in texto
+    print("  %-34s %s" % ("el datapack devuelve a %d" % (RADIO - 10),
+                          "" if ok else "<- dice otra cosa, miralo"))
+    return ok
 
 
 def anunciar():
@@ -131,9 +177,9 @@ def anunciar():
 
 
 def verificar():
-    """Lee el log para confirmar los tres bordes, en vez de confiar en que salió."""
+    """Lee el log para confirmar los bordes, en vez de confiar en que salió."""
     antes = len(mc.read("/logs/latest.log").splitlines())
-    for dim in DIMENSIONES:
+    for dim in CON_PARED + [SIN_PARED]:
         mc.cmd("execute in %s run worldborder get" % dim)
     time.sleep(2)
     lineas = mc.read("/logs/latest.log").splitlines()[antes:]
@@ -145,14 +191,18 @@ def verificar():
 
 def radio_de_ahora():
     """
-    El radio que ya tiene el overworld, leido del servidor.
+    El radio que ya tiene la pared, leido del servidor.
 
-    Es para no achicar el mundo por un numero mal tipeado en el .env: lo que quede
-    afuera del borde nuevo no se puede volver a habitar, y las construcciones que
-    haya ahi tampoco vuelven.
+    Se lee del **Nether** y no del overworld: desde la mudanza el overworld no
+    tiene pared —esta en 30.000.000— y preguntarle a el daria 15.000.000 de radio,
+    o sea que cualquier numero del .env pareceria un achique.
+
+    Es para no achicar el mundo por un numero mal tipeado: lo que quede afuera del
+    borde nuevo no se puede volver a habitar, y las construcciones que haya ahi
+    tampoco vuelven.
     """
     antes = len(mc.read("/logs/latest.log").splitlines())
-    mc.cmd("execute in minecraft:overworld run worldborder get")
+    mc.cmd("execute in %s run worldborder get" % CON_PARED[0])
     time.sleep(2)
     for linea in mc.read("/logs/latest.log").splitlines()[antes:]:
         numeros = re.findall(r"[0-9]+", linea.split("]: ")[-1])
@@ -167,8 +217,15 @@ if __name__ == "__main__":
     if ahora is None:
         sys.exit("no pude leer el borde que tiene el servidor. Esta prendido?")
 
-    if RADIO == ahora:
-        print("El borde ya esta en %s de radio. No hay nada que cambiar." % miles(RADIO))
+    # Aunque la pared ya este bien, el overworld puede haber quedado con una: pasa
+    # cada vez que alguien corre un `worldborder set` suelto en la consola, que va
+    # a parar al overworld. Con el lobby a 500.000 eso deja a medio servidor afuera
+    # del borde, recibiendo daño, asi que se revisa igual.
+    if RADIO == ahora and str(TAMANO_SIN_PARED) in (mc.responde(
+            "execute in %s run worldborder get" % SIN_PARED) or [""])[0]:
+        print("El borde ya esta en %s de radio y el overworld sin pared." % miles(RADIO))
+        if not el_datapack_dice_lo_mismo():
+            sys.exit("pero el datapack dice otro numero. Arreglá sdp:tick.")
         sys.exit(0)
 
     if RADIO < ahora and "--achicar" not in sys.argv:
@@ -185,7 +242,10 @@ if __name__ == "__main__":
     if "--anunciar" in sys.argv:
         anunciar()
     print("verificación:")
-    if verificar() != len(DIMENSIONES):
+    if verificar() != len(CON_PARED) + 1:
         sys.exit("el servidor no confirmó el borde en las tres dimensiones")
-    print("borde de %d bloques (%d de radio) en las %d dimensiones"
-          % (TAMANO, RADIO, len(DIMENSIONES)))
+    if not el_datapack_dice_lo_mismo():
+        sys.exit("el datapack y el .env no dicen el mismo límite. Arreglá sdp:tick.")
+    print("pared de %d bloques (%d de radio) en el Nether y el End, y el mismo"
+          % (TAMANO, RADIO))
+    print("límite hecho por el datapack en el overworld.")

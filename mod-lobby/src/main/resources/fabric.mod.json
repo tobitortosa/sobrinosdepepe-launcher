@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "lobbydepepe",
+  "version": "${version}",
+  "name": "Lobby de Pepe",
+  "description": "Todos los que entran caen en el lobby, y al Survival se va a mano con /survival. Guarda dónde estaba cada uno y lo devuelve al mismo lugar. En el lobby no se rompe, no se pone y no se pega.",
+  "authors": ["SOBRINOS DE PEPE"],
+  "environment": "server",
+  "entrypoints": {
+    "server": ["pe.sobrinosdepepe.lobby.LobbyServidor"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": ">=26.1",
+    "fabric-api": "*"
+  }
+}

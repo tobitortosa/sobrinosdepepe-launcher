@@ -120,7 +120,7 @@ public final class Carteles {
 	 * apostar y dice cuanto tiempo queda.
 	 */
 	public static Component arrancaElDuelo(String uno, String otro, int apuesta,
-			String kit, int segundos) {
+			String kit, int segundos, boolean hayGradas) {
 		MutableComponent cartel = Component.empty()
 				.append(apagado("\n  " + RAYA.repeat(26) + "\n"))
 				.append(dorado("  " + ESPADAS + " DUELO EN LA ARENA\n\n"))
@@ -139,16 +139,25 @@ public final class Carteles {
 					.append(gris(" cada uno\n"));
 		}
 
-		return cartel
-				.append(Component.literal("\n"))
+		cartel.append(Component.literal("\n"))
 				.append(gris("  Apostale a uno de los dos:\n  "))
 				.append(boton("[ " + uno.toUpperCase() + " ]", "/pvp apostar " + uno + " ", BIEN,
 						"Completa con cuantos shards le ponés"))
 				.append(Component.literal("  "))
 				.append(boton("[ " + otro.toUpperCase() + " ]", "/pvp apostar " + otro + " ", ACENTO,
 						"Completa con cuantos shards le ponés"))
-				.append(gris("\n\n  Las apuestas cierran en " + segundos + " segundos.\n"))
-				.append(apagado("  " + RAYA.repeat(26) + "\n"));
+				.append(gris("\n\n  Las apuestas cierran en " + segundos + " segundos.\n"));
+
+		// El boton de mirar sale solo si hay adonde mandar a la gente: uno que
+		// contesta "todavia no marcaron las gradas" es peor que no tener boton.
+		if (hayGradas) {
+			cartel.append(Component.literal("\n  "))
+					.append(boton("[ VER LA PELEA ]", "/pvp ver", MARCA,
+							"Te lleva a las gradas del coliseo"))
+					.append(Component.literal("\n"));
+		}
+
+		return cartel.append(apagado("  " + RAYA.repeat(26) + "\n"));
 	}
 
 	public static Component apostaste(String aQuien, int cuanto, int aFavor, int enContra) {
@@ -167,6 +176,19 @@ public final class Carteles {
 				.append(Component.literal("+" + cuanto + " shards")
 						.withStyle(e -> e.withColor(SHARDS).withBold(true)))
 				.append(gris("  le habias puesto " + puesto));
+	}
+
+	/**
+	 * Le erro, pero del otro lado no habia con que pagarle todo lo que puso: esos
+	 * shards vuelven. Va con su propio cartel y no con el de cobrar, porque un
+	 * "+10 shards" despues de perder se lee como un premio.
+	 */
+	public static Component noSeCruzo(int cuanto, int puesto) {
+		return Component.empty()
+				.append(Component.literal("  " + SHARD + " ").withStyle(e -> e.withColor(SHARDS)))
+				.append(gris("Le erraste. De los " + puesto + " que pusiste, "))
+				.append(shards(cuanto))
+				.append(gris(" no se los jugo nadie en contra y te vuelven."));
 	}
 
 	public static Component teDevolvemos(int cuanto) {
@@ -219,7 +241,9 @@ public final class Carteles {
 				.append(Component.literal("  " + VINETA + " ").withStyle(e -> e.withColor(BIEN)))
 				.append(gris("Rompan todo lo que quieran: la arena se\n    arregla sola despues.\n"))
 				.append(Component.literal("  " + VINETA + " ").withStyle(e -> e.withColor(SHARDS)))
-				.append(gris("El resto apuesta shards a quien va a ganar.\n\n"))
+				.append(gris("El resto apuesta shards a quien va a ganar:\n    si le acertás cobrás el doble, si no lo perdés.\n"))
+				.append(Component.literal("  " + VINETA + " ").withStyle(e -> e.withColor(SHARDS)))
+				.append(gris("Lo que del otro lado nadie te cruzo, vuelve.\n\n"))
 				.append(gris("  Las clases, por si querés pedir una:\n  "))
 				.append(Component.literal(String.join("  ", Kits.NOMBRES))
 						.withStyle(e -> e.withColor(MARCA)))
@@ -490,15 +514,37 @@ public final class Carteles {
 		return mal("El que pelea no apuesta. Ya te estas jugando lo tuyo adentro.");
 	}
 
-	public static Component noEstasPeleando() {
-		return mal("No estas en ningun duelo.");
+	public static Component sinGradas() {
+		return mal("Todavia no marcaron las gradas. Un operador se para en la tribuna "
+				+ "y escribe /pvp arena gradas.");
 	}
 
-	public static Component teSacamosDeLaArena() {
+	public static Component teLlevamosALasGradas(String uno, String otro) {
 		return Component.empty()
-				.append(Component.literal("  " + ESPADAS + " ").withStyle(e -> e.withColor(KILLS)))
-				.append(rojo("Se esta peleando ahi adentro. "))
-				.append(gris("Mirá desde afuera."));
+				.append(Component.literal("  " + ESPADAS + " ").withStyle(e -> e.withColor(MARCA)))
+				.append(gris("A las gradas. Pelean "))
+				.append(Component.literal(uno).withStyle(e -> e.withColor(BIEN).withBold(true)))
+				.append(gris(" y "))
+				.append(Component.literal(otro).withStyle(e -> e.withColor(ACENTO).withBold(true)))
+				.append(gris("."));
+	}
+
+	public static Component gradasGuardadas(boolean adentroDeLaArena) {
+		MutableComponent cartel = Component.empty()
+				.append(dorado("\n  " + ESTRELLA + " Gradas guardadas.\n"))
+				.append(gris("  Ahi cae el que aprieta VER LA PELEA, mirando para\n"))
+				.append(gris("  donde estás mirando vos ahora.\n"));
+
+		if (adentroDeLaArena) {
+			cartel.append(rojo("\n  Ojo: las marcaste ADENTRO de la arena.\n"))
+					.append(gris("  No rompe nada —al de afuera no lo toca nadie— pero el\n"))
+					.append(gris("  que llega cae justo en el medio de la pelea.\n"));
+		}
+		return cartel;
+	}
+
+	public static Component noEstasPeleando() {
+		return mal("No estas en ningun duelo.");
 	}
 
 	public static Component enLaCola(int lugar) {
@@ -714,6 +760,26 @@ public final class Carteles {
 				.withBold(true)
 				.withClickEvent(click)
 				.withHoverEvent(new HoverEvent.ShowText(gris(globito))));
+	}
+
+	/**
+	 * Lo que le llega al invitado a una mesa.
+	 *
+	 * Lleva el boton para abrirla, y eso importa: el invitado no tiene por que
+	 * saber que existe `/pvp mesa`, y mandarle un comando para que lo tipee es
+	 * pedirle que aprenda algo para poder contestar que si.
+	 */
+	public static MutableComponent invitacionAMesa(String dueno, String modo, int apuesta,
+			boolean deSuLado) {
+		MutableComponent cartel = Component.empty()
+				.append(aviso(dueno + " te invitó a un " + modo
+						+ (deSuLado ? ", de su lado." : ", del lado contrario.") + "\n"));
+		if (apuesta > 0) {
+			cartel.append(gris("  Se juegan " + apuesta + " shards cada lado.\n"));
+		}
+		return cartel.append(Component.literal("  "))
+				.append(boton("[ VERLA Y ACEPTAR ]", "/pvp mesa", BIEN,
+						"Te abre la pelea que están armando"));
 	}
 
 	public static MutableComponent bien(String texto) {

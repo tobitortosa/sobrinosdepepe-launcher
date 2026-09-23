@@ -26,6 +26,7 @@ import java.util.List;
  *     /pvp rechazar <jugador>       decirle que no
  *     /pvp rendirse                 abandonar el duelo que estas peleando
  *     /pvp apostar <jugador> <n>    ponerle shards a uno de los dos
+ *     /pvp ver                      mirar la pelea de espectador, volando
  *     /pvp top                      los que mas duelos ganaron
  *     /pvp duelos                   como funciona todo esto
  *     /pvp arena ...                marcar y mirar la arena (operadores)
@@ -102,7 +103,22 @@ public final class ComandoPvp {
 								.suggests((c, s) -> SharedSuggestionProvider.suggest(losQuePelean(), s))
 								.then(Commands.argument("shards", IntegerArgumentType.integer(1))
 										.executes(this::apostar))))
-				.then(Commands.literal("top").executes(this::top))
+				.then(Commands.literal("ver").executes(this::ver))
+				.then(Commands.literal("volver").executes(this::dejarDeMirar))
+				.then(Commands.literal("cola")
+						.executes(c -> anotarse(c, "1v1"))
+						.then(Commands.argument("modo", StringArgumentType.word())
+								.suggests((c, s) -> SharedSuggestionProvider.suggest(
+										new String[] {"1v1", "2v2", "equipos"}, s))
+								.executes(c -> anotarse(c, StringArgumentType.getString(c, "modo")))))
+				.then(Commands.literal("salir").executes(this::salirDeLaCola))
+				.then(Commands.literal("mesa")
+						.executes(this::abrirMesa)
+						.then(Commands.argument("modo", StringArgumentType.word())
+								.suggests((c, s) -> SharedSuggestionProvider.suggest(
+										new String[] {"1v1", "2v2"}, s))
+								.executes(c -> armarMesa(c, StringArgumentType.getString(c, "modo")))))
+			.then(Commands.literal("top").executes(this::top))
 				.then(Commands.literal("duelos").executes(this::comoEs))
 				.then(Commands.literal("probar")
 						.requires(ComandoPvp::esOperador)
@@ -125,7 +141,7 @@ public final class ComandoPvp {
 														IntegerArgumentType.getInteger(c, "alto"))))))
 						.then(Commands.literal("punto1").executes(c -> ponerPunto(c, 1)))
 						.then(Commands.literal("punto2").executes(c -> ponerPunto(c, 2)))
-						.then(Commands.literal("borrar").executes(this::borrarArena)))
+				.then(Commands.literal("borrar").executes(this::borrarArena)))
 				.then(Commands.literal("torneo")
 						.executes(this::verTorneo)
 						.then(Commands.literal("entrar").executes(this::torneoEntrar))
@@ -255,6 +271,173 @@ public final class ComandoPvp {
 		Component problema = duelo.apostar(quien, aQuien, cuanto);
 		return problema == null ? 1 : no(quien, problema);
 	}
+
+	/**
+	 * `/pvp ver`: te lleva a las gradas a mirar la pelea que se esta jugando.
+	 *
+	 * Es el boton que sale en el cartel de cada duelo, y por eso lo puede usar
+	 * cualquiera sin ser operador: la gracia del coliseo es que lo mire todo el
+	 * mundo, y pedirle al que mira que sepa las coordenadas es pedirle de mas.
+	 *
+	 * Las tres cosas que lo frenan, y las tres son la misma: un teletransporte
+	 * gratis no puede ser una forma de zafar de algo.
+	 *
+	 *  - **estar en combate** no te deja ir. Sin esto, `/pvp ver` seria el mejor
+	 *    `/home` del servidor: cada vez que te acorralan, un click y aparecias
+	 *    entero del otro lado del mapa. Es la misma marca del datapack que ya
+	 *    tapa `/home`, `/spawn`, `/rtp` y `/tpa`.
+	 *  - **el que esta peleando** tampoco: ya esta adentro de la arena, y salir
+	 *    de ahi seria abandonar la pelea sin perderla.
+	 *  - **tiene que haber un duelo ahora**. Si no, no hay nada que mirar y esto
+	 *    seria un viaje gratis a un punto fijo del mapa a cualquier hora.
+	 */
+	/**
+	 * Abre la mesa en la que estas sentado.
+	 *
+	 * Es el comando al que llega el invitado desde el boton del chat, asi que no
+	 * puede pedir nada mas: el que lo aprieta no sabe ni que existe una mesa.
+	 */
+	private int abrirMesa(CommandContext<CommandSourceStack> contexto)
+			throws CommandSyntaxException {
+		ServerPlayer quien = contexto.getSource().getPlayerOrException();
+		Mesa mesa = duelos.mesas().dondeEsta(quien.getScoreboardName());
+		if (mesa == null) {
+			return no(quien, Carteles.mal("No estás armando ninguna pelea. "
+					+ "Armá una desde el menú del coliseo."));
+		}
+		PantallaMesa.abrir(quien, duelos, duelos.mesas(), contexto.getSource().getServer(), mesa);
+		return 1;
+	}
+
+	/**
+	 * Arma una mesa nueva y la abre.
+	 *
+	 * No se puede si ya estas peleando o anotado: dos compromisos a la vez
+	 * terminan siempre en alguien plantado esperando en la arena.
+	 */
+	private int armarMesa(CommandContext<CommandSourceStack> contexto, String modo)
+			throws CommandSyntaxException {
+		ServerPlayer quien = contexto.getSource().getPlayerOrException();
+		String nombre = quien.getScoreboardName();
+
+		if (duelos.estaOcupado(nombre)) {
+			return no(quien, Carteles.mal("Ya estás en una pelea o esperando turno."));
+		}
+		if (duelos.espera().estaAnotado(nombre)) {
+			return no(quien, Carteles.mal("Estás anotado en la lista de espera. "
+					+ "Bajate primero con /pvp salir."));
+		}
+		if (quien.entityTags().contains(Puntos.COMBATE)) {
+			return no(quien, Carteles.enPelea());
+		}
+		// Una mesa por persona y una por minuto: sin esto, armar y deshacer es
+		// gratis y se le pueden mandar treinta invitaciones seguidas al mismo.
+		String problema = duelos.mesas().porQueNoPuedeArmar(nombre);
+		if (problema != null) {
+			return no(quien, Carteles.mal(problema));
+		}
+
+		int porLado = "2v2".equalsIgnoreCase(modo) ? 2 : 1;
+		Mesa mesa = duelos.mesas().armar(nombre, porLado);
+		PantallaMesa.abrir(quien, duelos, duelos.mesas(), contexto.getSource().getServer(), mesa);
+		return 1;
+	}
+
+	private int ver(CommandContext<CommandSourceStack> contexto) throws CommandSyntaxException {
+		ServerPlayer quien = contexto.getSource().getPlayerOrException();
+		MinecraftServer servidor = contexto.getSource().getServer();
+
+		Duelo duelo = duelos.actual();
+		if (duelo == null) return no(quien, Carteles.noHayDuelo());
+		if (duelo.esDuelista(quien.getScoreboardName())) {
+			return no(quien, Carteles.mal("Estás peleando. Mirala desde adentro."));
+		}
+		if (quien.entityTags().contains("sdp_combate")) return no(quien, Carteles.enPelea());
+
+		Arena arena = duelo.arena();
+		ServerLevel nivel = arena.nivel(servidor);
+		if (nivel == null) return no(quien, Carteles.sinArena());
+
+		if (duelos.mirones().estaMirando(quien)) {
+			return no(quien, Carteles.mal("Ya la estás mirando. Para volver: /pvp volver"));
+		}
+		// De espectador y no a pie: asi no puede pegar, ni que le peguen, ni tocar un
+		// bloque, y mira desde donde quiera. Si no se pudo anotar a donde vuelve, no
+		// se lo mueve: quedar de espectador sin vuelta es peor que no ver la pelea.
+		if (!duelos.mirones().aMirar(quien, arena, nivel)) {
+			return no(quien, Carteles.mal("No pude guardar desde dónde venís. Avisale a Pepe."));
+		}
+		quien.sendSystemMessage(Carteles.teLlevamosALasGradas(duelo.uno, duelo.otro));
+		quien.sendSystemMessage(Carteles.aviso("Estás mirando de espectador. Para volver: /pvp volver"));
+		return 1;
+	}
+
+	/** Deja de mirar y vuelve a donde estaba, con lo suyo. */
+	private int dejarDeMirar(CommandContext<CommandSourceStack> contexto)
+			throws CommandSyntaxException {
+		ServerPlayer quien = contexto.getSource().getPlayerOrException();
+		if (!duelos.mirones().estaMirando(quien)) {
+			return no(quien, Carteles.mal("No estás mirando ninguna pelea."));
+		}
+		duelos.mirones().devolver(quien);
+		quien.sendSystemMessage(Carteles.aviso("Volviste a donde estabas."));
+		return 1;
+	}
+
+	/**
+	 * `/pvp cola [1v1|2v2|equipos]`: se anota en la lista de espera.
+	 *
+	 * No hace falta rival: cuando haya con quien cruzarlo, la pelea arranca sola.
+	 */
+	private int anotarse(CommandContext<CommandSourceStack> contexto, String modoTexto)
+			throws CommandSyntaxException {
+		ServerPlayer quien = contexto.getSource().getPlayerOrException();
+		MinecraftServer servidor = contexto.getSource().getServer();
+		String nombre = quien.getScoreboardName();
+
+		Cola.Modo modo = Cola.Modo.porNombre(modoTexto);
+		if (modo == null) {
+			return no(quien, Carteles.mal("Ese modo no existe. Son 1v1, 2v2 y equipos."));
+		}
+		if (!duelos.hayArena()) return no(quien, Carteles.sinArena());
+		if (duelos.estaOcupado(nombre)) {
+			return no(quien, Carteles.mal("Ya tenés una pelea armada."));
+		}
+		if (quien.entityTags().contains("sdp_combate")) return no(quien, Carteles.enPelea());
+		if (duelos.mirones().estaMirando(quien)) {
+			return no(quien, Carteles.mal("Estás mirando una pelea. Volvé primero: /pvp volver"));
+		}
+		if (modo == Cola.Modo.EQUIPOS && Cola.equipoDe(servidor, nombre) == null) {
+			return no(quien, Carteles.mal("Para el modo equipos hay que tener equipo. "
+					+ "Armá uno con /equipo crear."));
+		}
+
+		int cuantos = duelos.espera().anotar(nombre, modo);
+		int faltan = Math.max(0, modo.cupos - cuantos);
+		quien.sendSystemMessage(Carteles.aviso("Anotado en " + modo.comoSeLlama + ". "
+				+ (faltan > 0 ? "Falta" + (faltan == 1 ? " " : "n ") + faltan
+						+ (modo == Cola.Modo.EQUIPOS ? " equipo(s)." : " más.")
+				: "Arranca en cuanto se libere la arena.")));
+		for (ServerPlayer otro : duelos.espera().conectadosDe(servidor, modo)) {
+			if (otro != quien) {
+				otro.sendSystemMessage(Carteles.aviso(nombre + " se anotó a " + modo.comoSeLlama
+						+ ": son " + cuantos + " esperando."));
+			}
+		}
+		return 1;
+	}
+
+	/** `/pvp salir`: se baja de la lista de espera. */
+	private int salirDeLaCola(CommandContext<CommandSourceStack> contexto)
+			throws CommandSyntaxException {
+		ServerPlayer quien = contexto.getSource().getPlayerOrException();
+		if (!duelos.espera().sacar(quien.getScoreboardName())) {
+			return no(quien, Carteles.mal("No estabas anotado en ninguna lista."));
+		}
+		quien.sendSystemMessage(Carteles.aviso("Te bajaste de la lista de espera."));
+		return 1;
+	}
+
 
 	private List<String> losQuePelean() {
 		Duelo duelo = duelos.actual();

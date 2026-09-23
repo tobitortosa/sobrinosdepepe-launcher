@@ -233,9 +233,7 @@ public final class Copia {
 	}
 
 	private static AABB cajaDe(Arena arena) {
-		return new AABB(
-				arena.min.getX(), arena.min.getY(), arena.min.getZ(),
-				arena.max.getX() + 1, arena.max.getY() + 1, arena.max.getZ() + 1);
+		return arena.caja();
 	}
 
 	/**
@@ -250,7 +248,7 @@ public final class Copia {
 	 * no se rompen.
 	 *
 	 * Los jugadores quedan afuera: los dos que pelean tienen que poder pegarse, y
-	 * a los de afuera ya los saca `Duelo`.
+	 * a los de afuera ya los deja mirar sin tocar `Duelos.dejarPegar`.
 	 */
 	public static List<UUID> cuidarLaDecoracion(ServerLevel nivel, Arena arena) {
 		AABB caja = cajaDe(arena);

@@ -29,6 +29,12 @@ subir tal cual y todo queda como estaba.
 | `ver-cofre.py` | Muestra el cofre de ender (y con `--todo` la mochila) de cualquier jugador, aunque esté baneado y no se pueda conectar. Lee el archivo del jugador; no es un comando del juego y nadie más lo ve. |
 | `subir-cofres.py` | Sube el mod de `/cofre <jugador>`, que abre ese mismo cofre de ender adentro del juego y deja sacar y meter cosas. Solo para operadores; al cerrar la ventana reescribe el archivo del jugador. |
 | `configurar-auth.py` | Deja EasyAuth como lo queremos: al servidor se entra con contraseña. |
+| `subir-lobby.py` | Sube las dos partes del lobby de una: el mod que manda a todos ahí, y los dos ajustes de EasyAuth. También borra del datapack las dimensiones viejas. |
+| `respaldar-jugadores.py` | Baja a esta PC los `.dat` de todos los jugadores y los JSON de estado, y avisa a quién le quedó el inventario vacío. Lo que el plan de Minehost no cubre: el backup del panel es uno solo. |
+| `mudar-al-overworld.py` | Copia el lobby y el coliseo al overworld, a 500.000 bloques del spawn, con `/clone from ... to ...`, y después compara bloque por bloque que la copia haya quedado idéntica. Con `--arena` le mueve al mod de duelos las coordenadas de la arena. |
+| `ver-motd.py` | Muestra el cartel del servidor tal como lo ve el que lo agrega en Minecraft: le hace el mismo saludo que el cliente (Server List Ping) y dice el texto sin códigos, los colores y el ancho. Leer `server.properties` no alcanza: los `§` no se ven, las tildes pueden salir rotas y el cliente corta lo que se pasa de ancho. |
+| `probar-tick.py` | Le pregunta al servidor, con muñecos puestos en puntos elegidos, si los selectores de `sdp:tick` agarran a quien tienen que agarrar. Esas líneas corren sobre `@a` veinte veces por segundo: un volumen mal escrito no falla, teletransporta gente. |
+| `region.py` | Lee los archivos de región (`.mca`) y dice qué bloques hay adentro: la caja que ocupa lo construido y el conteo. Es lo que hace verificable una mudanza. |
 | `estilo.py` | Los colores y los símbolos, en un solo lugar. |
 
 Las credenciales salen de `web/.env.local`, que no está en el repositorio.
@@ -69,6 +75,558 @@ Las contraseñas viven hasheadas en un SQLite del propio mod
 (`/config/EasyAuth/EasyAuth/easyauth.db`) y **no las respalda ningún script**. Si ese
 archivo se pierde, cada uno se vuelve a registrar —y el nombre vuelve a quedar libre
 para el primero que llegue.
+
+## El lobby
+
+Desde el 2026-09-22 **nadie aparece en su casa al entrar**: todos caen en el lobby,
+vengan de donde vengan, entren con el launcher o sin él, **con el inventario vacío
+y una perla en la mano**. Click derecho a la perla y se abre el menú de juegos, que
+hoy tiene un solo modo: SURVIVAL SMP. Al elegirlo aparecés **exactamente donde
+estabas y con todo lo tuyo**: misma dimensión, misma posición, mismo inventario,
+misma vida y misma experiencia. `/lobby` te trae de vuelta cuando quieras, salvo
+que estés en combate.
+
+Las cosas del Survival quedan en el Survival: el lobby está vacío a propósito. No
+se pierde nada — el inventario completo (los 41 casilleros, o sea también la
+armadura puesta y la mano de atrás), la vida, la comida y la experiencia se guardan
+en `config/lobby-de-pepe.json` antes de tocarle nada, y vuelven al salir. Es la
+misma clase `Guardado` que el mod de duelos usa para la arena, copiada: son dos
+mods sueltos y el código que mueve inventarios ajenos es el último que conviene
+acoplar de apuro.
+
+**Si la copia no se puede escribir, al jugador no se le vacía nada** y se le avisa
+en el chat. Que el lobby quede feo con alguien vestido de netherita es
+infinitamente mejor que perderle el equipo.
+
+El lobby es un lugar chico y construido (62×37×61 bloques, un patio rodeado de
+edificios) que flota en el **overworld**, en `x=500.000, y=250, z=0`: a medio
+millón de bloques del spawn y por encima de las nubes, que quedan a y=192. El
+coliseo está igual de lejos, en `x=501.145, y=250, z=11.590`.
+
+No hay proxy ni un segundo servidor: DonutSMP reparte su overworld en seis
+proxies geográficos porque tiene decenas de miles de jugadores, y nosotros
+tenemos un contenedor que ya se cae por RAM.
+
+**Y tampoco son dimensiones propias, desde el 2026-09-22.** Eso es lo importante
+de esta parte y está explicado abajo, en «El bug que costó la mudanza».
+
+Sube el mod y los ajustes `subir-lobby.py`. El lugar en sí no se sube: los
+chunks ya están adentro del mundo de siempre, y si alguna vez hay que moverlos,
+los copia `mudar-al-overworld.py`.
+
+### Por qué hay un mod y no alcanza la config
+
+`mod-lobby` es el que manda a todos al lobby, anota dónde estaban y qué tenían, y
+los devuelve. Eso no lo puede hacer ninguna opción de EasyAuth: **Minecraft guarda
+una sola posición y un solo inventario por jugador**, los de cuando se desconectó,
+así que si lo movemos al lobby sin anotar antes, el Survival arrancaría en el spawn
+y el inventario del lobby sería el de verdad. Lo anotado se escribe en cada
+anotación y no al apagar, porque el servidor se cae solo por RAM cada tanto.
+
+**El teleport va en el tick siguiente al login, no dentro del evento.** Mover al
+jugador mientras el login sigue en curso es pedir problemas; se arregla con
+`servidor.execute(...)`, que corre la tarea cuando el tick actual terminó.
+
+### El bug que costó la mudanza
+
+Hasta el 2026-09-22 el lobby era la dimensión `sdp:lobby` y el coliseo
+`sdp:coliseo`. El que se desconectaba adentro de una, al volver a entrar, se
+quedaba cargando y aparecía con el mapa entero vacío. En el log:
+
+```
+Force-added player with duplicate UUID 7a067f19-...
+UUID of added entity already exists: ServerPlayer['PEPE'/1138, ...]
+```
+
+Son dos altas de la misma entidad: la segunda se rechaza, el jugador nunca entra
+de verdad al nivel y el cliente se queda sin chunks. El UUID queda sucio en el
+`knownUuids` del nivel porque al desconectarse la entidad se remueve con un motivo
+que no la destruye, y en una dimensión que nadie más tiene cargada eso no se
+limpia hasta que el servidor reinicia.
+
+Se probaron las tres formas posibles de taparlo y **las tres fallan**:
+
+1. Sacarlo del lobby en el `DISCONNECT`: ese evento corre en el hilo de red y
+   **después** de que el servidor escribió el archivo del jugador. Esto le borró
+   el inventario a dos jugadores de verdad.
+2. No tocarlo al salir: queda guardado adentro y se duplica al reconectar.
+3. Sacarlo en el `LEAVE`, que sí corre en el hilo del servidor y antes del
+   guardado: el teleport durante la desconexión igual deja el UUID colgado en el
+   otro nivel.
+
+El diagnóstico es que `Force-added player` aparece **solo en el login**, nunca en
+un teleport: los `/tp` entre dimensiones andan perfecto. Lo que rompe es que
+existan dos niveles que puedan discutir de quién es el UUID del jugador.
+
+La salida fue **sacar el segundo nivel**: el lobby y el coliseo se mudaron al
+overworld, lejísimos, y las dos dimensiones se borraron. Ahora «estás en el
+lobby» es una caja de coordenadas, en el mod y en el datapack. Y **al que se
+desconecta no se le toca nada**, que es la regla que quedó de todo esto.
+
+### `restart` con el servidor apagado no lo prende
+
+`mc.power("restart")` sobre un servidor que ya está en `offline` **no hace nada**: lo
+deja apagado y el script sigue adelante como si hubiera arrancado. Pasó el
+2026-09-22 después de apagarlo a mano para editar la config de la arena; el servidor
+quedó caído y lo que se leyó del log era del arranque anterior.
+
+Los scripts que suben algo miran el estado antes y usan `start` o `restart` según
+corresponda. Y la verificación de después **tiene que esperar a que el estado sea
+`running`**, no leer el log de una: si no, se lee el del arranque viejo y todo parece
+bien.
+
+### El servidor no se duerme, y por qué
+
+`pause-when-empty-seconds` está en **0**, o sea apagado. Venía en 60: el servidor
+vanilla deja de tickear cuando lleva un minuto sin nadie adentro, para no gastar
+CPU al pedo.
+
+El 2026-09-22 eso dejó un login colgado **ocho minutos**. En el log se ve el
+silencio entero entre la conexión y el `logged in`, y después:
+
+```
+User 7a067f19... doesn't currently have data pre-loaded - denying login.
+PEPE lost connection: Disconnected
+PEPE left the game
+PEPE joined the game          <- el joined DESPUÉS del left
+handleDisconnection() called twice
+```
+
+LuckPerms precarga los permisos del que está entrando y los descarta si el login
+tarda demasiado; cuando por fin entra, ya no los tiene y lo rechaza. Al jugador le
+aparece un cartel rojo largo de error de permisos, y en el servidor queda un
+**jugador fantasma**: `list` lo muestra adentro, `kick` no lo saca, y ocupa el
+nombre así que el de verdad no puede entrar. Se limpia reiniciando.
+
+Lo que **no** era, aunque lo parecía: generación de terreno. Las dos zonas nuevas
+están a 500.000 del spawn y es lo primero que uno piensa, pero los archivos de
+región guardan la hora de cada chunk y dicen que durante esos ocho minutos **no se
+escribió ni un chunk**. Los 1.860 chunks que aparecen después son del fantasma
+parado en el lobby, y son los que cualquier jugador carga al pisar terreno nuevo:
+para entregar los 441 de `view-distance=10` hay que tocar unos 1.850 en las etapas
+intermedias. `region.py` tiene la función `cuando()` para volver a preguntarle esto
+al servidor.
+
+Con 20 jugadores el servidor casi nunca queda un minuto vacío, así que esto se ve
+sobre todo probando solo. Igual no vale la pena: lo que ahorra es CPU de un
+servidor que no está haciendo nada.
+
+### El borde del mundo, después de la mudanza
+
+Afuera del borde el juego daña y empuja, así que con el lobby a 500.000 el borde
+del overworld tuvo que irse a 30.000.000. Como en 26.1 **el borde es por
+dimensión**, el Nether y el End conservan la pared de siempre.
+
+El límite del survival no desapareció: lo hace `sdp:tick`, que devuelve al que se
+mete en la banda que va de 15.020 a 400.000 del spawn. Más allá de los 400.000
+están el lobby y el coliseo, y para llegar caminando hay que cruzar la banda
+primero. `WORLD_BORDER_RADIUS` sigue siendo la única palanca, y
+`configurar-borde.py` verifica que el datapack diga el mismo número.
+
+**Los ids de los menús llevan namespace.** La perla abre `menu sdp:juegos`, no
+`menu juegos`: sin el prefijo, Inventory Menu contesta *"the menu doesn't exist"*.
+Es el mismo formato que usan los comandos de Melius y los botones de volver.
+
+Por eso mismo **`hide-player-coords` quedó en `false`**. Prendido hace casi lo
+mismo que el mod, pero los dos enganchan el mismo momento del login y el orden
+entre mods no está definido: si EasyAuth mueve al jugador primero, el mod anota el
+lobby como "donde estaba" y el `/survival` lo dejaría encerrado ahí. Una sola cosa
+mueve al jugador, y es el mod.
+
+El punto donde se cae está en `LobbyServidor` (0.5, 0.0, 0.5) y en `SPAWN` de
+`subir-lobby.py`. Si se mueve, se mueve en los dos lados.
+
+### El día que el lobby borró inventarios (2026-09-22)
+
+Dos jugadores entraron y aparecieron **sin nada**. La causa, y la regla que sale
+de acá:
+
+> **Al jugador que se desconecta no se le toca nada.**
+
+El mod tenía un `ServerPlayConnectionEvents.DISCONNECT` que le devolvía sus cosas
+al que se iba desde el lobby, para que su archivo no quedara guardado adentro de
+la dimensión del lobby. Ese evento **corre en el hilo de red**, no en el del servidor — en el
+log se ve clarísimo, dice `[Netty Epoll IO #56]` en vez de `[Server thread]` — y
+para cuando corre, el servidor **ya escribió el archivo del jugador**, vacío,
+porque en el lobby está vacío. O sea que le devolvíamos el inventario a una copia
+en memoria que ya nadie iba a guardar, y encima **borrábamos la copia buena del
+JSON**. El jugador entraba sin nada y no quedaba de dónde sacarlo.
+
+Ahora la copia se consume en **un solo lugar**, siempre con el jugador adentro del
+juego y en el hilo del servidor: al entrar o al apretar SURVIVAL. Una sola puerta
+de salida es lo que hace imposible perderlo y también duplicarlo.
+
+Y hay un seguro más, puesto en la mudanza: **anotar nunca pisa una copia que ya
+existe**. Si hay una copia sin devolver, lo que el jugador tenga encima no son sus
+cosas —es la perla del lobby o un kit prestado del coliseo— así que anotarlo sería
+cambiarle el equipo por eso. Si eso salta en el log, se arregla el orden de
+`alEntrar`; no se saca el seguro.
+
+Cómo encontrar los afectados si vuelve a pasar algo así: el mod dejaba una línea
+por caso, y los logs viejos están comprimidos en `/logs/*.log.gz`. Fueron dos en
+99 archivos de log.
+
+**Lo que no se pudo recuperar:** Minecraft guarda solo dos copias del jugador,
+`<uuid>.dat` y `<uuid>.dat_old`, y cada entrar-y-salir corre una sobre la otra. Al
+mirarlas, las dos estaban ya vacías. El cofre de ender sí se salvó entero. Se
+compensó a mano con equipo de netherita al máximo.
+
+**Los respaldos, desde el 2026-09-22.** Son dos, porque ninguno alcanza solo:
+
+- **El panel**, con el schedule `Respaldo diario` — todos los días a las 5:30 hace
+  un backup del servidor entero. Ojo: el plan de Minehost permite **un solo
+  backup**, así que cada uno pisa al anterior; sirve para volver de un desastre
+  grande, no para buscar qué tenía alguien el martes.
+- **`respaldar-jugadores.py`**, en esta PC — baja los `.dat` y `.dat_old` de todos
+  y los JSON de nuestros mods, fechados, y conserva 45 días. Le pide al servidor un
+  `save-all` antes de bajar, porque lo de los que están conectados vive en memoria
+  y si no, justo los que están jugando quedan peor respaldados. Al final imprime
+  cuánto tiene cada uno encima y en el ender: un inventario que era de 37 y hoy es
+  de 0 salta a la vista sin abrir nada.
+
+### Lo que el lobby tapa solo
+
+- **No se rompe ni se pone nada.** Tres eventos de Fabric cancelan romper, usar y
+  pegar en esa dimensión; los operadores quedan afuera para poder arreglar el
+  mundo. Lo que **no** está tapado es tirar items al piso, que pide un mixin: si
+  alguien vacía la mochila en el patio, los items se despawnean solos.
+- **Al que no está autenticado no lo deja moverse** — eso lo sigue haciendo
+  EasyAuth y no hay que tocarlo. Además es invulnerable y los bichos lo ignoran.
+- **El que se cae vuelve.** Abajo del patio no hay nada, así que `sdp:tick` sube
+  al patio a cualquiera que esté por debajo de y=−25 en esa dimensión.
+- **Deja de cantar dónde vivís.** Antes, mientras escribías `/login`, la pantalla
+  mostraba tu casa. Era lo último que faltaba para streamear tranquilo.
+
+El `/login` en sí lo sufre cada vez menos gente: con el launcher no existe, y sin
+launcher `session-timeout` está en 604.800 segundos, o sea que el que vuelve dentro
+de la semana desde la misma IP entra derecho.
+
+## El coliseo está lejos, no en otro mundo
+
+Las peleas no son adentro del survival: el coliseo flota en el overworld a
+**x 501.145→501.205, y 250→306, z 11.590→11.650**, o sea a medio millón de bloques
+del spawn y por encima de las nubes. Así no se puede grifear, no ocupa chunks de
+donde vive todo el mundo, y el lag del overworld poblado no se come las peleas.
+
+Tuvo dos mudanzas. La primera (2026-09-22, a la mañana) lo sacó del survival y lo
+metió en la dimensión `sdp:coliseo`; la segunda, el mismo día, lo trajo de vuelta
+al overworld junto con el lobby, porque las dimensiones propias rompen el login.
+Las dos las hizo `mudar-al-overworld.py` con `/clone from <mundo> ... to <mundo>`,
+que **funciona entre dimensiones** (probado acá). Va por franjas porque un clone
+tiene un tope de 32.768 bloques, y con las dos áreas en `forceload` porque si no el
+comando contesta *"that position is not loaded"* y no copia nada.
+
+La aritmética de la segunda mudanza es toda esta: **x + 500.000, y + 180, z igual**
+para el coliseo, y **x + 500.000, y + 250, z igual** para el lobby. Las cajas de
+origen no son a ojo: `region.py` lee los archivos de región y devuelve la caja
+exacta de los bloques que no son aire.
+
+Verificado bloque por bloque bajando las regiones de los dos lados y comparando con
+la traslación aplicada: **21.049 bloques no-aire en el lobby y 32.323 en el
+coliseo, los mismos de los dos lados, cero faltantes, cero sobrantes, cero
+distintos.** (Cinco bloques de pasto que se volvieron tierra entre una medición y
+la otra: eso lo hace el juego solo y el verificador lo sabe.)
+
+**La altura salió de medir el destino, no de una corazonada:** el terreno del
+overworld llega a y=88 donde va el lobby y a y=103 donde va el coliseo. Poniéndolos
+arriba de 250 quedan 150 bloques de aire por debajo y no hubo que limpiar ni un
+bloque con `/fill`.
+
+Lo viejo sigue donde estaba, a propósito: el coliseo original en `x 1145, z 11590`
+del overworld, y los chunks de las dimensiones borradas en
+`/world/dimensions/sdp/`. Se borran cuando lo nuevo esté probado.
+
+### Recorrer el coliseo, y por qué es de espectador
+
+`/coliseo` (el botón **VER EL MAPA**) te deja de **espectador** arriba de la
+cancha: volás, atravesás las paredes y no podés tocar ni romper nada, que es todo
+lo que hace falta para darse una vuelta sin ensuciarla. Lo maneja
+`mod-lobby/Mirador.java`.
+
+Tres cosas que no son obvias:
+
+- **De espectador no se puede usar la perla.** El juego no dispara el click derecho
+  de un ítem para el que mira, así que el menú no abre. La única salida es escribir
+  `/lobby`, y por eso el mod se lo dice al entrar, en amarillo.
+- **Hay que encerrarlo.** De espectador se cruza el mundo entero volando y el
+  coliseo está a 500.000 del spawn: el que sale derecho no vuelve nunca. Un tick lo
+  devuelve a las gradas apenas cruza la caja.
+- **Al salir siempre queda en survival.** La primera versión le devolvía el modo que
+  tenía antes, para no romperle el creativo a los operadores, y estuvo mal: el que
+  entraba a mirar desde el creativo volvía al lobby en creativo y **seguía volando**,
+  apretaba SURVIVAL y entraba al mundo volando también, que es modo creativo de
+  contrabando. Del lobby se sale a jugar, y jugando no se vuela. Además `soloMover` y
+  `mandarAlLobby` pasan a survival a cualquiera que llegue al patio de espectador,
+  que es la red abajo del trapecio por si aparece otro camino de salida.
+
+La marca es la etiqueta `sdp_mirando`. Si alguien queda marcado **dentro del
+lobby** —o sea, salió del coliseo sin pasar por `/lobby`— el tick le limpia la
+marca en vez de traerlo de vuelta: traerlo sería mandarlo al coliseo veinte veces
+por segundo mientras el mod del lobby lo devuelve al patio, que es exactamente el
+ida y vuelta por tick que ya se pagó una vez con `execute in`.
+
+El espectador de `/pvp ver` —el que mira un duelo, que maneja
+`mod-duelos/Mirones.java`— tiene su propio límite: `noSeVayan()` lo devuelve arriba
+de la cancha si se aleja más de 48 bloques de la caja de la arena. Con 48 sobra para
+recorrer las gradas y todo el edificio (la cancha mide 37 de lado y el coliseo 61) y
+no alcanza para irse a ningún lado. Son dos mods sueltos y por eso son dos límites,
+pero los dos existen por el mismo motivo: a 500.000 del spawn, el que sale volando no
+vuelve.
+
+### La guarda del login pregunta por la CONEXIÓN
+
+En el `JOIN` el mod difiere su trabajo al tick siguiente (`servidor.execute`), y ahí
+chequea que el jugador no se haya ido en el medio. Ese chequeo **tiene que mirar la
+conexión** (`handler.isAcceptingMessages()`).
+
+La primera versión miraba si el jugador ya figuraba en la lista del servidor, y
+rechazaba **todos** los logins: para cuando corre esa tarea el jugador todavía no
+está anotado ahí —el `joined the game` sale después— así que daba "se fue" siempre y
+nadie llegaba al lobby. Estuvo así medio día y el síntoma era raro de leer: la gente
+aparecía donde se había desconectado en vez de en el patio, y el log decía
+`se fue antes de que lo pudiera mandar al lobby` en cada entrada buena.
+
+### La perla abre dos menús distintos
+
+Un menú de cofre es un JSON fijo: no sabe dónde está parado el que lo abre. Lo
+único que sabe eso es el mod, así que el botón **IR AL LOBBY** se resuelve
+generando dos archivos —`sdp:juegos` y `sdp:juegos_afuera`— y eligiendo en
+`Perla.abrirMenu`. Estando en el lobby, "IR AL LOBBY" no sería un botón: sería una
+pregunta.
+
+Hoy la perla existe en dos lugares, el lobby y el coliseo (`enLasNuestras`). En el
+survival no la tenés, y de espectador no se puede usar.
+
+### Armar una pelea a mano: la mesa
+
+Hasta ahora al coliseo se entraba de una sola forma: anotarse en la lista de espera
+y que el servidor te cruzara con quien apareciera. El compañero de un 2v2 salía por
+orden de llegada y no se elegía.
+
+La **mesa** es la otra forma: elegís vos a quién invitar, de tu lado y del otro.
+Vive en `mod-duelos/Mesa.java` y se abre con `/pvp mesa 1v1` o `/pvp mesa 2v2`,
+que es lo que corren los botones de **ARMAR UNA PELEA** en el menú del coliseo.
+
+**El grupo y la mesa son la misma cosa**, y esa es la decisión que hace que todo
+esto entre en una clase y no en dos:
+
+- llenás **tu lado** y lo dejás ahí → es un grupo, y se anota junto a la cola;
+- llenás **los dos lados** → es una pelea armada, y arranca sola.
+
+Lo que el jugador aprende para una le sirve para la otra, y no hay dos sistemas de
+invitaciones conviviendo.
+
+**La pelea arranca sola cuando el último acepta.** No hay botón de empezar, y eso no
+es una simplificación: la primera versión lo tenía y estaba roto de raíz. El botón lo
+veía sólo el dueño, y su pantalla **no se enteraba** de que el otro había aceptado
+—son dos menús distintos, cada uno con su copia dibujada— así que le quedaba "FALTA
+GENTE" para siempre mientras el invitado veía "ya aceptaste". Los dos mirando una
+pantalla que no se iba a mover nunca.
+
+Arrancando sola, el estado vive en un solo lugar (`Mesa`) y las pantallas pasan a ser
+lo que tienen que ser: una foto de algo que decide otro. Se pueden cerrar, se puede
+estar en otro lado del mapa, y la pelea empieza igual. Lo hace `Mesas.tick`, y está
+ahí y no en la pantalla a propósito: una pelea que sólo arranca si alguien tiene una
+ventana abierta no arranca nunca.
+
+### Las nueve formas de romper la mesa, y qué las tapa
+
+| Lo que alguien va a intentar | Qué lo frena |
+|---|---|
+| Armar una mesa atrás de otra para spamear invitaciones | Una mesa por persona y **una por minuto** (`ESPERA_ENTRE_MESAS`) |
+| Insistirle al que dijo que no, apretando su cara sin parar | No se puede reinvitar al mismo por **30 segundos** (`ESPERA_REINVITAR`) |
+| Subir la apuesta a 999.999 con el botón | Tope de **1.000 shards**, y nunca más de lo que el dueño tiene |
+| Apostar shards que no tiene ninguno de los dos | Se verifica **al arrancar**, no sólo al invitar: entre medio se los pudo gastar en la tienda |
+| Invitar a alguien que está peleando en el survival | La marca `sdp_combate` lo deja fuera, igual que en `/pvp` |
+| Meterse a una mesa estando en la cola o en otra pelea | `porQueNo` lo apaga en la lista, con el motivo escrito debajo de la cara |
+| Que la pelea arranque con la arena ocupada | Espera y avisa **una sola vez**; arranca cuando termina la de ahora |
+| Aceptar y desconectarse antes de que arranque | El tick libera el lugar y le avisa al dueño |
+| Dejar una mesa colgada para siempre | Se cae sola a los tres minutos, y si el dueño se va se deshace entera |
+
+El aviso de "por qué no arranca" pasa por `hayQueAvisar`, que sólo habla cuando el
+motivo **cambia**: esto se pregunta veinte veces por segundo y sin ese filtro "la
+arena está ocupada" serían mil doscientas líneas de chat por minuto.
+
+Y al que se **desconecta** se le libera el lugar y se le avisa al dueño.
+
+### Las pantallas que dibuja el mod
+
+Los doce menús del servidor los dibuja Inventory Menu leyendo JSON del datapack, y
+están perfectos para lo que son: **botones fijos**. Pero un JSON no sabe quién está
+conectado, y para elegir a una persona hay que mostrar una lista que cambia cada
+minuto.
+
+Por eso `mod-duelos` tiene ahora sus propias pantallas, y **conviven** con las del
+datapack en vez de reemplazarlas: en el mod están sólo las que muestran gente.
+
+- `Pantalla.java` es la base: un contenedor de 9×N donde **nada se puede mover**
+  (`clicked` no llama nunca al `super`, que es lo que evita que el primero que abra
+  el menú se lleve las cabezas al inventario).
+- `ElegirJugador.java` es la lista de caras, paginada, y debajo de cada una dice
+  **si se puede elegir y por qué no**: que está peleando, que ya está en la mesa,
+  que está armando otra. Mostrar a todos y después decirle que no al que clickeó es
+  peor que no mostrarlos.
+- `PantallaMesa.java` es la mesa: los dos lados, quién aceptó y quién falta.
+
+Las caras se ven de verdad aunque el servidor sea **offline-mode** porque está
+`skinrestorer` instalado. Sin ese mod serían todas Steve y la lista no se podría
+leer de un vistazo, que es justo para lo que existe.
+
+En 26.1 la firma es `clicked(int, int, ContainerInput, Player)` y no la de
+`ClickType` de las versiones viejas, y `ResolvableProfile` es abstracta: se arma con
+`ResolvableProfile.createResolved(perfil)`. Las dos salieron de mirar con `javap`
+cómo lo hace EconomyCraft, que ya tiene sus menús andando en esta versión, en vez de
+descubrirlas a fuerza de compilar.
+
+### La cola se acuerda de quién vino con quién
+
+`Cola.java` guardaba una lista de nombres sueltos, y alcanzaba mientras el compañero
+saliera por orden de llegada. Desde que el dúo se arma a mano, **cada anotación es un
+grupo** que entra junta del mismo lado; un anotado solo es un grupo de uno, así que
+no hay dos caminos.
+
+Al armar la pelea se toma un lado y después el otro, y si el segundo no se puede
+completar **el primero vuelve a la lista**: sacar media pelea de la cola dejaría a un
+dúo esperando para siempre sin figurar en ningún lado. Un grupo que no entra en el
+cupo se saltea en vez de cortarse.
+
+### La caja de la arena llega hasta abajo del piso
+
+La arena va de **y=250 a 280**, y el piso de la cancha está en 256: hay seis bloques
+de caja **por debajo** del piso, y no son decoración.
+
+Con dinamita se vuela el piso. Cuando la caja empezaba justo en el piso, el que caía
+por el agujero salía de la caja, y el control que devuelve al que se va —`Duelo.
+adentroDeLaArena`, que corre cada tick— lo mandaba **al borde de abajo**, que ahora
+era aire: caía otra vez, y otra, y otra. El jugador quedaba temblando en el aire
+hasta que terminaba la pelea. Pasó en un 1v1 de verdad.
+
+Dos cosas lo tapan, y hacen falta las dos:
+
+- la caja baja hasta la base del coliseo, así romper el piso no te saca de la arena
+  **y lo que se rompe ahí abajo también se restaura** al terminar;
+- al que igual se va **por abajo** se lo manda a su esquina, que siempre tiene piso,
+  en vez de al borde. Devolver al borde a alguien que está cayendo es devolverlo
+  cayendo.
+
+### Dónde aparece cada uno en un 2v2
+
+Los dos puntos marcados con la varita definen el **eje** de la pelea —uno enfrente
+del otro— y los compañeros se reparten sobre la **perpendicular** a ese eje, a tres
+bloques uno de otro. Eso es lo que hace que un 2v2 se lea desde las gradas como un
+2v2: dos de un lado, dos del otro.
+
+Antes el primero de cada lado iba a su punto y los compañeros caían **al azar** por
+el ring. Se veía mal y el que aparecía de espaldas arrancaba perdiendo.
+
+Sale de la geometría y no de puntos marcados a mano a propósito: marcar seis lugares
+por lado en cada cancha son doce clicks y una planilla, y el día que la cancha cambie
+hay que rehacerlos. Así, **marcar los dos de siempre alcanza para todos los modos**, y
+el mismo coliseo sirve para 1v1, 2v2 y equipo contra equipo sin tocar nada.
+
+El tope de gente por lado es **6**, que no es un número inventado: es el que ya tiene
+`mod-equipos` (`Registro.TOPE`), así que un equipo entero entra siempre.
+
+### Los textos de los menús
+
+Los escribe `generar-menus.py` y los lee **gente que entra por primera vez**, así
+que la regla es que no pueden explicar el servidor *desde los cambios que le
+hicimos*. "Aparecés donde lo dejaste" o "ya no es en el survival" solo se entienden
+si viviste la versión anterior; al que recién llega no le dicen nada. Dicen qué se
+hace adentro, en dos renglones, y terminan en el triangulito (`e.ENTRAR`), que es
+lo único que hay que entender para apretar.
+
+El menú **LOS KITS** (`sdp:coliseo_kits`) muestra las ocho formas de pelear, para
+mirar y no para elegir: el kit sale al azar y les toca el mismo a los dos, que es
+lo que hace pareja la pelea. Los nombres y el "cómo se pelea" están escritos en
+`mod-duelos/Kits.java` y copiados en el menú, y `kits_de_java()` compara las dos
+listas al generar: si alguien agrega la novena clase en el mod, el generador falla
+en vez de dejar un menú que miente.
+
+Lo único animado que da Minecraft sin resource pack es `obfuscated`, que cambia los
+caracteres veinte veces por segundo. `titilando()` lo pone en un adorno a los
+costados y **nunca** en el texto que hay que leer: un título entero titilando no se
+lee, y además el ancho baila y mueve todo lo que tiene al lado.
+
+**No hay botón de ver la pelea.** Casi siempre no hay ninguna jugándose —hay una
+sola arena, así que se juega de a una y el resto espera en la cola— y un botón que
+la mayor parte del tiempo no hace nada ensucia el menú. El comando `/pvp ver` sigue
+existiendo para el que mira mientras espera su turno.
+
+### Cómo se pelea ahora
+
+Se entra **desde el lobby**: perla → COLISEO → el modo → ANOTARME. No hace falta
+retar a nadie por su nombre; uno se anota en la lista de espera y, cuando hay con
+quién, la pelea arranca sola.
+
+| Modo | Cuántos | Cómo se arma |
+|---|---|---|
+| **1v1** | 2 anotados | por orden de llegada |
+| **2v2** | 4 anotados | los dos primeros contra los dos siguientes; el compañero no se elige |
+| **Equipo vs equipo** | 2 equipos | junta a los anotados por su equipo de `/equipo` y los cruza |
+
+Los equipos se leen del **scoreboard** y no del mod de equipos: son dos mods
+sueltos que no se hablan, pero `/equipo` espeja cada equipo en uno del scoreboard
+llamado `sdp_<nombre>`, y eso lo ve cualquiera.
+
+Sigue habiendo **una pelea a la vez** — el coliseo es para mirar, y con tres duelos
+simultáneos no habría a qué apostarle. Los retos de `/pvp <jugador>` tienen
+prioridad sobre la lista de espera: un reto es entre dos que se pusieron de
+acuerdo, y eso vale más que un turno.
+
+### Bandos, y qué cambió por dentro
+
+`Duelo` estaba escrito para dos jugadores. Ahora son **dos lados** ({@link Lado}),
+y cada lado tiene un **nombre para mostrar**: en 1v1 es el del jugador, en 2v2
+"PEPE y Chichón", y en equipos el nombre del equipo. Por eso los carteles siguen
+recibiendo dos String como siempre y no hubo que reescribir las 860 líneas de
+`Carteles`.
+
+Lo que cambia con más de uno por lado:
+
+- **El que cae no termina la pelea**: queda eliminado, pasa a espectador y mira
+  cómo sigue. El lado pierde cuando se queda sin nadie en pie.
+- **Entre compañeros no se pega.** El kit es el mismo para todos, así que un golpe
+  mal dado adentro del propio bando decidiría la pelea.
+- **La apuesta la pone cada uno** y el pozo se reparte entre los del lado que ganó.
+- Si se acaban los cinco minutos, gana el lado con **más vida sumada**.
+
+### Los espectadores
+
+`/pvp ver` (o el botón VER LA PELEA del chat y del menú) te pone en **modo
+espectador** sobre el centro de la arena: volás, atravesás paredes y mirás desde
+donde quieras. No podés pegar, que te peguen ni tocar un bloque.
+
+**Ya no hay un asiento marcado.** El comando `/pvp arena gradas` y la clase
+`Gradas` se borraron: el espectador vuela, así que cada cancha nueva trae su punto
+de mirada sin que nadie marque nada.
+
+Se vuelve con `/pvp volver`, o solo cuando termina la pelea. Dónde estabas y en qué
+modo de juego se escriben en `config/mirones-de-pepe.json` **antes** de moverte,
+porque nadie puede quedar de espectador para siempre: también se devuelve al que se
+desconecta mirando y al que estaba mirando cuando se cayó el servidor.
+
+### Nadie queda guardado adentro del coliseo
+
+Es la misma regla que en el lobby y por la misma razón: el que se conecta dentro de
+una dimensión custom entra con el mapa vacío. Entonces el mod saca del coliseo,
+**antes de que el servidor escriba el archivo del jugador**, a los tres casos:
+
+- el que se va **peleando** (además recupera lo suyo en el acto, sin esperar a
+  reconectarse),
+- el que se va **mirando**,
+- y el que se va desde el lobby, que ya lo hacía el mod del lobby.
+
+### En el coliseo no hay bichos
+
+Ni uno, en todo el mundo, haya pelea o no. Se borran **al aparecer** (`ENTITY_LOAD`
+en el mod del lobby) en vez de barrer cada tick, y se respeta al invulnerable, que
+es la marca que deja la varita sobre un animal que alguien quiso cuidar. Probado
+invocando un zombi y una vaca adentro: ninguno de los dos llegó a existir.
+
+La luz es **constante** (`ambient_light` en 1.0): el coliseo se ve igual de día que
+de noche. La lluvia sí sigue la del overworld, porque la dimensión tiene cielo. Si
+llega a molestar, se le saca el cielo y queda siempre seco.
 
 ## Cómo funciona la economía
 
@@ -749,7 +1307,7 @@ y el comando.
 
 Cuatro etapas, y el orden es lo que le da la forma de coliseo:
 
-1. **Apuestas, 20 segundos.** Los dos ya estan parados en la arena, quietos y sin
+1. **Apuestas, 10 segundos.** Los dos ya estan parados en la arena, quietos y sin
    poderse tocar, con el kit puesto, mientras el resto mira y apuesta. Estan
    adentro y no afuera a proposito: la gente le apuesta a alguien que esta
    **viendo**, y no a un nombre en el chat.
@@ -764,6 +1322,104 @@ Cuatro etapas, y el orden es lo que le da la forma de coliseo:
 
 Se pelea **una pelea a la vez**. Hay una sola arena y el coliseo es para mirar:
 con tres duelos simultaneos no habria a que apostarle. Los demas hacen cola.
+
+### El boton para ir a mirar: `/pvp ver`
+
+El cartel que sale para todo el servidor cuando arranca un duelo trae, abajo de
+los dos botones de apostar, un **[ VER LA PELEA ]** que te teletransporta a las
+gradas del coliseo.
+
+Donde caen se marca una sola vez, parado ahi:
+
+    /pvp arena gradas      (operadores)
+
+Se guarda **para donde estas mirando**, no solo donde estas parado. No es un
+detalle: el que llega teletransportado aparece mirando para donde lo deja el
+juego, y si eso es la pared del fondo lo primero que hace es girar sin entender
+donde cayo. Se marca parado en la tribuna mirando la arena y todos los que llegan
+ya estan mirando la pelea. Se guarda en el mismo archivo que la arena y **se
+borra con ella**: un punto para mirar una pelea que no se pelea en ningun lado
+mandaria gente a un descampado.
+
+Si no hay gradas marcadas, el boton no sale. Uno que contesta "todavia no
+marcaron las gradas" es peor que no tener boton, y el log lo avisa al arrancar.
+
+Tres cosas frenan el `/pvp ver`, y las tres son la misma: **un teletransporte
+gratis no puede ser una forma de zafar de algo.**
+
+- **Estar en combate** no te deja ir. Sin esto, `/pvp ver` seria el mejor `/home`
+  del servidor: cada vez que te acorralan, un click y aparecias entero del otro
+  lado del mapa. Es la misma marca del datapack (`sdp_combate`) que ya tapa
+  `/home`, `/spawn`, `/rtp` y `/tpa`.
+- **El que esta peleando** tampoco: ya esta adentro de la arena, y salir de ahi
+  seria abandonar la pelea sin perderla.
+- **Tiene que haber un duelo ahora.** Si no, no hay nada que mirar y esto seria un
+  viaje gratis a un punto fijo del mapa a cualquier hora.
+
+### A la arena entra el que quiere, y la pared la pones vos
+
+El mod **no saca a nadie de la arena**. Lo hacia, y estaba mal: el que queria
+mirar de cerca salia volando dos bloques para atras cada vez que pisaba adentro
+de la caja, y la caja es todo el coliseo, gradas incluidas.
+
+Estar adentro no cambia la pelea, y eso ya estaba resuelto por otro lado:
+
+- no puede pegarle a los que pelean ni ellos a el (`dejarPegar` cancela cualquier
+  golpe en el que uno solo de los dos sea duelista, venga del lado que venga);
+- no puede romper ni poner un bloque adentro de la arena mientras dura la pelea
+  (`puedeTocarLaArena`).
+
+Lo unico que puede hacer un espectador adentro es **ponerse en el medio**. Para
+eso estan los bloques, que es lo que se ve y lo que se entiende: una pared de
+`minecraft:barrier` en el borde del ring. Es invisible, se ve a traves, frena a
+los jugadores, a los bichos y a las flechas, y solo la ve el que tiene una
+barrier en la mano. Se pone una vez y queda:
+
+    give <jugador> minecraft:barrier 64
+
+Y queda **protegida sola**: la foto de la arena se saca antes de cada pelea y se
+devuelve al terminar, asi que si alguien llegara a romper una, vuelve.
+
+### Adentro de la arena no hay bichos
+
+Haya duelo o no. Cada diez ticks —media vez por segundo— se barre la caja de la
+arena y se van todos los hostiles. Un coliseo es un lugar grande y oscuro, o sea
+una guarderia de zombis, y un duelo con un esqueleto tirando flechas desde las
+gradas deja de decidir nada. Los phantoms son peores: bajan igual con la pelea
+empezada, y bajan justo sobre el que hace rato que no duerme.
+
+Se barre en vez de prohibirles aparecer porque aparecer no es el unico camino: el
+phantom se genera arriba del techo y el zombi entra caminando desde una cueva de
+al lado. Y aunque alguno llegue, a los que pelean no les pega: `dejarPegar` ya
+cancela todo golpe que no venga del otro duelista.
+
+Se van **solo los hostiles, y solo los que no estan protegidos**. Los caballos,
+los lobos y las vacas que alguien haya dejado ahi son de alguien; y al que se
+protegio a mano con la varita (click derecho con el palo de depuracion sobre el
+bicho) no lo toca esto ni aunque sea un hostil. Hace falta preguntarlo: `discard()`
+se lleva puesto al invulnerable igual, asi que sin el chequeo un esqueleto de
+adorno protegido con la varita se borraria solo medio segundo despues de ponerlo.
+
+### El duelo le gana al equipo
+
+Dos companeros de `/equipo` no se podian pelear: entraban a la arena, sonaba el
+PELEEN y los golpes no pasaban. Eran los dos mods diciendo cosas distintas sobre
+el mismo golpe, y ganaba el que corre primero. Y el que corre primero es vanilla:
+`ServerPlayer.hurtServer` pregunta `canHarmPlayer` —que es el `friendlyFire` del
+equipo del scoreboard— y devuelve false **antes** de que el golpe llegue a
+`LivingEntity.hurtServer`, que es donde Fabric tira el `ALLOW_DAMAGE` que usa el
+mod de duelos. Ningun enganche nuestro llegaba a opinar. Pasa igual con las
+flechas: el mismo metodo mira tambien al dueno de la flecha.
+
+Manda el duelo, que es el que los dos pidieron: mientras dura la pelea se le
+**abre el fuego amigo al equipo** y se le vuelve a cerrar al desarmar. Se toca el
+equipo y no a los jugadores porque sacarlos del equipo les apagaria el color, el
+`[TAG]` y la barra de arriba en el medio de su propia pelea. Mientras dura, el
+resto del equipo tambien se puede pegar entre si: son como mucho cinco minutos,
+hace falta que los dos que pelean sean del mismo equipo, y el que pega le tiene
+que apuntar a un companero a proposito. Si el servidor se cae con el duelo
+empezado, el equipo queda abierto hasta el arranque siguiente: ahi el mod de
+equipos rearma el espejo desde `equipos-de-pepe.json` y lo vuelve a cerrar.
 
 ### Nadie muere de verdad
 
@@ -824,6 +1480,12 @@ que pelea mejor.
 no es el sabor de una clase, es lo que hace que el que arranca atras tenga una
 carta para jugar; una clase sin perlas no es una clase distinta, es una clase
 peor.
+
+**La que lleva escudo lleva hacha.** GLADIADOR es la unica de las ocho con
+escudo, y por eso la unica con hacha: el hacha es lo que deshabilita el escudo
+por cinco segundos. Como los dos pelean con el mismo kit, sin hacha los dos se
+tapan, no se sacan vida y el duelo lo termina el reloj en vez de la pelea. Si
+alguna vez se agrega otra clase con escudo, va con hacha por la misma razon.
 
 **Dos de las ocho llevan crystals**, que es con lo que se pelea de verdad en los
 servidores grandes: se apoya obsidiana, se planta el crystal al lado del otro y se
@@ -1029,11 +1691,20 @@ Se cobran **al apostar** y no al final: cobrando al final, el que aposto 500 y
 los gasto en la tienda mientras miraba la pelea pagaria con shards que ya no
 tiene, y el objetivo se iria a negativo sin que nada se queje.
 
-El reparto es el de una rifa de carrera: todo lo que pusieron los que erraron se
-reparte entre los que acertaron **en proporcion a lo que arriesgo cada uno**, y
-el que acerto recupera ademas lo suyo. Sin comision de la casa. Lo que la
+**Se paga a la par: le acertaste, cobras el doble de lo que pusiste.** Cada shard
+del que erro le paga un shard al que acerto, y nada mas. Lo que del lado de los
+que erraron no encuentra con quien cruzarse vuelve a quien lo puso, con su propio
+cartel para que no se lea como un premio. Sin comision de la casa. Lo que la
 division no da entero se lo lleva el que gano la pelea: tiene que ir a algun
 lado, o los shards se irian evaporando de a uno por duelo.
+
+Antes era el reparto de una rifa de carrera —todo lo de los que erraron repartido
+entre los que acertaron, en proporcion— y en la primera pelea con apuestas de
+verdad (2026-09-21, PEPE contra Felix1256) eso pago **65 shards por una apuesta de
+10**, porque del otro lado habia uno solo que habia puesto todo lo que tenia. La
+cuenta cerraba igual, pero con dos o tres apostadores las cuotas salen de
+cualquier lado, y un shard vale diez minutos de juego o una kill. Una apuesta
+tiene que pagar algo que el que la hace pueda calcular antes de hacerla.
 
 Los shards de un duelo **no se crean ni se destruyen**: los que pone el que
 pierde son exactamente los que cobra el que gana. Es la unica forma de meter
@@ -1132,12 +1803,120 @@ Entran **seis por equipo**. El tope no es decoración: la barra muestra a los
 compañeros, así que un equipo con medio servidor adentro es el radar de todos
 contra todos que justamente se sacó.
 
+### `/sz bichos`: una zona sin hostiles
+
+Safe Zone no lo tiene: una zona suya es siempre lo mismo para todas. Lo agrega el
+mod de la varita, se guarda en `config/zonas-de-pepe.json` por `claimId`, y se
+pone parado adentro de la zona:
+
+    /sz bichos      adentro no hay hostiles
+    /sz modos       que zonas lo tienen puesto
+
+Cuelga del `/sz` que ya existe porque es donde el que administra lo va a buscar.
+Brigadier fusiona los hijos cuando dos mods registran el mismo literal, igual que
+`/pvp` con Melius. **El `requires` de nuestra raiz esta copiado del de Safe Zone a
+proposito**: de los dos nodos raiz sobrevive el del que registro primero, con SU
+permiso, y el orden entre dos mods no lo decide nadie. Si el nuestro fuera mas
+permisivo y ganara la carrera, todo el `/sz` —`reload`, `removeall`, `limits`— le
+quedaria abierto a cualquiera. Con el mismo permiso —nivel 2, `GAMEMASTERS`— el
+resultado es el mismo gane quien gane.
+
+Son dos cosas: el hostil que aparece adentro se va en el mismo tick
+(`ServerEntityEvents.ENTITY_LOAD`), y una vez por segundo se barre la zona entera
+para el que entro caminando. La caja del barrido va de lo mas bajo a lo mas alto
+del mundo porque una zona **es la columna entera**: su proteccion compara solo X
+y Z. Se van solo los hostiles y solo los que nadie protegio con la varita:
+`discard()` se lleva puesto al invulnerable igual.
+
+### El coliseo adentro de una zona protegida
+
+Safe Zone **no toca el daño entre jugadores**: adentro de una zona dos se siguen
+pegando igual. Lo que cancela es poner y romper bloques al que no es dueño ni
+trusted, y los kits de duelo son de poner bloques: obsidiana y crystals el
+CRISTALERO, TNT el BOMBARDERO, y los ocho traen bloques para taparse. Con el
+coliseo adentro del spawn protegido no se podia jugar ninguno.
+
+**El agujero lo abre el duelo, no un comando.** `duelos/mixin/ClaimManagerMixin`
+entra en `ClaimManager.canBuild` y contesta `ADMIN_BYPASS` cuando se dan las tres
+condiciones juntas, que son las de `Duelos.dejaConstruir`:
+
+- **hay un duelo ahora**, asi que entre pelea y pelea el coliseo esta tan
+  protegido como el resto del spawn;
+- **es uno de los dos que pelean**, asi que el de las gradas no rompe nada aunque
+  este parado adentro;
+- **es adentro de la caja de la arena**, que es lo unico que se fotografia antes
+  del duelo y vuelve entero al terminar. Un bloque puesto un metro afuera de la
+  caja se quedaria ahi para siempre, y desde adentro se llega: el brazo de un
+  jugador pasa la pared.
+
+Hubo antes un `/sz construir` que abria la zona entera para todos. Duro una
+tarde, por lo obvio: adentro del coliseo eso dejaba que cualquiera picara la
+estructura entre pelea y pelea.
+
+**Por que `canBuild` y no `getClaimAt`.** `getClaimAt` seria mas corto y apagaria
+la zona entera en ese punto, pero **no sabe quien pregunta**: recibe una posicion
+y nada mas. `canBuild` recibe el jugador, que es justo lo que hay que mirar.
+
+Lo que eso cuesta: las explosiones van por `getClaimAt` y no por `canBuild`, asi
+que adentro de una zona la TNT y los crystals **siguen sin romper el piso**. Se
+puede poner la TNT, se puede prender y le hace daño al otro igual, que es de lo
+que se trata la pelea; lo unico que no pasa es el crater. Es el precio de que
+nadie mas pueda tocar el coliseo, y es barato: la arena se devuelve entera al
+terminar, asi que el crater duraba lo que duraba la pelea.
+
+**Por que un mixin y no un evento nuestro.** Los eventos de Fabric se cancelan si
+CUALQUIERA de los que escucha dice que no, y no hay forma de des-cancelar lo que
+ya cancelo otro mod. Safe Zone dice que no antes de que lleguemos a opinar.
+
+**Y hace falta un segundo mixin para que los crystals peguen.** Safe Zone decide
+la inmunidad a explosiones con `ClaimEntityProtection.hasTrustedClaimAccess`, y
+ese metodo no pregunta si sos dueño ni si sos trusted: pregunta **`canBuild(vos,
+donde estas parado) != DENIED`**. Usa el permiso de construir como si fuera la
+definicion de "este es de los de casa". Asi que el mismo mixin que deja a los
+duelistas poner obsidiana los volvia inmunes a las explosiones: los end crystals
+del CRISTALERO se plantaban, reventaban y no le hacian un rasguño a nadie. Lo
+mismo la TNT del BOMBARDERO. `ClaimEntityProtectionMixin` le contesta que no al
+que esta peleando adentro de la arena, y vuelve a ser lo que era.
+
+Adentro de una zona protegida un duelo queda asi:
+
+| | |
+|---|---|
+| poner y romper bloques, los dos que pelean | **si** (`ClaimManagerMixin`) |
+| daño y empujon de las explosiones | **si** (`ClaimEntityProtectionMixin`) |
+| que la explosion rompa el piso | **no** |
+
+Lo ultimo porque eso Safe Zone lo decide por posicion y no por jugador, y
+abrirlo dejaria que cualquiera volara el coliseo. La arena se devuelve entera al
+terminar igual, asi que el crater duraba lo que duraba la pelea.
+
+`PermissionResult.ADMIN_BYPASS` se busca **por reflexion**, el mismo camino que
+usa el mod de acceso con EasyAuth: sin eso habria que tener el jar de Safe Zone
+para compilar, y el dia que cambie de version no compilaria mas. Y si Safe Zone
+no esta puesto, Mixin avisa en el log que no encontro la clase y sigue de largo,
+que es lo que se quiere: los duelos tienen que andar en un servidor sin zonas.
+
+### Zonas anidadas: no existen
+
+`ClaimValidator.validate` recorre todas las zonas y rechaza la nueva si toca
+cualquiera, con `TOO_CLOSE_TO_EXISTING_CLAIM`. No hay prioridad, no hay "la de
+adentro manda" y **no hay excepcion para el administrador**: el unico chequeo con
+bypass es el del limite de zonas. El `claimGapEnforced` en false solo saca los 10
+bloques de separacion extra (`effectiveMinDistance()` devuelve 0); el
+solapamiento se sigue rechazando.
+
+O sea que una zona chica adentro de una grande no se puede hacer. Si el coliseo
+tiene que quedar adentro del spawn, es **una sola zona** con `/sz construir`
+puesto, o el spawn en varias zonas alrededor del coliseo. Y de todas formas van a
+ser varias: `maxClaimWidth`/`maxClaimDepth` estan en 128.
+
 ### Lo que da un equipo, y lo que no
 
 Da tres cosas, y las tres las hace el juego y no nosotros, porque cada equipo es
 un **equipo del scoreboard** de vanilla llamado `sdp_<nombre en minúscula>`:
 
-- **entre compañeros no se pega** (`friendlyFire` en `false`);
+- **entre compañeros no se pega** (`friendlyFire` en `false`), salvo adentro de
+  un duelo: ver "El duelo le gana al equipo" mas abajo;
 - **el nombre va del color del equipo**, que es cómo en una pelea se ve de un
   vistazo quién es de quién. Se reparten ocho colores, el primero libre;
 - **se ven en la barra de arriba**, que es lo de más arriba.

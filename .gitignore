@@ -27,6 +27,8 @@ mod-equipos/build/
 mod-equipos/.gradle/
 mod-varita/build/
 mod-varita/.gradle/
+mod-lobby/build/
+mod-lobby/.gradle/
 mod-cofres/build/
 mod-cofres/.gradle/
 mod-duelos/build/
@@ -49,3 +51,6 @@ servidor/recursos/
 Sin *.png
 *-fullsize.jpg
 varitamagica.txt
+
+# Respaldos locales de jugadores (binarios, se rehacen solos)
+respaldos/

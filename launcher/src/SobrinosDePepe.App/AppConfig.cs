@@ -10,7 +10,7 @@ namespace SobrinosDePepe.App;
 public static class AppConfig
 {
     public const string DefaultApiUrl = "https://sobrinosdepepe.com";
-    public const string DefaultServerAddress = "sobrinosdepepe.minehost.pro";
+    public const string DefaultServerAddress = "sobrinosdepepe.com";
 
     public static Uri ApiUrl { get; } = Resolve();
 

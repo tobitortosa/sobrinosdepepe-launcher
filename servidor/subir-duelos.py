@@ -219,7 +219,11 @@ if __name__ == "__main__":
         mc.cmd("say Reinicio en %d segundos: se instala el coliseo. Vuelve enseguida." % AVISO)
         print("  avisado por chat; reiniciando en %d segundos" % AVISO)
         time.sleep(AVISO)
-        mc.power("restart")
+        # `restart` con el servidor ya apagado no lo prende: lo deja apagado y el
+        # script sigue como si nada. Paso de verdad el 2026-09-22, despues de
+        # apagarlo a mano para editar la config de la arena.
+        estaba = json.loads(mc.call("/resources"))["attributes"]["current_state"]
+        mc.power("start" if estaba == "offline" else "restart")
         print("  reiniciando, porque el jar es nuevo")
     else:
         print()

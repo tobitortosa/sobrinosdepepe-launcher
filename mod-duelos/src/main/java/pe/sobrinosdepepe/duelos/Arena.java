@@ -9,7 +9,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * La cancha: una caja de bloques y los dos lugares donde aparece cada uno.
@@ -138,6 +142,17 @@ public final class Arena {
 				&& donde.getZ() >= min.getZ() && donde.getZ() <= max.getZ();
 	}
 
+	/**
+	 * La caja, para preguntarle al mundo quien esta adentro. Va hasta el borde
+	 * de afuera del ultimo bloque (`max + 1`) y no hasta su esquina: si no, lo
+	 * que esta parado sobre la ultima fila queda medio adentro y medio afuera.
+	 */
+	public AABB caja() {
+		return new AABB(
+				min.getX(), min.getY(), min.getZ(),
+				max.getX() + 1, max.getY() + 1, max.getZ() + 1);
+	}
+
 	public Vec3 centro() {
 		return new Vec3((min.getX() + max.getX() + 1) / 2.0, max.getY(),
 				(min.getZ() + max.getZ() + 1) / 2.0);
@@ -186,6 +201,50 @@ public final class Arena {
 		return conY(afuera, piso, nivel.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
 				(int) Math.floor(x), (int) Math.floor(z)));
 	}
+
+	/**
+	 * Donde se para cada uno de un lado: repartidos en linea, mirando al otro lado.
+	 *
+	 * Los dos puntos marcados definen el **eje** de la pelea —uno enfrente del
+	 * otro—, asi que los companeros se reparten sobre la **perpendicular** a ese
+	 * eje, que es lo que hace que un 2v2 se vea como un 2v2 desde las gradas: dos
+	 * de un lado, dos del otro, y no cuatro desparramados.
+	 *
+	 * Sale de la geometria y no de puntos marcados a mano, y eso es a proposito:
+	 * marcar seis lugares por lado en cada cancha nueva son doce clicks y una
+	 * planilla, y el dia que la cancha cambie hay que rehacerlos todos. Asi, marcar
+	 * los dos de siempre alcanza para todos los modos.
+	 *
+	 * A cada uno se le busca el piso abajo: si el lugar que le toca cae sobre un
+	 * pozo o una pared, se lo corre al punto del lado, que siempre sirve.
+	 */
+	public List<Vec3> puestos(ServerLevel nivel, boolean primerLado, int cuantos) {
+		Vec3 centro = primerLado ? punto1 : punto2;
+		List<Vec3> lugares = new ArrayList<>();
+		if (cuantos <= 1) {
+			lugares.add(centro);
+			return lugares;
+		}
+
+		Vec3 eje = punto2.subtract(punto1);
+		Vec3 aLoLargo = new Vec3(-eje.z, 0, eje.x);
+		if (aLoLargo.lengthSqr() < 1.0E-6) {
+			aLoLargo = new Vec3(0, 0, 1);
+		}
+		Vec3 perp = aLoLargo.normalize();
+
+		for (int i = 0; i < cuantos; i++) {
+			double corrimiento = (i - (cuantos - 1) / 2.0) * SEPARACION;
+			Vec3 donde = centro.add(perp.scale(corrimiento));
+			donde = devolverAdentro(donde);
+			Integer piso = enElPiso(nivel, donde, min.below(2), max.above(4));
+			lugares.add(piso == null ? centro : new Vec3(donde.x, piso, donde.z));
+		}
+		return lugares;
+	}
+
+	/** Cuanto se separan los companeros de un mismo lado. */
+	private static final double SEPARACION = 3.0;
 
 	private static Vec3 conY(Vec3 donde, Integer piso, int siNoHay) {
 		return new Vec3(donde.x, piso != null ? piso : siNoHay, donde.z);

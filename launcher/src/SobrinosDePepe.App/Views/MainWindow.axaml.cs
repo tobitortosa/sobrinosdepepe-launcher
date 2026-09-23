@@ -33,12 +33,32 @@ public partial class MainWindow : Window
                 Topmost = _shell.Current is UpdateRequiredViewModel;
         };
 
-        // No se cierra el launcher con el juego abierto. Al cerrarse dejaría de avisar
+        // El launcher se queda abierto mientras se juega: al cerrarse dejaría de avisar
         // de las actualizaciones, y son obligatorias.
+        //
+        // Pero **nadie puede quedar atrapado**. Antes esto cancelaba el cierre siempre
+        // que hubiera un proceso de Java vivo en nuestra carpeta, y cuando el juego se
+        // cerraba mal —la ventana se va pero el proceso queda— el launcher no se dejaba
+        // cerrar nunca más. Dos salidas, las dos sin diálogos nuevos:
+        //
+        //   - si el juego **no tiene ventana**, es un proceso colgado y no un juego: se
+        //     lo mata y el launcher se cierra;
+        //   - si la tiene, se avisa una vez, y **el segundo intento cierra igual**. El
+        //     que insiste en cerrar sabe lo que quiere.
+        var yaAvise = false;
         Closing += (_, e) =>
         {
             if (!GameProcess.IsRunning()) return;
 
+            if (!GameProcess.HasWindow())
+            {
+                GameProcess.KillLeftovers();
+                return;
+            }
+
+            if (yaAvise) return;
+
+            yaAvise = true;
             e.Cancel = true;
             Activate();
             _shell.NotifyCannotClose();

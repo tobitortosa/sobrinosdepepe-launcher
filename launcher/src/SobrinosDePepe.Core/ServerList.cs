@@ -32,24 +32,47 @@ public static class ServerList
     private const byte TagCompound = 10;
 
     /// <summary>
-    /// Deja el servidor en la lista, primero y aceptando su resource pack. Si ya está
-    /// pero le falta lo segundo, lo corrige; si hay otros servidores, los conserva.
+    /// Deja el servidor en la lista una sola vez, primero y aceptando su resource pack.
+    /// Los servidores que la persona agregó por su cuenta quedan intactos, abajo.
     /// Devuelve true cuando tuvo que tocar el archivo.
     ///
     /// Se revisa en cada JUGAR y no solo la primera vez, porque el que ya tenía el
     /// servidor cargado de antes también tiene que dejar de ver el cartel del pack.
+    ///
+    /// <para>
+    /// <b>Lo nuestro se reconoce por el nombre y no solo por la dirección</b>, y eso es
+    /// lo que borra las entradas viejas. Cuando la dirección del servidor cambió de
+    /// <c>sobrinosdepepe.minehost.pro</c> al dominio propio, mirando solo la dirección
+    /// la vieja no coincidía con nada, se daba por un servidor ajeno y se conservaba:
+    /// al jugador le quedaban DOS SOBRINOS DE PEPE en el menú y la mitad entraba por la
+    /// que ya no era. Sacando todas las que se llaman como la nuestra, el día que la
+    /// dirección vuelva a cambiar la lista se arregla sola en el primer JUGAR.
+    /// </para>
     /// </summary>
     public static bool Ensure(string path, SavedServer server)
     {
         var existing = Read(path);
-        var mismo = existing.FirstOrDefault(
-            s => string.Equals(s.Address, server.Address, StringComparison.OrdinalIgnoreCase));
 
-        if (mismo is not null && mismo.AcceptTextures == server.AcceptTextures) return false;
+        bool EsNuestro(SavedServer s) =>
+            string.Equals(s.Address, server.Address, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(s.Name, server.Name, StringComparison.OrdinalIgnoreCase);
+
+        var mios = existing.Where(EsNuestro).ToList();
+
+        // Ya está como tiene que estar: uno solo, arriba de todo, con la dirección de
+        // ahora y el pack aceptado. No se toca el archivo.
+        if (mios.Count == 1
+            && existing.Count > 0
+            && ReferenceEquals(existing[0], mios[0])
+            && string.Equals(mios[0].Address, server.Address, StringComparison.OrdinalIgnoreCase)
+            && mios[0].AcceptTextures == server.AcceptTextures)
+        {
+            return false;
+        }
 
         // El servidor de la comunidad va primero: es el que van a usar.
         var updated = new List<SavedServer> { server };
-        updated.AddRange(existing.Where(s => !ReferenceEquals(s, mismo)));
+        updated.AddRange(existing.Where(s => !EsNuestro(s)));
 
         Write(path, updated);
         return true;

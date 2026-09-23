@@ -7,6 +7,7 @@ Las credenciales salen de web/.env.local, que no está en el repositorio.
 import json
 import os
 import sys
+import time
 import urllib.parse
 import urllib.request
 
@@ -17,6 +18,8 @@ for line in open(ENV, encoding="utf-8"):
     if "=" in line and not line.startswith("#"):
         clave, valor = line.split("=", 1)
         cfg[clave.strip()] = valor.strip().strip('"')
+
+LOG = "/logs/latest.log"
 
 BASE = "%s/api/client/servers/%s" % (cfg["PTERODACTYL_URL"].rstrip("/"), cfg["PTERODACTYL_SERVER_ID"])
 HEAD = {
@@ -43,6 +46,22 @@ def cmd(comando):
     call("/command", {"command": comando})
 
 
+def responde(comando, espera=1.5):
+    """
+    Ejecuta un comando y devuelve lo que el servidor contesto, en lineas.
+
+    La API del panel manda el comando y corta: no hay respuesta. Lo unico que
+    queda es la consola, asi que se mira cuanto medía el log antes y se lee lo
+    que aparecio despues. En este proyecto las conclusiones "por logica" ya
+    fallaron tres veces; esto es para no tener que confiar.
+    """
+    antes = len(read(LOG).splitlines())
+    cmd(comando)
+    time.sleep(espera)
+    lineas = read(LOG).splitlines()[antes:]
+    return [l.split("]: ")[-1].strip() for l in lineas]
+
+
 def write(ruta, texto):
     """Escribe un archivo del servidor, creando las carpetas que falten."""
     call("/files/write?file=" + urllib.parse.quote(ruta), raw=texto.encode("utf-8"))
@@ -50,6 +69,21 @@ def write(ruta, texto):
 
 def read(ruta):
     return call("/files/contents?file=" + urllib.parse.quote(ruta))
+
+
+def download(ruta):
+    """
+    Baja un archivo del servidor tal cual, en bytes.
+
+    read() no sirve para los binarios: decodifica a utf-8 y un .mca o un .dat
+    queda destrozado. Y /files/contents corta en 4 MiB —un .mca de region lo pasa
+    sin esfuerzo y contesta 400— asi que se pide la URL firmada del nodo, que es
+    la misma que usa el boton de descargar del panel y no tiene tope.
+    """
+    firmada = json.loads(
+        call("/files/download?file=" + urllib.parse.quote(ruta)))["attributes"]["url"]
+    with urllib.request.urlopen(firmada) as respuesta:
+        return respuesta.read()
 
 
 def upload(carpeta, ruta_local):

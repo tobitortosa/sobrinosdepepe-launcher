@@ -122,13 +122,21 @@ public final class Kits {
 
 	// --------------------------------------------------------------- las ocho clases
 
+	/**
+	 * La unica clase que lleva escudo, y por eso la unica que necesita hacha: el
+	 * hacha es lo que deshabilita el escudo del otro por cinco segundos. Sin ella
+	 * los dos —que pelean con el mismo kit— se tapan y no se sacan vida, y el duelo
+	 * lo termina el reloj en vez de la pelea. La regla es esa y vale para las que
+	 * vengan: **si una clase tiene escudo, tiene hacha**.
+	 */
 	private static Kit gladiador(HolderLookup.Provider r, RandomSource azar, Item bloque) {
-		return new Kit("GLADIADOR", "Espada y escudo. La pelea de toda la vida.",
+		return new Kit("GLADIADOR", "Espada, hacha y escudo. La pelea de toda la vida.",
 				armadura(r, Items.IRON_HELMET, Items.IRON_CHESTPLATE, Items.IRON_LEGGINGS,
 						Items.IRON_BOOTS, Enchantments.PROTECTION, 2,
 						uno(Items.SHIELD)),
 				List.of(
 						enc(r, uno(Items.IRON_SWORD), Enchantments.SHARPNESS, 2),
+						uno(Items.IRON_AXE),
 						varios(Items.GOLDEN_APPLE, entre(azar, 5, 8)),
 						varios(Items.ENDER_PEARL, entre(azar, 8, 12)),
 						varios(bloque, entre(azar, 32, 64)),

@@ -43,6 +43,10 @@ mod-duelos/                    el coliseo: /pvp <jugador> reta a alguien a un du
 ├── Arena                      la caja de la cancha y donde aparece cada uno
 ├── Varita                     la misma varita de las zonas, pero con el click izquierdo
 ├── Duelo                      una pelea: apuestas, la cuenta de 3 2 1, la pelea y el final
+│                              un LADO contra el otro, sean de uno o de varios
+├── Lado                       quienes pelean de cada lado y como se llama el lado
+├── Cola                       la lista de espera: 1v1, 2v2 y equipo vs equipo
+├── Mirones                    los que miran de espectador, y a donde vuelven
 ├── Duelos                     una pelea a la vez, la cola, y que no se meta nadie
 ├── Kits                       las ocho clases, una al azar y la misma para los dos
 ├── Guardado                   el inventario de cada uno mientras pelea, y como vuelve
@@ -61,6 +65,17 @@ mod-equipos/                   los equipos: /equipo crear, invitar, aceptar, ech
 ├── Invitaciones               las que estan esperando respuesta, dos minutos
 ├── ComandoEquipo              /equipo y sus cinco subcomandos
 └── Carteles                   lo que el jugador lee, con los colores del servidor
+
+mod-lobby/                     el lobby: al entrar caen todos ahi, con las manos vacias
+├── LobbyServidor              manda al lobby en el tick siguiente al login (adentro
+│                              del evento el cliente queda con el mapa vacio), y en
+│                              el lobby no se rompe, no se pone y no se pega
+├── Guardado                   el inventario, la vida y la experiencia de cada uno
+│                              mientras esta en el lobby; la misma clase que duelos
+├── Vuelta                     el registro de todo eso, en config/lobby-de-pepe.json
+├── Perla                      lo unico que se tiene en la mano: abre /menu juegos
+├── ComandoLobby               /lobby y /survival
+└── Carteles                   lo que el jugador lee, con el boton verde del chat
 
 launcher/
 ├── pack.json                  copia del pack publicado; solo la usa la CLI de la fase 0

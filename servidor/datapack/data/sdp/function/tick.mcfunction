@@ -52,3 +52,38 @@ execute as @a if score @s sdp_tiempo >= @s sdp_marca run function sdp:turno
 
 # Repone la vision nocturna a quien la dejo prendida y la perdio al morir.
 execute as @a[scores={sdp_nv=1}] unless predicate sdp:tiene_nv run effect give @s night_vision infinite 1 true
+
+# El que se cae del lobby vuelve al patio, y el que se cae del coliseo vuelve a las
+# gradas. Los dos flotan a 250 y pico de altura en el overworld, sin nada abajo
+# hasta el terreno: sin esto se caeria 150 bloques y aparecerian a 500.000 del
+# spawn, sin forma de volver.
+#
+# Se pregunta por CAJA y por altura, jugador por jugador. Antes esto miraba la
+# dimension, cuando el lobby era una; lo que no alcanza nunca es `execute in`, que
+# le cambia la dimension al contexto pero deja el volumen del selector en la
+# posicion de cada uno. Escrito asi agarraba a los que estaban bajo tierra en el
+# survival y los devolvia al lobby veinte veces por segundo: el sintoma era un
+# jugador que apretaba SURVIVAL, caia en su mina a y=-28 y rebotaba, con el cliente
+# cargando terreno para siempre.
+execute as @a at @s if dimension minecraft:overworld if entity @s[x=499950,dx=100,y=-64,dy=294,z=-50,dz=100] run tp @s 500000.5 250.0 0.5
+execute as @a at @s if dimension minecraft:overworld if entity @s[x=501125,dx=100,y=-64,dy=304,z=11570,dz=100] run tp @s 501163.42 267.0 11631.92 -139.35 8.61
+
+# El borde del survival.
+#
+# El del overworld es de 30.000.000 desde la mudanza, para que el lobby y el
+# coliseo —que estan a 500.000 del spawn— no queden afuera, donde el juego daña y
+# empuja. El limite de verdad lo hace esta linea: el que se mete en la banda que va
+# de 15.020 a 400.000 del spawn vuelve al borde. Mas alla de los 400.000 estan los
+# dos lugares nuestros, y para llegar caminando hay que cruzar la banda primero.
+#
+# La banda empieza en 15.020 y no en 15.000, y se devuelve a 14.990: son 30 bloques
+# de aire entre la pared y el lugar donde te deja, para que el que camina pegado al
+# borde no rebote una vez por tick.
+#
+# El numero tiene que coincidir con WORLD_BORDER_RADIUS de web/.env.local, que es
+# el que le pone el borde de verdad al Nether y al End. Lo verifica
+# servidor/configurar-borde.py.
+execute as @a at @s if dimension minecraft:overworld if entity @s[x=15020,dx=384980] run tp @s 14990 ~ ~
+execute as @a at @s if dimension minecraft:overworld if entity @s[x=-400000,dx=384980] run tp @s -14990 ~ ~
+execute as @a at @s if dimension minecraft:overworld if entity @s[z=15020,dz=384980] run tp @s ~ ~ 14990
+execute as @a at @s if dimension minecraft:overworld if entity @s[z=-400000,dz=384980] run tp @s ~ ~ -14990

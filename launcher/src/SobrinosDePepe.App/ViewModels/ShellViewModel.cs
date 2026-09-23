@@ -73,7 +73,8 @@ public partial class ShellViewModel : ObservableObject
     public void NotifyCannotClose()
     {
         if (Current is HomeViewModel home)
-            home.Message = "El launcher se queda abierto mientras juegues: así te avisa si hay una actualización.";
+            home.Message = "El launcher se queda abierto mientras juegues: así te avisa si hay "
+                + "una actualización. Si lo querés cerrar igual, cerralo de nuevo.";
     }
 
     public void ShowLogin(string? message = null) =>
